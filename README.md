@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# МАТЭТИС — кликабельный прототип
 
-## Getting Started
+Веб-приложение (в будущем PWA) для учеников Мастера: тест определяет один из 12 типов,
+а приложение выдаёт программу практик под связку «тип + текущая стихия».
+Есть кабинет администратора для управления контентом и статистики.
 
-First, run the development server:
+Сейчас это **прототип без сервера**: все данные выдуманные, отметки ученика хранятся
+в браузере (localStorage), изменения в админке живут до перезагрузки страницы.
+Вход, база данных и загрузка файлов появятся в рабочей версии.
+
+## Как запустить
+
+Нужны Node.js 20+ и pnpm.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+pnpm dev          # http://localhost:4317
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Главная страница (`/`) — карта всех экранов прототипа.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Команда | Что делает |
+|---|---|
+| `pnpm dev` | дев-сервер на порту 4317 |
+| `pnpm typecheck` | проверка типов TypeScript |
+| `pnpm lint` | проверка кода ESLint |
+| `pnpm build` | production-сборка |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Экраны
 
-## Learn More
+- **Ученик:** приветствие → тест → результат; Программа (практика дня, ритуалы недели,
+  рекомендации на стихию), карточка практики, Библиотека (практики по состоянию, книги),
+  чтение книги, Профиль со статистикой.
+- **Администратор (`/admin`):** общая статистика, ученики и карточка ученика, 12 типов,
+  редактор теста, матрица программ «тип × стихия», практики и медиа, библиотека книг.
 
-To learn more about Next.js, take a look at the following resources:
+## Стек
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Next.js (App Router) + TypeScript + Tailwind CSS + shadcn/ui (на Base UI), иконки lucide.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Структура кода (Feature-Sliced Design)
 
-## Deploy on Vercel
+```
+src/
+  app/        маршруты Next.js — тонкие обёртки, только подключают экран
+  views/      экраны целиком (слой «pages» в FSD)
+  widgets/    крупные блоки экранов: меню, «практика дня», статистика…
+  features/   действия пользователя: отметить выполнение, пройти тест
+  entities/   предметные сущности: стихия, тип, практика, книга, ученик, тест, прогресс
+  shared/     общее: UI-компоненты, конфиг маршрутов и навигации, утилиты
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Дерево экранов и пункты меню описаны в одном месте — `src/shared/config/navigation.ts`
+  и `src/shared/config/routes.ts`. Чтобы переставить разделы, правим эти файлы и папки
+  в `src/app`, сами экраны не трогаем.
+- Тестовые данные лежат в `src/entities/*/api/*-api.ts`. Когда появится сервер и база
+  (PostgreSQL), заменяются только эти функции — экраны останутся прежними.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Правила для разработки и ИИ-агентов — в [`AGENTS.md`](./AGENTS.md).
