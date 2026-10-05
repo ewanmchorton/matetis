@@ -18,14 +18,14 @@ export function ElementGuide() {
   return (
     <section className="space-y-4">
       <h2 className="text-lg font-semibold">Рекомендации на стихию</h2>
-      <div className="grid gap-4 rounded-2xl border bg-card p-4 sm:p-5 md:grid-cols-2">
+      <div className="grid gap-4 rounded-2xl border bg-card p-4 sm:p-5">
         <VideoPlaceholder title={guide.videoTitle} duration={guide.videoDuration} />
         <div className="space-y-4">
           <div className="space-y-1.5">
             <h3 className="font-semibold">{guide.title}</h3>
             <p className="text-sm leading-relaxed text-muted-foreground">{guide.text}</p>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-1 xl:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <p className="inline-flex items-center gap-1.5 text-sm font-medium">
                 <BookOpen className="size-4" /> Книги
