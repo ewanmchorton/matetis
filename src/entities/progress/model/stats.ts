@@ -23,18 +23,18 @@ function pluralPracticeAcc(n: number): string {
 
 function encouragementForWeek(count: number): string {
   if (count === 0) {
-    return "Когда будет удобно — отметьте практику дня. Каждый шаг к себе уже важен.";
+    return "Когда будет удобно — отметьте практику дня.";
   }
   if (count === 1) {
-    return "Вы уже нашли время для себя — бережно и без спешки.";
+    return "Вы уже нашли время для себя на этой неделе.";
   }
   if (count === 2) {
-    return "Два раза на этой неделе — хороший, спокойный ритм.";
+    return "Два раза на этой неделе — спокойный ритм.";
   }
   if (count === 3) {
-    return "Три практики за неделю — вы заботитесь о себе, и это заметно.";
+    return "Три практики за неделю — хороший знак заботы о себе.";
   }
-  return "Вы уделяете практике внимание — в своём темпе, без сравнения с другими.";
+  return "Вы уделяете практике внимание — в своём темпе.";
 }
 
 /** Блок на главной «Программа»: цифра за неделю + короткие ободряющие слова. */
@@ -50,21 +50,17 @@ export function getProgramWeekHighlight(completedDays: string[], weekDays: Date[
   };
 }
 
-/** Короткая второстепенная строка под блоком (если нужна). */
+/** Короткая второстепенная строка под блоком на программе. */
 export function getSoftProgramNote(completedDays: string[], weekDays: Date[]): string {
-  const thisWeek = countPracticesInWeek(completedDays, weekDays);
   const total = completedDays.length;
 
   if (total === 0) {
-    return "Подробнее — в профиле, когда захотите заглянуть.";
+    return "Подробнее — в профиле.";
   }
-  if (thisWeek > 0) {
-    return `Всего отмечено ${total} ${pluralPracticeAcc(total)} — это ваш путь, не соревнование.`;
-  }
-  return "Раньше вы уже практиковали — детали в профиле.";
+  return `Всего отмечено ${total} ${pluralPracticeAcc(total)}.`;
 }
 
-/** Развёрнутая, но мягкая статистика для профиля. */
+/** Краткие подписи под цифрами в профиле. */
 export function getProfileStatsSummary(
   completedDays: string[],
   weekDays: Date[],
@@ -72,19 +68,11 @@ export function getProfileStatsSummary(
   const total = completedDays.length;
   const thisWeek = countPracticesInWeek(completedDays, weekDays);
 
-  const lines: string[] = [
-    `Практика дня отмечена ${total} ${pluralPracticeAcc(total)} — каждый раз по вашему желанию, без «обязаловки».`,
-  ];
+  const lines = [`Всего — ${total} ${pluralPracticeAcc(total)}.`];
 
   if (thisWeek > 0) {
-    lines.push(
-      `На этой неделе — ${thisWeek} ${pluralPracticeAcc(thisWeek)}. Можно делать меньше или больше: важен бережный контакт с собой.`,
-    );
-  } else {
-    lines.push("На этой неделе практика ещё не отмечалась — это нормально, если вы отдыхаете.");
+    lines.push(`На этой неделе — ${thisWeek} ${pluralPracticeAcc(thisWeek)}.`);
   }
-
-  lines.push("Мы не считаем серии «дней подряд», чтобы не подсаживать на тревожные страйки.");
 
   return { lines };
 }

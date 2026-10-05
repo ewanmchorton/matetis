@@ -73,6 +73,7 @@ function ProgramContent({
   const weekDays = getWeekDays(today);
   const weekStartKey = getWeekStartKey(today);
   const practice = getDailyPractice(element.id, typeNumber, today);
+  const weekHighlight = getProgramWeekHighlight(completedPractices, weekDays);
 
   return (
     <>
@@ -92,16 +93,11 @@ function ProgramContent({
         weekStartKey={weekStartKey}
       />
       <ElementRecommendations element={element} guide={getElementGuide(element.id)} />
-      {(() => {
-        const week = getProgramWeekHighlight(completedPractices, weekDays);
-        return (
-          <ProgramStats
-            headline={week.headline}
-            encouragement={week.encouragement}
-            note={getSoftProgramNote(completedPractices, weekDays)}
-          />
-        );
-      })()}
+      <ProgramStats
+        headline={weekHighlight.headline}
+        encouragement={weekHighlight.encouragement}
+        note={getSoftProgramNote(completedPractices, weekDays)}
+      />
     </>
   );
 }

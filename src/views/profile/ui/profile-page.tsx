@@ -34,7 +34,7 @@ export function ProfilePage() {
         <div className="space-y-2">
           <h1 className="text-3xl font-semibold">Профиль</h1>
           <p className="text-sm text-muted-foreground">
-            Тип, стихия, статистика и настройки — без давления и «страйков».
+            Тип, стихия, статистика и настройки.
           </p>
         </div>
       </header>
@@ -85,7 +85,7 @@ export function ProfilePage() {
             checked={remindMorning}
             onCheckedChange={(v) => setRemindMorning(v === true)}
           />
-          <span className="text-sm leading-snug">Утром — практика дня (мягко, без «серий»)</span>
+          <span className="text-sm leading-snug">Утром — напоминание о практике дня</span>
         </Label>
         <Label className="flex items-start gap-3 font-normal">
           <Checkbox
