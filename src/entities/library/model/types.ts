@@ -1,31 +1,26 @@
 import type { ElementId } from "@/entities/element";
 
-export type LibraryVideo = {
+export type LibraryItemKind = "video" | "meditation" | "book" | "film";
+
+export type LibraryItem = {
   id: string;
-  /** К какой стихии относится материал (если применимо) */
-  elementId?: ElementId;
+  kind: LibraryItemKind;
   title: string;
-  duration: string;
-  kind: "intro" | "lesson";
+  /** К какой стихии относится материал (необязательно) */
+  elementId?: ElementId;
+  /** Для видео и медитаций, например «15 мин» */
+  duration?: string;
+  /** Для книг */
+  author?: string;
+  /** Для фильмов */
+  year?: number;
+  /** Имя загруженного файла (в прототипе сам файл никуда не отправляется) */
+  fileName?: string;
 };
 
-export type LibraryMeditation = {
-  id: string;
-  elementId?: ElementId;
-  title: string;
-  duration: string;
-};
-
-export type LibraryBook = {
-  id: string;
-  elementId?: ElementId;
-  title: string;
-  author: string;
-};
-
-export type LibraryFilm = {
-  id: string;
-  elementId?: ElementId;
-  title: string;
-  year: number;
+export const libraryKindLabels: Record<LibraryItemKind, string> = {
+  video: "Видео",
+  meditation: "Медитация",
+  book: "Книга",
+  film: "Фильм",
 };

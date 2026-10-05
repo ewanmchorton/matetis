@@ -6,4 +6,8 @@ export const routes = {
   program: "/program",
   library: "/library",
   profile: "/profile",
+  admin: "/admin",
+  adminMaterials: "/admin/materials",
+  adminProgram: "/admin/program",
+  adminStudents: "/admin/students",
 } as const;

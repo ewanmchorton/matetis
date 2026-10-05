@@ -1,7 +1,3 @@
-export type { LibraryBook, LibraryFilm, LibraryMeditation, LibraryVideo } from "./model/types";
-export {
-  getLibraryBooks,
-  getLibraryFilms,
-  getLibraryMeditations,
-  getLibraryVideos,
-} from "./api/library-api";
+export type { LibraryItem, LibraryItemKind } from "./model/types";
+export { libraryKindLabels } from "./model/types";
+export { filterLibrary, libraryActions, useLibraryItems } from "./api/library-api";

@@ -1,10 +1,13 @@
+"use client";
+
 import type { ElementId } from "@/entities/element";
+import { createLocalStore } from "@/shared/lib/create-local-store";
 import { getDayNumber } from "@/shared/lib/date";
 
 import type { DailyPractice, WeeklyRitual } from "../model/types";
 
-// Демо-данные стихии Воды (даосская пятерка, запуск 1 декабря).
-const dailyPractices: DailyPractice[] = [
+// Демо-данные стихии Воды (даосская пятерка, запуск 1 декабря). Админка дополняет их в браузере.
+const seedPractices: DailyPractice[] = [
   {
     id: "water-inner-smile",
     elementId: "water",
@@ -31,7 +34,7 @@ const dailyPractices: DailyPractice[] = [
   },
 ];
 
-const weeklyRituals: WeeklyRitual[] = [
+const seedRituals: WeeklyRitual[] = [
   {
     id: "water-subjects-study",
     elementId: "water",
@@ -55,20 +58,50 @@ const weeklyRituals: WeeklyRitual[] = [
   },
 ];
 
+type PracticeCatalog = { practices: DailyPractice[]; rituals: WeeklyRitual[] };
+
+const store = createLocalStore<PracticeCatalog>("matetis-demo-practices-v1", {
+  practices: seedPractices,
+  rituals: seedRituals,
+});
+
+export function usePracticeCatalog(): PracticeCatalog {
+  return store.useStore();
+}
+
 /**
  * Практика дня меняется каждые сутки. Номер типа сдвигает очередь,
  * чтобы у разных типов в один день были разные практики.
  */
-export function getDailyPractice(
+export function pickDailyPractice(
+  practices: DailyPractice[],
   elementId: ElementId,
   typeNumber: number,
   date: Date,
 ): DailyPractice | undefined {
-  const list = dailyPractices.filter((p) => p.elementId === elementId);
+  const list = practices.filter((p) => p.elementId === elementId);
   if (list.length === 0) return undefined;
   return list[(getDayNumber(date) + typeNumber) % list.length];
 }
 
-export function getWeeklyRituals(elementId: ElementId): WeeklyRitual[] {
-  return weeklyRituals.filter((r) => r.elementId === elementId);
+export function filterRituals(rituals: WeeklyRitual[], elementId: ElementId): WeeklyRitual[] {
+  return rituals.filter((r) => r.elementId === elementId);
 }
+
+export const practiceActions = {
+  addPractice(practice: DailyPractice) {
+    store.update((s) => ({ ...s, practices: [...s.practices, practice] }));
+  },
+  removePractice(id: string) {
+    store.update((s) => ({ ...s, practices: s.practices.filter((p) => p.id !== id) }));
+  },
+  addRitual(ritual: WeeklyRitual) {
+    store.update((s) => ({ ...s, rituals: [...s.rituals, ritual] }));
+  },
+  removeRitual(id: string) {
+    store.update((s) => ({ ...s, rituals: s.rituals.filter((r) => r.id !== id) }));
+  },
+  reset() {
+    store.reset();
+  },
+};

@@ -2,7 +2,7 @@
 
 import { ElementBadge, getCurrentElement, getElementGuide } from "@/entities/element";
 import { getPersonType } from "@/entities/person-type";
-import { getDailyPractice, getWeeklyRituals } from "@/entities/practice";
+import { filterRituals, pickDailyPractice, usePracticeCatalog } from "@/entities/practice";
 import { getProgramWeekHighlight, getSoftProgramNote, useProgress } from "@/entities/progress";
 import { routes } from "@/shared/config/routes";
 import { getWeekDays, getWeekStartKey, toDateKey } from "@/shared/lib/date";
@@ -68,11 +68,12 @@ function ProgramContent({
   ritualMarks: Record<string, string[]>;
 }) {
   const element = getCurrentElement();
+  const catalog = usePracticeCatalog();
   const today = new Date();
   const todayKey = toDateKey(today);
   const weekDays = getWeekDays(today);
   const weekStartKey = getWeekStartKey(today);
-  const practice = getDailyPractice(element.id, typeNumber, today);
+  const practice = pickDailyPractice(catalog.practices, element.id, typeNumber, today);
   const weekHighlight = getProgramWeekHighlight(completedPractices, weekDays);
 
   return (
@@ -86,7 +87,7 @@ function ProgramContent({
         done={completedPractices.includes(todayKey)}
       />
       <WeeklyRituals
-        rituals={getWeeklyRituals(element.id)}
+        rituals={filterRituals(catalog.rituals, element.id)}
         ritualMarks={ritualMarks}
         weekDays={weekDays}
         todayKey={todayKey}

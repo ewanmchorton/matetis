@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { ElementBadge, getCurrentElement } from "@/entities/element";
-import { getWeeklyRituals } from "@/entities/practice";
+import { filterRituals, usePracticeCatalog } from "@/entities/practice";
 import { getPersonType, TypeTraits } from "@/entities/person-type";
 import {
   countPracticesInWeek,
@@ -134,7 +134,7 @@ function ProfileRituals({ ritualMarks }: { ritualMarks: Record<string, string[]>
   const weekStart = getWeekStartKey(today);
   const weekDays = getWeekDays(today);
   const weekKeys = new Set(weekDays.map((d) => toDateKey(d)));
-  const rituals = getWeeklyRituals(getCurrentElement().id);
+  const rituals = filterRituals(usePracticeCatalog().rituals, getCurrentElement().id);
 
   return (
     <section aria-labelledby="profile-rituals-title" className="space-y-3 rounded-2xl border bg-card p-4">

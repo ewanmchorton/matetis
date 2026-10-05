@@ -26,6 +26,7 @@ const prototypeScreens: { href: string; label: string; note?: string }[] = [
   { href: routes.program, label: "Программа" },
   { href: routes.library, label: "Библиотека" },
   { href: routes.profile, label: "Профиль" },
+  { href: routes.admin, label: "Админка", note: "веб-версия" },
 ];
 
 function isActive(pathname: string, href: string): boolean {
