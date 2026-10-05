@@ -51,7 +51,7 @@ export function getProgramWeekHighlight(completedDays: string[], weekDays: Date[
 }
 
 /** Короткая второстепенная строка под блоком на программе. */
-export function getSoftProgramNote(completedDays: string[], weekDays: Date[]): string {
+export function getSoftProgramNote(completedDays: string[]): string {
   const total = completedDays.length;
 
   if (total === 0) {

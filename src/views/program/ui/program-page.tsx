@@ -96,7 +96,7 @@ function ProgramContent({
       <ProgramStats
         headline={weekHighlight.headline}
         encouragement={weekHighlight.encouragement}
-        note={getSoftProgramNote(completedPractices, weekDays)}
+        note={getSoftProgramNote(completedPractices)}
       />
     </>
   );
