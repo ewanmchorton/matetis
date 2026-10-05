@@ -1,8 +1,8 @@
 export type { ProgressState } from "./model/progress-store";
 export { progressActions, useProgress } from "./model/progress-store";
 export {
-  countPracticesInWeek,
-  getProfileStatsSummary,
-  getProgramWeekHighlight,
-  getSoftProgramNote,
+  countInLastDays,
+  countRitualMarksInLastDays,
+  getProgramStats,
+  pluralRu,
 } from "./model/stats";

@@ -6,11 +6,7 @@ import { useState } from "react";
 import { ElementBadge, getCurrentElement } from "@/entities/element";
 import { filterRituals, usePracticeCatalog } from "@/entities/practice";
 import { getPersonType, TypeTraits } from "@/entities/person-type";
-import {
-  countPracticesInWeek,
-  getProfileStatsSummary,
-  useProgress,
-} from "@/entities/progress";
+import { countInLastDays, pluralRu, useProgress } from "@/entities/progress";
 import { routes } from "@/shared/config/routes";
 import { getWeekDays, getWeekStartKey, toDateKey } from "@/shared/lib/date";
 import { useIsClient } from "@/shared/lib/use-is-client";
@@ -121,9 +117,7 @@ export function ProfilePage() {
 }
 
 function ProfileStats({ completedPractices }: { completedPractices: string[] }) {
-  const weekDays = getWeekDays(new Date());
-  const thisWeek = countPracticesInWeek(completedPractices, weekDays);
-  const { lines } = getProfileStatsSummary(completedPractices, weekDays);
+  const lastWeek = countInLastDays(completedPractices, new Date());
 
   return (
     <section aria-labelledby="profile-stats-title" className="space-y-4 rounded-2xl border bg-card p-4">
@@ -136,17 +130,20 @@ function ProfileStats({ completedPractices }: { completedPractices: string[] }) 
           <p className="text-xs text-muted-foreground">практик дня всего</p>
         </div>
         <div className="rounded-xl bg-muted/60 p-3">
-          <p className="text-2xl font-semibold tabular-nums">{thisWeek}</p>
-          <p className="text-xs text-muted-foreground">на этой неделе</p>
+          <p className="text-2xl font-semibold tabular-nums">{lastWeek}</p>
+          <p className="text-xs text-muted-foreground">за последние 7 дней</p>
         </div>
       </div>
-      <ul className="space-y-2 text-sm leading-relaxed text-muted-foreground">
-        {lines.map((line) => (
-          <li key={line}>{line}</li>
-        ))}
-      </ul>
+      <p className="text-sm leading-relaxed text-muted-foreground">
+        Каждая отметка — это время, которое вы нашли для себя.
+      </p>
     </section>
   );
+}
+
+function dailyRitualLabel(days: number): string {
+  if (days === 0) return "пока не отмечено";
+  return `отмечено ${days} ${pluralRu(days, "день", "дня", "дней")}`;
 }
 
 function ProfileRituals({ ritualMarks }: { ritualMarks: Record<string, string[]> }) {
@@ -166,7 +163,7 @@ function ProfileRituals({ ritualMarks }: { ritualMarks: Record<string, string[]>
           const marks = ritualMarks[ritual.id] ?? [];
           const label =
             ritual.schedule === "daily"
-              ? `${marks.filter((d) => weekKeys.has(d)).length} дн. с отметкой`
+              ? dailyRitualLabel(marks.filter((d) => weekKeys.has(d)).length)
               : marks.includes(weekStart)
                 ? "отмечено на этой неделе"
                 : "ещё не отмечено";

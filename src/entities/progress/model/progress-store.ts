@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 
-import { addDays, getWeekDays, toDateKey } from "@/shared/lib/date";
+import { addDays, toDateKey } from "@/shared/lib/date";
 
 /**
  * Результат теста и отметки о практиках в прототипе хранятся в браузере (localStorage).
@@ -20,7 +20,7 @@ export type ProgressState = {
   ritualMarks: Record<string, string[]>;
 };
 
-const STORAGE_KEY = "matetis-demo-progress-v3";
+const STORAGE_KEY = "matetis-demo-progress-v4";
 
 const initialState: ProgressState = {
   typeId: "t7",
@@ -28,19 +28,16 @@ const initialState: ProgressState = {
   ritualMarks: {},
 };
 
-/** Выдуманная история за прошлые дни, чтобы в профиле было что показать. */
+/**
+ * Выдуманная история за прошлые дни, чтобы статистика не была пустой.
+ * Сегодняшний день не отмечен — его можно отметить вживую.
+ */
 function createDemoState(): ProgressState {
   const today = new Date();
   const daysAgo = (n: number) => toDateKey(addDays(today, -n));
-  const todayKey = toDateKey(today);
-  const weekKeys = getWeekDays(today)
-    .map((d) => toDateKey(d))
-    .filter((k) => k < todayKey);
-  const demoThisWeek = weekKeys.slice(-3);
-  const older = [daysAgo(7), daysAgo(8), daysAgo(14)].filter((k) => !demoThisWeek.includes(k));
   return {
     ...initialState,
-    completedPractices: [...new Set([...demoThisWeek, ...older])],
+    completedPractices: [daysAgo(1), daysAgo(2), daysAgo(4), daysAgo(8), daysAgo(9), daysAgo(13)],
     ritualMarks: {
       "water-subjects-study": [daysAgo(1), daysAgo(2), daysAgo(4)],
     },

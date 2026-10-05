@@ -1,78 +1,56 @@
-import { toDateKey } from "@/shared/lib/date";
+import { addDays, toDateKey } from "@/shared/lib/date";
 
-export function countPracticesInWeek(completedDays: string[], weekDays: Date[]): number {
-  const week = new Set(weekDays.map(toDateKey));
-  return completedDays.filter((d) => week.has(d)).length;
+const WINDOW_DAYS = 7;
+
+/** Ключи последних n дней, включая сегодня. */
+function lastDayKeys(today: Date, n: number): Set<string> {
+  return new Set(Array.from({ length: n }, (_, i) => toDateKey(addDays(today, -i))));
 }
 
-function pluralPracticeNoun(n: number): string {
+export function countInLastDays(days: string[], today: Date, n = WINDOW_DAYS): number {
+  const window = lastDayKeys(today, n);
+  return days.filter((d) => window.has(d)).length;
+}
+
+/**
+ * Отметки ритуалов за последние n дней. У недельных ритуалов ключ — понедельник
+ * текущей недели, он всегда попадает в окно из 7 дней.
+ */
+export function countRitualMarksInLastDays(
+  ritualMarks: Record<string, string[]>,
+  today: Date,
+  n = WINDOW_DAYS,
+): number {
+  return Object.values(ritualMarks).reduce((sum, marks) => sum + countInLastDays(marks, today, n), 0);
+}
+
+export function pluralRu(n: number, one: string, few: string, many: string): string {
   const mod10 = n % 10;
   const mod100 = n % 100;
-  if (mod10 === 1 && mod100 !== 11) return "практика";
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "практики";
-  return "практик";
+  if (mod10 === 1 && mod100 !== 11) return one;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
+  return many;
 }
 
-function pluralPracticeAcc(n: number): string {
-  const mod10 = n % 10;
-  const mod100 = n % 100;
-  if (mod10 === 1 && mod100 !== 11) return "раз";
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "раза";
-  return "раз";
+function encouragement(practices: number): string {
+  if (practices === 0) return "Когда будет удобно — отметьте практику дня.";
+  if (practices === 1) return "Вы уже нашли время для себя — это хорошее начало.";
+  if (practices <= 3) return "Спокойный, хороший ритм — так держать.";
+  return "Вы уделяете практике много внимания — это заметно.";
 }
 
-function encouragementForWeek(count: number): string {
-  if (count === 0) {
-    return "Когда будет удобно — отметьте практику дня.";
-  }
-  if (count === 1) {
-    return "Вы уже нашли время для себя на этой неделе.";
-  }
-  if (count === 2) {
-    return "Два раза на этой неделе — спокойный ритм.";
-  }
-  if (count === 3) {
-    return "Три практики за неделю — хороший знак заботы о себе.";
-  }
-  return "Вы уделяете практике внимание — в своём темпе.";
-}
-
-/** Блок на главной «Программа»: цифра за неделю + короткие ободряющие слова. */
-export function getProgramWeekHighlight(completedDays: string[], weekDays: Date[]) {
-  const weekCount = countPracticesInWeek(completedDays, weekDays);
+/** Цифры и ободряющие слова для блока статистики на главной «Программа». */
+export function getProgramStats(
+  completedPractices: string[],
+  ritualMarks: Record<string, string[]>,
+  today: Date,
+) {
+  const practices = countInLastDays(completedPractices, today);
+  const rituals = countRitualMarksInLastDays(ritualMarks, today);
   return {
-    weekCount,
-    headline:
-      weekCount === 0
-        ? "На этой неделе пока без отметок"
-        : `${weekCount} ${pluralPracticeNoun(weekCount)} на этой неделе`,
-    encouragement: encouragementForWeek(weekCount),
+    practices,
+    rituals,
+    total: completedPractices.length,
+    encouragement: encouragement(practices),
   };
-}
-
-/** Короткая второстепенная строка под блоком на программе. */
-export function getSoftProgramNote(completedDays: string[]): string {
-  const total = completedDays.length;
-
-  if (total === 0) {
-    return "Подробнее — в профиле.";
-  }
-  return `Всего отмечено ${total} ${pluralPracticeAcc(total)}.`;
-}
-
-/** Краткие подписи под цифрами в профиле. */
-export function getProfileStatsSummary(
-  completedDays: string[],
-  weekDays: Date[],
-): { lines: string[] } {
-  const total = completedDays.length;
-  const thisWeek = countPracticesInWeek(completedDays, weekDays);
-
-  const lines = [`Всего — ${total} ${pluralPracticeAcc(total)}.`];
-
-  if (thisWeek > 0) {
-    lines.push(`На этой неделе — ${thisWeek} ${pluralPracticeAcc(thisWeek)}.`);
-  }
-
-  return { lines };
 }

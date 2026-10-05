@@ -1,31 +1,49 @@
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 
+import { pluralRu } from "@/entities/progress";
 import { routes } from "@/shared/config/routes";
-import { cn } from "@/shared/lib/utils";
-import { buttonVariants } from "@/shared/ui/button";
+
+function StatTile({ value, label }: { value: number; label: string }) {
+  return (
+    <div className="rounded-xl bg-muted/60 px-3 py-3">
+      <p className="text-2xl font-semibold tabular-nums leading-none">{value}</p>
+      <p className="mt-1.5 text-xs leading-snug text-muted-foreground">{label}</p>
+    </div>
+  );
+}
 
 export function ProgramStats({
-  headline,
+  practices,
+  rituals,
+  total,
   encouragement,
-  note,
 }: {
-  headline: string;
+  practices: number;
+  rituals: number;
+  total: number;
   encouragement: string;
-  note: string;
 }) {
   return (
     <section aria-labelledby="stats-title" className="space-y-3 rounded-2xl border bg-card p-4">
-      <h2 id="stats-title" className="text-lg font-semibold">
-        На этой неделе
-      </h2>
-      <p className="text-2xl font-semibold tabular-nums leading-tight text-primary">{headline}</p>
-      <p className="text-sm leading-relaxed text-foreground">{encouragement}</p>
-      <p className="text-sm text-muted-foreground">{note}</p>
+      <div className="flex items-baseline justify-between gap-2">
+        <h2 id="stats-title" className="text-lg font-semibold">
+          Статистика
+        </h2>
+        <span className="text-xs text-muted-foreground">за 7 дней</span>
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        <StatTile value={practices} label={pluralRu(practices, "практика дня", "практики дня", "практик дня")} />
+        <StatTile value={rituals} label={pluralRu(rituals, "ритуал", "ритуала", "ритуалов")} />
+        <StatTile value={total} label={`${pluralRu(total, "практика", "практики", "практик")} за всё время`} />
+      </div>
+      <p className="text-sm leading-relaxed">{encouragement}</p>
       <Link
         href={routes.profile}
-        className={cn(buttonVariants({ variant: "link" }), "h-auto p-0 text-sm")}
+        className="flex items-center justify-between rounded-lg text-sm font-medium text-primary"
       >
-        Подробная статистика в профиле
+        Подробнее в профиле
+        <ChevronRight className="size-4" />
       </Link>
     </section>
   );
