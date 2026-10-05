@@ -1,8 +1,6 @@
-import type { ElementId } from "@/entities/element";
-import { getElementGuide } from "@/entities/element";
+import type { LibraryBook, LibraryFilm, LibraryMeditation, LibraryVideo } from "../model/types";
 
-import type { LibraryMeditation, LibraryVideo } from "../model/types";
-
+// Каталог материалов, которые реально есть в прототипе (без «библиотек по стихиям»).
 const videos: LibraryVideo[] = [
   {
     id: "water-intro",
@@ -42,19 +40,34 @@ const meditations: LibraryMeditation[] = [
   },
 ];
 
-export function getLibraryVideos(elementId: ElementId): LibraryVideo[] {
-  return videos.filter((v) => v.elementId === elementId);
+const books: LibraryBook[] = [
+  { id: "book-tao", elementId: "water", title: "Дао дэ цзин", author: "Лао-цзы" },
+  { id: "book-qigong", elementId: "water", title: "Цигун для начинающих", author: "Мантак Чиа" },
+  { id: "book-water-path", elementId: "water", title: "Путь воды", author: "Джон А. Дейвис" },
+];
+
+const films: LibraryFilm[] = [
+  {
+    id: "film-seasons",
+    elementId: "water",
+    title: "Весна, лето, осень, зима… и снова весна",
+    year: 2003,
+  },
+  { id: "film-way-home", elementId: "water", title: "Путь домой", year: 2019 },
+];
+
+export function getLibraryVideos(): LibraryVideo[] {
+  return videos;
 }
 
-export function getLibraryMeditations(elementId: ElementId): LibraryMeditation[] {
-  return meditations.filter((m) => m.elementId === elementId);
+export function getLibraryMeditations(): LibraryMeditation[] {
+  return meditations;
 }
 
-export function getLibraryBooksAndFilms(elementId: ElementId) {
-  const guide = getElementGuide(elementId);
-  return {
-    books: guide?.books ?? [],
-    films: guide?.films ?? [],
-    introText: guide?.text,
-  };
+export function getLibraryBooks(): LibraryBook[] {
+  return books;
+}
+
+export function getLibraryFilms(): LibraryFilm[] {
+  return films;
 }

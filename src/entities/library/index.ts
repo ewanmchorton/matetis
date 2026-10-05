@@ -1,6 +1,7 @@
-export type { LibraryMeditation, LibraryVideo } from "./model/types";
+export type { LibraryBook, LibraryFilm, LibraryMeditation, LibraryVideo } from "./model/types";
 export {
-  getLibraryBooksAndFilms,
+  getLibraryBooks,
+  getLibraryFilms,
   getLibraryMeditations,
   getLibraryVideos,
 } from "./api/library-api";
