@@ -19,6 +19,12 @@ export function getWeekDays(date: Date): Date[] {
   return Array.from({ length: 7 }, (_, i) => addDays(monday, i));
 }
 
+/** Ключ недели — дата её понедельника «ГГГГ-ММ-ДД». */
+export function getWeekStartKey(date: Date): string {
+  const mondayOffset = (date.getDay() + 6) % 7;
+  return toDateKey(addDays(date, -mondayOffset));
+}
+
 /** Номер дня от 1 января 1970 — удобно, чтобы «практика дня» менялась раз в сутки. */
 export function getDayNumber(date: Date): number {
   return Math.floor(

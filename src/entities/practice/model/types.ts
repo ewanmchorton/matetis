@@ -10,10 +10,13 @@ export type DailyPractice = {
   why: string;
 };
 
+/** «daily» — можно отмечать каждый день; «once_per_week» — одна отметка на неделю */
+export type WeeklyRitualSchedule = "daily" | "once_per_week";
+
 export type WeeklyRitual = {
   id: string;
   elementId: ElementId;
   title: string;
   description: string;
-  timesPerWeek: number;
+  schedule: WeeklyRitualSchedule;
 };

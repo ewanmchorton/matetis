@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 
-import { addDays, toDateKey } from "@/shared/lib/date";
+import { addDays, getWeekStartKey, toDateKey } from "@/shared/lib/date";
 
 /**
  * Результат теста и отметки о практиках в прототипе хранятся в браузере (localStorage).
@@ -13,11 +13,14 @@ export type ProgressState = {
   typeId: string | null;
   /** Дни («ГГГГ-ММ-ДД»), в которые выполнена практика дня */
   completedPractices: string[];
-  /** Отметки еженедельных ритуалов: id ритуала → дни выполнения */
+  /**
+   * Отметки ритуалов.
+   * Для ежедневных — ключи дней; для «раз в неделю» — ключ понедельника недели.
+   */
   ritualMarks: Record<string, string[]>;
 };
 
-const STORAGE_KEY = "matetis-demo-progress-v2";
+const STORAGE_KEY = "matetis-demo-progress-v3";
 
 const initialState: ProgressState = {
   typeId: "t7",
@@ -25,7 +28,7 @@ const initialState: ProgressState = {
   ritualMarks: {},
 };
 
-/** Выдуманная история за прошлые дни, чтобы статистика в прототипе не была пустой. */
+/** Выдуманная история за прошлые дни, чтобы в профиле было что показать. */
 function createDemoState(): ProgressState {
   const today = new Date();
   const daysAgo = (n: number) => toDateKey(addDays(today, -n));
@@ -33,7 +36,8 @@ function createDemoState(): ProgressState {
     ...initialState,
     completedPractices: [daysAgo(4), daysAgo(3), daysAgo(2), daysAgo(1), daysAgo(7), daysAgo(8)],
     ritualMarks: {
-      "water-sleep-ritual": [daysAgo(1), daysAgo(2)],
+      "water-tuata-charge": [daysAgo(1), daysAgo(2), daysAgo(4)],
+      "water-weekly-audio": [getWeekStartKey(today)],
     },
   };
 }
@@ -90,11 +94,22 @@ export const progressActions = {
   togglePractice(day: string) {
     setState({ ...state, completedPractices: toggleDay(state.completedPractices, day) });
   },
-  toggleRitual(ritualId: string, day: string) {
+  toggleDailyRitual(ritualId: string, day: string) {
     const marks = state.ritualMarks[ritualId] ?? [];
     setState({
       ...state,
       ritualMarks: { ...state.ritualMarks, [ritualId]: toggleDay(marks, day) },
+    });
+  },
+  toggleWeeklyRitual(ritualId: string, weekKey: string) {
+    const marks = state.ritualMarks[ritualId] ?? [];
+    const done = marks.includes(weekKey);
+    setState({
+      ...state,
+      ritualMarks: {
+        ...state.ritualMarks,
+        [ritualId]: done ? marks.filter((k) => k !== weekKey) : [...marks, weekKey],
+      },
     });
   },
   reset() {

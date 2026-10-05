@@ -3,9 +3,9 @@
 import { ElementBadge, getCurrentElement, getElementGuide } from "@/entities/element";
 import { getPersonType } from "@/entities/person-type";
 import { getDailyPractice, getWeeklyRituals } from "@/entities/practice";
-import { getStreak, useProgress } from "@/entities/progress";
+import { getSoftProgramNote, useProgress } from "@/entities/progress";
 import { routes } from "@/shared/config/routes";
-import { getWeekDays, toDateKey } from "@/shared/lib/date";
+import { getWeekDays, getWeekStartKey, toDateKey } from "@/shared/lib/date";
 import { useIsClient } from "@/shared/lib/use-is-client";
 import { Logo } from "@/shared/ui/logo";
 
@@ -47,7 +47,6 @@ export function ProgramPage() {
 
       {isClient ? (
         <ProgramContent
-          typeNumber={type?.number ?? 1}
           completedPractices={completedPractices}
           ritualMarks={ritualMarks}
         />
@@ -59,11 +58,9 @@ export function ProgramPage() {
 }
 
 function ProgramContent({
-  typeNumber,
   completedPractices,
   ritualMarks,
 }: {
-  typeNumber: number;
   completedPractices: string[];
   ritualMarks: Record<string, string[]>;
 }) {
@@ -71,7 +68,8 @@ function ProgramContent({
   const today = new Date();
   const todayKey = toDateKey(today);
   const weekDays = getWeekDays(today);
-  const practice = getDailyPractice(element.id, typeNumber, today);
+  const weekStartKey = getWeekStartKey(today);
+  const practice = getDailyPractice(element.id);
 
   return (
     <>
@@ -88,15 +86,10 @@ function ProgramContent({
         ritualMarks={ritualMarks}
         weekDays={weekDays}
         todayKey={todayKey}
+        weekStartKey={weekStartKey}
       />
       <ElementRecommendations element={element} guide={getElementGuide(element.id)} />
-      <ProgramStats
-        streak={getStreak(completedPractices, today)}
-        totalDone={completedPractices.length}
-        completedDays={completedPractices}
-        weekDays={weekDays}
-        todayKey={todayKey}
-      />
+      <ProgramStats note={getSoftProgramNote(completedPractices, weekDays)} />
     </>
   );
 }

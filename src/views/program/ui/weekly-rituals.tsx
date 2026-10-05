@@ -12,28 +12,33 @@ export function WeeklyRituals({
   ritualMarks,
   weekDays,
   todayKey,
+  weekStartKey,
 }: {
   rituals: WeeklyRitual[];
   ritualMarks: Record<string, string[]>;
   weekDays: Date[];
   todayKey: string;
+  weekStartKey: string;
 }) {
   const weekKeys = weekDays.map(toDateKey);
 
   return (
     <section aria-labelledby="rituals-title" className="space-y-3">
-      <div className="flex items-baseline justify-between">
+      <div className="space-y-1">
         <h2 id="rituals-title" className="text-lg font-semibold">
           Еженедельные ритуалы
         </h2>
-        <span className="text-xs text-muted-foreground">эта неделя</span>
+        <p className="text-sm text-muted-foreground">
+          То, что делается реже практики дня: зарядку можно отмечать по дням, остальное — раз в
+          неделю.
+        </p>
       </div>
       <ul className="space-y-3">
         {rituals.map((ritual) => {
           const marks = new Set(ritualMarks[ritual.id] ?? []);
-          const doneThisWeek = weekKeys.filter((k) => marks.has(k)).length;
+          const isDaily = ritual.schedule === "daily";
           const doneToday = marks.has(todayKey);
-          const complete = doneThisWeek >= ritual.timesPerWeek;
+          const doneThisWeek = marks.has(weekStartKey);
 
           return (
             <li key={ritual.id} className="space-y-3 rounded-2xl border bg-card p-4">
@@ -44,12 +49,24 @@ export function WeeklyRituals({
                 </div>
                 <button
                   type="button"
-                  aria-pressed={doneToday}
-                  aria-label={doneToday ? "Снять отметку за сегодня" : "Отметить за сегодня"}
-                  onClick={() => progressActions.toggleRitual(ritual.id, todayKey)}
+                  aria-pressed={isDaily ? doneToday : doneThisWeek}
+                  aria-label={
+                    isDaily
+                      ? doneToday
+                        ? "Снять отметку за сегодня"
+                        : "Отметить за сегодня"
+                      : doneThisWeek
+                        ? "Снять отметку за эту неделю"
+                        : "Отметить на этой неделе"
+                  }
+                  onClick={() =>
+                    isDaily
+                      ? progressActions.toggleDailyRitual(ritual.id, todayKey)
+                      : progressActions.toggleWeeklyRitual(ritual.id, weekStartKey)
+                  }
                   className={cn(
                     "grid size-10 shrink-0 place-items-center rounded-full border-2 transition-colors",
-                    doneToday
+                    (isDaily ? doneToday : doneThisWeek)
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-input text-transparent hover:border-primary/50 hover:text-primary/40",
                   )}
@@ -57,8 +74,8 @@ export function WeeklyRituals({
                   <Check className="size-5" />
                 </button>
               </div>
-              <div className="flex items-center justify-between gap-3">
-                <ul className="flex gap-1" aria-hidden>
+              {isDaily ? (
+                <ul className="flex gap-1" aria-label="Дни недели">
                   {weekKeys.map((key, i) => (
                     <li
                       key={key}
@@ -72,15 +89,11 @@ export function WeeklyRituals({
                     </li>
                   ))}
                 </ul>
-                <span
-                  className={cn(
-                    "shrink-0 text-sm tabular-nums",
-                    complete ? "font-medium text-primary" : "text-muted-foreground",
-                  )}
-                >
-                  {doneThisWeek} из {ritual.timesPerWeek}
-                </span>
-              </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  {doneThisWeek ? "На этой неделе отмечено" : "Можно отметить, когда сделаете"}
+                </p>
+              )}
             </li>
           );
         })}
