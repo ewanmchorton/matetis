@@ -1,0 +1,21 @@
+export const routes = {
+  map: "/",
+  welcome: "/welcome",
+  typeTest: "/test",
+  typeResult: "/test/result",
+  program: "/program",
+  practice: (id: string) => `/practice/${id}`,
+  library: "/library",
+  book: (id: string) => `/library/books/${id}`,
+  profile: "/profile",
+  admin: {
+    dashboard: "/admin",
+    students: "/admin/students",
+    student: (id: string) => `/admin/students/${id}`,
+    types: "/admin/types",
+    test: "/admin/test",
+    programs: "/admin/programs",
+    practices: "/admin/practices",
+    library: "/admin/library",
+  },
+} as const;
