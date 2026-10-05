@@ -20,7 +20,7 @@ export function TodayPractice({
       <section className="rounded-3xl border bg-card p-6">
         <p className="text-sm font-medium text-primary">Практика сегодня</p>
         <p className="mt-2 text-muted-foreground">
-          Практики для этой стихии Мастер ещё готовит.
+          Практики для этой стихии пока готовятся.
         </p>
       </section>
     );

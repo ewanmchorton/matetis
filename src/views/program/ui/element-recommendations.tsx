@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { BookOpen, Film, PlayCircle } from "lucide-react";
 
 import type { Element, ElementGuide } from "@/entities/element";
+import { routes } from "@/shared/config/routes";
 
 export function ElementRecommendations({
   element,
@@ -58,10 +60,13 @@ export function ElementRecommendations({
               ))}
             </ul>
           </div>
+          <Link href={routes.library} className="text-sm font-medium text-primary hover:underline">
+            Вся библиотека по стихии →
+          </Link>
         </div>
       ) : (
         <p className="rounded-2xl border bg-card p-4 text-sm text-muted-foreground">
-          Рекомендации для стихии {element.name} Мастер добавит позже.
+          Рекомендации для стихии {element.name} появятся позже — загляните в библиотеку.
         </p>
       )}
     </section>

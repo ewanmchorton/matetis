@@ -3,7 +3,7 @@ import { getDayNumber } from "@/shared/lib/date";
 
 import type { DailyPractice, WeeklyRitual } from "../model/types";
 
-// Демо-данные стихии Воды (даосская пятерка, запуск 1 декабря). Тексты уточняет Мастер.
+// Демо-данные стихии Воды (даосская пятерка, запуск 1 декабря).
 const dailyPractices: DailyPractice[] = [
   {
     id: "water-inner-smile",
@@ -23,7 +23,7 @@ const dailyPractices: DailyPractice[] = [
     title: "Размышление над уроком на стихию",
     duration: "10 минут",
     steps: [
-      "Откройте короткий урок Мастера про стихию Воды (в приложении или из записей).",
+      "Откройте короткий урок про стихию Воды в разделе «Библиотека».",
       "Прочитайте или прослушайте спокойно, без спешки.",
       "Запишите одну мысль: что из урока откликается вам сегодня.",
     ],
@@ -43,14 +43,14 @@ const weeklyRituals: WeeklyRitual[] = [
     id: "water-tuata-charge",
     elementId: "water",
     title: "Зарядка «Туата»",
-    description: "Комплекс по методике Мастера — один раз в неделю",
+    description: "Комплекс «Туата» — один раз в неделю",
     schedule: "once_per_week",
   },
   {
     id: "water-weekly-audio",
     elementId: "water",
     title: "Практика стихии Воды с аудио",
-    description: "Один раз за неделю, 25–30 минут по записи Мастера",
+    description: "Один раз за неделю, 25–30 минут по аудио из библиотеки",
     schedule: "once_per_week",
   },
 ];

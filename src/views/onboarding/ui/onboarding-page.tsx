@@ -21,7 +21,7 @@ function SlideSystem() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-3xl font-semibold leading-tight">Ваш путь развития по системе Мастера</h1>
+      <h1 className="text-3xl font-semibold leading-tight">Ваш путь развития в МАТЭТИС</h1>
       <p className="leading-relaxed text-muted-foreground">
         В системе 12 психотипов — у каждого своё имя и своя программа. Короткий тест определит
         ваш, и приложение соберёт практики именно для вас.
@@ -78,7 +78,7 @@ function SlideElements() {
 const programParts = [
   { icon: Sparkles, title: "Практика на сегодня", text: "Одно небольшое задание каждый день" },
   { icon: Repeat, title: "Ритуалы недели", text: "Зарядка, медитации — отмечайте галочкой" },
-  { icon: CalendarCheck, title: "Рекомендации стихии", text: "Видео Мастера, книги и фильмы" },
+  { icon: CalendarCheck, title: "Рекомендации стихии", text: "Видео, книги и фильмы в библиотеке" },
 ];
 
 function SlideProgram() {

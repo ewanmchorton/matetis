@@ -26,7 +26,7 @@ export function TypeResultPage() {
           </div>
           <TypeTraits type={type} />
           <p className="text-sm text-muted-foreground">
-            Подробное описание типа Мастер добавит позже.
+            Подробное описание типа появится в одном из следующих обновлений.
           </p>
         </div>
       )}

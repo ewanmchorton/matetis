@@ -19,7 +19,7 @@ function FullInstruction({ test }: { test: TypeTest }) {
   return (
     <details className="group rounded-xl border bg-card p-4 text-sm">
       <summary className="cursor-pointer font-medium marker:text-muted-foreground">
-        Полная инструкция Мастера
+        Полная инструкция к тесту
       </summary>
       <div className="mt-3 space-y-3 leading-relaxed text-muted-foreground">
         {test.instruction.map((p) => (

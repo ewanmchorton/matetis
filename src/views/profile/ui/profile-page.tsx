@@ -1,18 +1,31 @@
 "use client";
 
+import Link from "next/link";
+import { useState } from "react";
+
 import { ElementBadge, getCurrentElement } from "@/entities/element";
+import { getWeeklyRituals } from "@/entities/practice";
 import { getPersonType, TypeTraits } from "@/entities/person-type";
-import { countPracticesInWeek, getProfileStatsSummary, useProgress } from "@/entities/progress";
+import {
+  countPracticesInWeek,
+  getProfileStatsSummary,
+  useProgress,
+} from "@/entities/progress";
 import { routes } from "@/shared/config/routes";
-import { getWeekDays } from "@/shared/lib/date";
+import { getWeekDays, getWeekStartKey, toDateKey } from "@/shared/lib/date";
 import { useIsClient } from "@/shared/lib/use-is-client";
+import { buttonVariants } from "@/shared/ui/button";
+import { Checkbox } from "@/shared/ui/checkbox";
+import { Label } from "@/shared/ui/label";
 import { Logo } from "@/shared/ui/logo";
 
 export function ProfilePage() {
   const isClient = useIsClient();
-  const { typeId, completedPractices } = useProgress();
+  const { typeId, completedPractices, ritualMarks } = useProgress();
   const type = getPersonType(typeId ?? "t1");
   const element = getCurrentElement();
+  const [remindMorning, setRemindMorning] = useState(true);
+  const [remindEvening, setRemindEvening] = useState(false);
 
   return (
     <main className="flex flex-1 flex-col gap-6 px-5 pt-6 pb-8">
@@ -21,10 +34,19 @@ export function ProfilePage() {
         <div className="space-y-2">
           <h1 className="text-3xl font-semibold">Профиль</h1>
           <p className="text-sm text-muted-foreground">
-            Ваш тип, стихия и спокойная статистика — без серий «дней подряд».
+            Тип, стихия, статистика и настройки — без давления и «страйков».
           </p>
         </div>
       </header>
+
+      <section className="space-y-3 rounded-2xl border bg-card p-4">
+        <p className="text-sm font-medium text-primary">Аккаунт</p>
+        <p className="text-lg font-semibold">Анна</p>
+        <p className="text-sm text-muted-foreground">anna@example.ru</p>
+        <p className="text-xs text-muted-foreground">
+          В прототипе данные не отправляются на сервер.
+        </p>
+      </section>
 
       {type && (
         <section className="space-y-3 rounded-2xl border bg-card p-4">
@@ -37,18 +59,43 @@ export function ProfilePage() {
             <span>Текущая стихия</span>
             <ElementBadge element={element} />
           </div>
+          <Link href={routes.typeTest} className={buttonVariants({ variant: "outline", size: "sm" })}>
+            Пройти тест заново
+          </Link>
         </section>
       )}
 
       {isClient ? (
-        <ProfileStats completedPractices={completedPractices} />
+        <>
+          <ProfileStats completedPractices={completedPractices} />
+          <ProfileRituals ritualMarks={ritualMarks} />
+        </>
       ) : (
         <div className="h-40 animate-pulse rounded-2xl bg-muted" aria-hidden />
       )}
 
-      <p className="text-sm text-muted-foreground">
-        Настройки, напоминания и данные аккаунта появятся позже, когда подключим сервер.
-      </p>
+      <section className="space-y-4 rounded-2xl border bg-card p-4">
+        <h2 className="text-lg font-semibold">Напоминания</h2>
+        <p className="text-sm text-muted-foreground">
+          В полной версии можно будет выбрать время. Сейчас — только демо-переключатели.
+        </p>
+        <Label className="flex items-start gap-3 font-normal">
+          <Checkbox
+            className="mt-0.5"
+            checked={remindMorning}
+            onCheckedChange={(v) => setRemindMorning(v === true)}
+          />
+          <span className="text-sm leading-snug">Утром — практика дня (мягко, без «серий»)</span>
+        </Label>
+        <Label className="flex items-start gap-3 font-normal">
+          <Checkbox
+            className="mt-0.5"
+            checked={remindEvening}
+            onCheckedChange={(v) => setRemindEvening(v === true)}
+          />
+          <span className="text-sm leading-snug">Вечером — размышление или медитация</span>
+        </Label>
+      </section>
     </main>
   );
 }
@@ -77,6 +124,39 @@ function ProfileStats({ completedPractices }: { completedPractices: string[] }) 
         {lines.map((line) => (
           <li key={line}>{line}</li>
         ))}
+      </ul>
+    </section>
+  );
+}
+
+function ProfileRituals({ ritualMarks }: { ritualMarks: Record<string, string[]> }) {
+  const today = new Date();
+  const weekStart = getWeekStartKey(today);
+  const weekDays = getWeekDays(today);
+  const weekKeys = new Set(weekDays.map((d) => toDateKey(d)));
+  const rituals = getWeeklyRituals(getCurrentElement().id);
+
+  return (
+    <section aria-labelledby="profile-rituals-title" className="space-y-3 rounded-2xl border bg-card p-4">
+      <h2 id="profile-rituals-title" className="text-lg font-semibold">
+        Ритуалы на этой неделе
+      </h2>
+      <ul className="space-y-2 text-sm">
+        {rituals.map((ritual) => {
+          const marks = ritualMarks[ritual.id] ?? [];
+          const label =
+            ritual.schedule === "daily"
+              ? `${marks.filter((d) => weekKeys.has(d)).length} дн. с отметкой`
+              : marks.includes(weekStart)
+                ? "отмечено на этой неделе"
+                : "ещё не отмечено";
+          return (
+            <li key={ritual.id} className="flex justify-between gap-3 border-b border-border/60 pb-2 last:border-0">
+              <span className="text-muted-foreground">{ritual.title}</span>
+              <span className="shrink-0 text-right text-foreground">{label}</span>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );
