@@ -1,12 +1,20 @@
-export type TestOption = {
+export type TestSection = {
   id: string;
+  /** Часть тестового кода: «А», «В», «С» в группе 1 или «1»–«4» в группе 2 */
+  code: string;
   text: string;
-  /** Каким типам этот ответ добавляет балл */
-  typeIds: string[];
 };
 
-export type TestQuestion = {
+export type TestGroup = {
   id: string;
-  text: string;
-  options: TestOption[];
+  title: string;
+  /** Что различает группа — рабочая формулировка для админки */
+  hint: string;
+  sections: TestSection[];
+};
+
+export type TypeTest = {
+  instruction: string[];
+  shortInstruction: string;
+  groups: TestGroup[];
 };

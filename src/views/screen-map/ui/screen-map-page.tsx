@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
 import { screenMap } from "@/shared/config/navigation";
+import { cn } from "@/shared/lib/utils";
 import { Logo } from "@/shared/ui/logo";
 
 export function ScreenMapPage() {
@@ -27,10 +28,13 @@ export function ScreenMapPage() {
             </div>
             <ul className="flex flex-col">
               {group.screens.map((s) => (
-                <li key={s.href}>
+                <li key={`${s.title}-${s.href}`}>
                   <Link
                     href={s.href}
-                    className="group flex items-center justify-between gap-2 rounded-lg px-2 py-2 text-sm hover:bg-muted"
+                    className={cn(
+                      "group flex items-center justify-between gap-2 rounded-lg px-2 py-2 text-sm hover:bg-muted",
+                      s.depth ? "ml-4 border-l pl-3 text-muted-foreground" : "font-medium",
+                    )}
                   >
                     {s.title}
                     <ArrowUpRight className="size-4 text-muted-foreground group-hover:text-foreground" />

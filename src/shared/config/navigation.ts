@@ -3,82 +3,124 @@ import {
   BookOpen,
   ClipboardList,
   Grid3x3,
-  Library,
   ListChecks,
+  Shapes,
   Sparkles,
   User,
   Users,
-  Shapes,
   type LucideIcon,
 } from "lucide-react";
 
 import { routes } from "./routes";
 
-export type NavItem = {
-  title: string;
-  href: string;
+export type NavLink = { title: string; href: string };
+
+export type NavSection = NavLink & {
   icon: LucideIcon;
+  /** Подразделы показываются вкладками под шапкой раздела */
+  children?: NavLink[];
 };
 
 /**
- * Единое место, где описано «дерево экранов» прототипа.
- * Чтобы переставить разделы или переименовать их, достаточно поменять эти списки.
+ * Дерево экранов прототипа. Порядок, названия и вложенность разделов
+ * меняются только здесь (и папками в src/app), сами экраны не трогаем.
  */
-export const studentNav: NavItem[] = [
-  { title: "Программа", href: routes.program, icon: Sparkles },
-  { title: "Библиотека", href: routes.library, icon: BookOpen },
-  { title: "Профиль", href: routes.profile, icon: User },
+export const onboardingFlow: NavLink[] = [
+  { title: "Авторизация (регистрация)", href: routes.auth },
+  { title: "Онбординг", href: routes.onboarding },
+  { title: "Тест", href: routes.typeTest },
+  { title: "Результат теста", href: routes.typeResult },
 ];
 
-export const adminNav: NavItem[] = [
-  { title: "Статистика", href: routes.admin.dashboard, icon: BarChart3 },
-  { title: "Ученики", href: routes.admin.students, icon: Users },
+export const studentNav: NavSection[] = [
+  {
+    title: "Программа",
+    href: routes.program.home,
+    icon: Sparkles,
+    children: [
+      { title: "Главная", href: routes.program.home },
+      { title: "Практика сегодня", href: routes.program.today },
+      { title: "Еженедельные ритуалы", href: routes.program.rituals },
+      { title: "Рекомендации стихии", href: routes.program.recommendations },
+      { title: "Статистика", href: routes.program.stats },
+    ],
+  },
+  {
+    title: "Библиотека",
+    href: routes.library.practices,
+    icon: BookOpen,
+    children: [
+      { title: "Практики", href: routes.library.practices },
+      { title: "Книги", href: routes.library.books },
+      { title: "Материалы", href: routes.library.materials },
+    ],
+  },
+  {
+    title: "Профиль",
+    href: routes.profile.type,
+    icon: User,
+    children: [
+      { title: "Тип", href: routes.profile.type },
+      { title: "Статистика", href: routes.profile.stats },
+      { title: "Настройки", href: routes.profile.settings },
+    ],
+  },
+];
+
+export const adminNav: NavSection[] = [
   { title: "Типы", href: routes.admin.types, icon: Shapes },
   { title: "Тест", href: routes.admin.test, icon: ListChecks },
+  { title: "Библиотека практик", href: routes.admin.practices, icon: ClipboardList },
   { title: "Программы", href: routes.admin.programs, icon: Grid3x3 },
-  { title: "Практики", href: routes.admin.practices, icon: ClipboardList },
-  { title: "Библиотека", href: routes.admin.library, icon: Library },
+  { title: "Пользователи", href: routes.admin.users, icon: Users },
+  { title: "Статистика", href: routes.admin.stats, icon: BarChart3 },
 ];
+
+/** Раздел, к которому относится адрес (для подсветки меню). */
+export function findSection(sections: NavSection[], pathname: string) {
+  const matches = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+  return sections.find(
+    (s) => matches(s.href) || s.children?.some((c) => matches(c.href)),
+  );
+}
 
 export type ScreenGroup = {
   title: string;
   description: string;
-  screens: { title: string; href: string; note?: string }[];
+  screens: (NavLink & { depth?: number })[];
 };
+
+const flatten = (sections: NavSection[]) =>
+  sections.flatMap((s) =>
+    s.children
+      ? [
+          { title: s.title, href: s.href },
+          ...s.children.map((c) => ({ ...c, depth: 1 })),
+        ]
+      : [{ title: s.title, href: s.href }],
+  );
 
 export const screenMap: ScreenGroup[] = [
   {
     title: "Первый вход ученика",
-    description: "Знакомство и тест на определение типа",
-    screens: [
-      { title: "Приветствие", href: routes.welcome },
-      { title: "Тест на тип", href: routes.typeTest },
-      { title: "Результат теста", href: routes.typeResult },
-    ],
+    description: "Регистрация, знакомство и тест на тип",
+    screens: onboardingFlow,
   },
   {
     title: "Приложение ученика",
     description: "Нижнее меню: Программа / Библиотека / Профиль",
     screens: [
-      { title: "Программа (главный экран)", href: routes.program },
+      ...flatten(studentNav),
       { title: "Карточка практики", href: routes.practice("metal-d1") },
-      { title: "Библиотека", href: routes.library },
-      { title: "Чтение книги", href: routes.book("b1") },
-      { title: "Профиль и статистика", href: routes.profile },
+      { title: "Чтение книги", href: routes.library.book("b1") },
     ],
   },
   {
     title: "Кабинет администратора",
     description: "Для Мастера: контент, тест и статистика",
     screens: [
-      { title: "Общая статистика", href: routes.admin.dashboard },
-      { title: "Ученики", href: routes.admin.students },
-      { title: "Карточка ученика", href: routes.admin.student("s1") },
-      { title: "12 типов", href: routes.admin.types },
-      { title: "Редактор теста", href: routes.admin.test },
-      { title: "Программы «тип × стихия»", href: routes.admin.programs },
-      { title: "Практики и медиа", href: routes.admin.practices },
-      { title: "Библиотека и книги", href: routes.admin.library },
+      ...flatten(adminNav),
+      { title: "Карточка пользователя", href: routes.admin.user("s1") },
     ],
   },
 ];

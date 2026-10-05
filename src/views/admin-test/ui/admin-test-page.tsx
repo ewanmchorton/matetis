@@ -1,100 +1,99 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
 
-import { getPersonType } from "@/entities/person-type";
-import { getTestQuestions, type TestQuestion } from "@/entities/type-test";
-import { Button } from "@/shared/ui/button";
-import { Input } from "@/shared/ui/input";
+import { getPersonTypeByCode } from "@/entities/person-type";
+import { getTypeTest, type TypeTest } from "@/entities/type-test";
 import { PageHeader } from "@/shared/ui/page-header";
+import { Textarea } from "@/shared/ui/textarea";
 
 export function AdminTestPage() {
-  const [questions, setQuestions] = useState<TestQuestion[]>(getTestQuestions);
+  const [test, setTest] = useState<TypeTest>(getTypeTest);
+  const [g1, g2] = test.groups;
 
-  const updateQuestion = (id: string, text: string) =>
-    setQuestions(questions.map((q) => (q.id === id ? { ...q, text } : q)));
-
-  const updateOption = (qid: string, oid: string, text: string) =>
-    setQuestions(
-      questions.map((q) =>
-        q.id === qid
-          ? { ...q, options: q.options.map((o) => (o.id === oid ? { ...o, text } : o)) }
-          : q,
+  const updateSection = (groupId: string, sectionId: string, text: string) =>
+    setTest({
+      ...test,
+      groups: test.groups.map((g) =>
+        g.id === groupId
+          ? { ...g, sections: g.sections.map((s) => (s.id === sectionId ? { ...s, text } : s)) }
+          : g,
       ),
-    );
-
-  const addQuestion = () => {
-    const id = `q${Date.now()}`;
-    setQuestions([
-      ...questions,
-      {
-        id,
-        text: "Новый вопрос",
-        options: ["А", "Б"].map((l) => ({ id: `${id}${l}`, text: `Вариант ${l}`, typeIds: [] })),
-      },
-    ]);
-  };
+    });
 
   return (
     <>
       <PageHeader
         title="Тест на определение типа"
-        description="Каждый ответ добавляет баллы выбранным типам. Правило подсчёта уточняется у Мастера."
-        actions={
-          <Button onClick={addQuestion}>
-            <Plus /> Добавить вопрос
-          </Button>
-        }
+        description="Ученик выбирает по одному разделу в каждой группе. Тип = буква из группы 1 + цифра из группы 2."
       />
-      <ol className="space-y-4">
-        {questions.map((q, i) => (
-          <li key={q.id} className="space-y-3 rounded-xl border bg-card p-4">
-            <div className="flex items-center gap-2">
-              <span className="grid size-7 shrink-0 place-items-center rounded-full bg-muted text-sm font-medium">
-                {i + 1}
-              </span>
-              <Input
-                value={q.text}
-                onChange={(e) => updateQuestion(q.id, e.target.value)}
-                className="font-medium"
-                aria-label={`Текст вопроса ${i + 1}`}
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Удалить вопрос"
-                onClick={() => setQuestions(questions.filter((x) => x.id !== q.id))}
-              >
-                <Trash2 />
-              </Button>
-            </div>
-            <div className="grid gap-2 pl-9">
-              {q.options.map((o) => (
-                <div key={o.id} className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
-                  <Input
-                    value={o.text}
-                    onChange={(e) => updateOption(q.id, o.id, e.target.value)}
-                    className="sm:max-w-xs"
-                    aria-label="Вариант ответа"
-                  />
-                  <div className="flex flex-wrap gap-1">
-                    {o.typeIds.length === 0 ? (
-                      <span className="text-xs text-muted-foreground">типы не выбраны</span>
-                    ) : (
-                      o.typeIds.map((t) => (
-                        <span key={t} className="rounded-full bg-muted px-2 py-0.5 text-xs">
-                          {getPersonType(t)?.name}
-                        </span>
-                      ))
-                    )}
-                  </div>
-                </div>
+
+      <section className="space-y-3 rounded-xl border bg-card p-4 sm:p-5">
+        <h2 className="font-semibold">Как ответы превращаются в тип</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[520px] text-sm">
+            <thead>
+              <tr>
+                <th className="p-2 text-left font-medium text-muted-foreground">Группа 1 \ Группа 2</th>
+                {g2.sections.map((s) => (
+                  <th key={s.id} className="p-2 text-left font-medium">
+                    {s.code}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {g1.sections.map((a) => (
+                <tr key={a.id} className="border-t">
+                  <td className="p-2 font-medium">{a.code}</td>
+                  {g2.sections.map((b) => {
+                    const type = getPersonTypeByCode(`${a.code}${b.code}`);
+                    return (
+                      <td key={b.id} className="p-2">
+                        <span className="text-xs text-muted-foreground">{a.code}{b.code}</span>{" "}
+                        {type?.name ?? <span className="text-destructive">нет типа</span>}
+                      </td>
+                    );
+                  })}
+                </tr>
               ))}
-            </div>
-          </li>
-        ))}
-      </ol>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <details className="rounded-xl border bg-card p-4 text-sm sm:p-5">
+        <summary className="cursor-pointer font-semibold">Инструкция для ученика</summary>
+        <div className="mt-3 space-y-3 leading-relaxed text-muted-foreground">
+          {test.instruction.map((p) => (
+            <p key={p.slice(0, 24)}>{p}</p>
+          ))}
+        </div>
+      </details>
+
+      {test.groups.map((g) => (
+        <section key={g.id} className="space-y-3">
+          <div>
+            <h2 className="text-lg font-semibold">{g.title}</h2>
+            <p className="text-sm text-muted-foreground">{g.hint}</p>
+          </div>
+          <div className="grid gap-3 lg:grid-cols-2">
+            {g.sections.map((s) => (
+              <div key={s.id} className="space-y-2 rounded-xl border bg-card p-4">
+                <span className="inline-grid size-7 place-items-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                  {s.code}
+                </span>
+                <Textarea
+                  rows={7}
+                  value={s.text}
+                  onChange={(e) => updateSection(g.id, s.id, e.target.value)}
+                  aria-label={`${g.title}, раздел ${s.code}`}
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
     </>
   );
 }

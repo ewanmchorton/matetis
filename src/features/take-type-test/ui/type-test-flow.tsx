@@ -2,82 +2,179 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, RotateCcw } from "lucide-react";
 
 import { progressActions } from "@/entities/progress";
-import type { TestQuestion } from "@/entities/type-test";
+import type { TypeTest } from "@/entities/type-test";
 import { routes } from "@/shared/config/routes";
-import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { Progress } from "@/shared/ui/progress";
 
-import { calculateType } from "../model/calculate-type";
+import { calculateType, type TestAnswers } from "../model/calculate-type";
+import { SectionChoice } from "./section-choice";
 
-export function TypeTestFlow({ questions }: { questions: TestQuestion[] }) {
+export type TestVariant = "steps" | "page";
+
+function FullInstruction({ test }: { test: TypeTest }) {
+  return (
+    <details className="group rounded-xl border bg-card p-4 text-sm">
+      <summary className="cursor-pointer font-medium marker:text-muted-foreground">
+        Полная инструкция Мастера
+      </summary>
+      <div className="mt-3 space-y-3 leading-relaxed text-muted-foreground">
+        {test.instruction.map((p) => (
+          <p key={p.slice(0, 24)}>{p}</p>
+        ))}
+      </div>
+    </details>
+  );
+}
+
+export function TypeTestFlow({ test, variant }: { test: TypeTest; variant: TestVariant }) {
+  return variant === "page" ? <SinglePageTest test={test} /> : <StepByStepTest test={test} />;
+}
+
+function useFinish(test: TypeTest) {
   const router = useRouter();
-  const [step, setStep] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-
-  const question = questions[step];
-  const selected = answers[question.id];
-  const isLast = step === questions.length - 1;
-
-  const next = () => {
-    if (!isLast) {
-      setStep(step + 1);
-      return;
-    }
-    progressActions.setType(calculateType(questions, answers));
+  return (answers: TestAnswers) => {
+    const type = calculateType(test, answers);
+    if (type) progressActions.setType(type.id);
     router.push(routes.typeResult);
   };
+}
+
+/** Вариант из черновика: инструкция и обе группы на одной странице. */
+function SinglePageTest({ test }: { test: TypeTest }) {
+  const [answers, setAnswers] = useState<TestAnswers>({});
+  const finish = useFinish(test);
+  const complete = test.groups.every((g) => answers[g.id]);
+
+  return (
+    <div className="space-y-8">
+      <div className="space-y-3">
+        <h1 className="text-2xl font-semibold sm:text-3xl">Тест на определение типа</h1>
+        <p className="leading-relaxed text-muted-foreground">{test.shortInstruction}</p>
+        <FullInstruction test={test} />
+      </div>
+      {test.groups.map((g) => (
+        <section key={g.id} className="space-y-3">
+          <h2 className="text-lg font-semibold">{g.title}</h2>
+          <SectionChoice
+            group={g}
+            value={answers[g.id]}
+            onChange={(id) => setAnswers({ ...answers, [g.id]: id })}
+          />
+        </section>
+      ))}
+      <Button size="lg" className="h-12 w-full text-base" disabled={!complete} onClick={() => finish(answers)}>
+        Узнать свой тип
+      </Button>
+    </div>
+  );
+}
+
+/** Вариант «по шагам»: инструкция → по одной группе на экран → проверка результата. */
+function StepByStepTest({ test }: { test: TypeTest }) {
+  const [step, setStep] = useState(0);
+  const [answers, setAnswers] = useState<TestAnswers>({});
+  const finish = useFinish(test);
+
+  const totalSteps = test.groups.length + 2;
+  const group = step >= 1 && step <= test.groups.length ? test.groups[step - 1] : undefined;
+  const isConfirm = step === totalSteps - 1;
+  const candidate = isConfirm ? calculateType(test, answers) : undefined;
 
   return (
     <div className="flex flex-1 flex-col gap-6">
       <div className="space-y-2">
         <div className="flex justify-between text-sm text-muted-foreground">
           <span>
-            Вопрос {step + 1} из {questions.length}
+            Шаг {step + 1} из {totalSteps}
           </span>
-          <span>{Math.round((step / questions.length) * 100)}%</span>
+          {group && <span>{group.title}</span>}
         </div>
-        <Progress value={(step / questions.length) * 100} />
+        <Progress value={(step / (totalSteps - 1)) * 100} />
       </div>
 
-      <h1 className="text-2xl font-semibold leading-tight sm:text-3xl">{question.text}</h1>
+      {step === 0 && (
+        <div className="space-y-4">
+          <h1 className="text-2xl font-semibold sm:text-3xl">Как проходить тест</h1>
+          <ul className="space-y-3 text-[15px] leading-relaxed">
+            <li>• Перед вами будут две группы описаний. В каждой выберите одно — самое похожее на вас.</li>
+            <li>• Не обязательно соглашаться с каждым словом: достаточно 80–90% и общего ощущения «это про меня».</li>
+            <li>• Не перепроверяйте выбор — доверяйте интуиции.</li>
+          </ul>
+          <FullInstruction test={test} />
+        </div>
+      )}
 
-      <div className="grid gap-3" role="radiogroup" aria-label={question.text}>
-        {question.options.map((o) => (
-          <button
-            key={o.id}
-            type="button"
-            role="radio"
-            aria-checked={selected === o.id}
-            onClick={() => setAnswers({ ...answers, [question.id]: o.id })}
-            className={cn(
-              "rounded-xl border bg-card px-4 py-4 text-left text-base transition-colors hover:border-primary/50",
-              selected === o.id && "border-primary bg-primary/5 ring-2 ring-primary/20",
-            )}
-          >
-            {o.text}
-          </button>
-        ))}
-      </div>
+      {group && (
+        <div className="space-y-4">
+          <h1 className="text-xl font-semibold sm:text-2xl">
+            Какое описание больше всего похоже на вас?
+          </h1>
+          <SectionChoice
+            group={group}
+            value={answers[group.id]}
+            onChange={(id) => setAnswers({ ...answers, [group.id]: id })}
+          />
+        </div>
+      )}
+
+      {isConfirm && (
+        <div className="space-y-4">
+          <h1 className="text-xl font-semibold sm:text-2xl">Похоже на вас?</h1>
+          <div className="space-y-3 rounded-2xl border bg-card p-5">
+            <p className="text-sm text-muted-foreground">Предварительный результат</p>
+            <p className="text-2xl font-semibold">{candidate?.name ?? "Тип не определён"}</p>
+            <div className="flex flex-wrap gap-2">
+              {candidate?.traits.map((t) => (
+                <span key={t} className="rounded-full bg-muted px-3 py-1 text-sm">
+                  {t}
+                </span>
+              ))}
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Если описание совсем не про вас, вернитесь и выберите заново — это нормально.
+          </p>
+        </div>
+      )}
 
       <div className="mt-auto flex gap-3 pt-4">
-        <Button
-          variant="outline"
-          size="lg"
-          className="h-11"
-          disabled={step === 0}
-          onClick={() => setStep(step - 1)}
-        >
-          <ArrowLeft />
-          Назад
-        </Button>
-        <Button size="lg" className="h-11 flex-1" disabled={!selected} onClick={next}>
-          {isLast ? "Узнать свой тип" : "Дальше"}
-          <ArrowRight />
-        </Button>
+        {isConfirm ? (
+          <>
+            <Button variant="outline" size="lg" className="h-11" onClick={() => setStep(1)}>
+              <RotateCcw />
+              Выбрать заново
+            </Button>
+            <Button size="lg" className="h-11 flex-1" onClick={() => finish(answers)}>
+              Да, это про меня
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-11"
+              disabled={step === 0}
+              onClick={() => setStep(step - 1)}
+            >
+              <ArrowLeft />
+              Назад
+            </Button>
+            <Button
+              size="lg"
+              className="h-11 flex-1"
+              disabled={group ? !answers[group.id] : false}
+              onClick={() => setStep(step + 1)}
+            >
+              {step === 0 ? "Начать" : "Дальше"}
+              <ArrowRight />
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );

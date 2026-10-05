@@ -1,2 +1,2 @@
-export type { TestOption, TestQuestion } from "./model/types";
-export { getTestQuestions } from "./api/type-test-api";
+export type { TestGroup, TestSection, TypeTest } from "./model/types";
+export { getTypeTest } from "./api/type-test-api";

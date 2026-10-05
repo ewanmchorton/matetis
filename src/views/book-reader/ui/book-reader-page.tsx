@@ -15,11 +15,11 @@ export function BookReaderPage({ book }: { book: Book }) {
     <div className="mx-auto max-w-3xl space-y-4">
       <div className="flex items-center justify-between gap-3">
         <Link
-          href={routes.library}
+          href={routes.library.books}
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="size-4" />
-          Библиотека
+          Книги
         </Link>
         {book.downloadable ? (
           <Button variant="outline">

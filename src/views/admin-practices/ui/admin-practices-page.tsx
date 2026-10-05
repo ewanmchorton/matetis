@@ -37,7 +37,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/ui/table";
-import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
+import { cn } from "@/shared/lib/utils";
+import { BooksManager } from "@/widgets/books-manager";
+import { MaterialsManager } from "@/widgets/materials-manager";
 import { Textarea } from "@/shared/ui/textarea";
 
 const kinds = Object.entries(practiceKindLabel).map(([value, label]) => ({
@@ -45,9 +48,16 @@ const kinds = Object.entries(practiceKindLabel).map(([value, label]) => ({
   label,
 }));
 
+const filters: { value: PracticeKind | "all"; label: string }[] = [
+  { value: "all", label: "Все" },
+  { value: "daily", label: "Ежедневные" },
+  { value: "ritual", label: "Ритуалы" },
+  { value: "state", label: "По состоянию" },
+];
+
 const emptyDraft = { title: "", summary: "", kind: "daily" as PracticeKind, video: "" };
 
-export function AdminPracticesPage() {
+function PracticesManager() {
   const [practices, setPractices] = useState<Practice[]>(getPractices);
   const [filter, setFilter] = useState<PracticeKind | "all">("all");
   const [open, setOpen] = useState(false);
@@ -76,25 +86,27 @@ export function AdminPracticesPage() {
   };
 
   return (
-    <>
-      <PageHeader
-        title="Практики и медиа"
-        description="Все практики, ритуалы и практики по состоянию"
-        actions={
-          <Button onClick={() => setOpen(true)}>
-            <Plus /> Новая практика
-          </Button>
-        }
-      />
-
-      <Tabs value={filter} onValueChange={(v) => setFilter(v as PracticeKind | "all")}>
-        <TabsList className="max-w-full overflow-x-auto">
-          <TabsTrigger value="all">Все</TabsTrigger>
-          <TabsTrigger value="daily">Ежедневные</TabsTrigger>
-          <TabsTrigger value="ritual">Ритуалы</TabsTrigger>
-          <TabsTrigger value="state">По состоянию</TabsTrigger>
-        </TabsList>
-      </Tabs>
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="-mx-1 flex gap-1 overflow-x-auto px-1">
+          {filters.map((f) => (
+            <button
+              key={f.value}
+              type="button"
+              onClick={() => setFilter(f.value)}
+              className={cn(
+                "shrink-0 rounded-full border px-3 py-1 text-sm",
+                filter === f.value ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:bg-muted",
+              )}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+        <Button onClick={() => setOpen(true)}>
+          <Plus /> Новая практика
+        </Button>
+      </div>
 
       <div className="overflow-hidden rounded-xl border bg-card">
         <Table>
@@ -202,6 +214,33 @@ export function AdminPracticesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+export function AdminPracticesPage() {
+  return (
+    <>
+      <PageHeader
+        title="Библиотека практик"
+        description="Практики программы, практики по состоянию, книги и материалы для учеников"
+      />
+      <Tabs defaultValue="practices">
+        <TabsList>
+          <TabsTrigger value="practices">Практики</TabsTrigger>
+          <TabsTrigger value="books">Книги</TabsTrigger>
+          <TabsTrigger value="materials">Материалы</TabsTrigger>
+        </TabsList>
+        <TabsContent value="practices" className="pt-4">
+          <PracticesManager />
+        </TabsContent>
+        <TabsContent value="books" className="pt-4">
+          <BooksManager />
+        </TabsContent>
+        <TabsContent value="materials" className="pt-4">
+          <MaterialsManager />
+        </TabsContent>
+      </Tabs>
     </>
   );
 }

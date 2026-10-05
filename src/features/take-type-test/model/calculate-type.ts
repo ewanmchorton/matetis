@@ -1,27 +1,16 @@
-import type { TestQuestion } from "@/entities/type-test";
+import { getPersonTypeByCode, type PersonType } from "@/entities/person-type";
+import type { TypeTest } from "@/entities/type-test";
+
+/** Ответы: id группы → id выбранного раздела */
+export type TestAnswers = Record<string, string>;
 
 /**
- * Демо-правило: каждый ответ даёт балл перечисленным типам, побеждает тип с
- * наибольшей суммой. Настоящую формулу подсчёта нужно получить у Мастера.
+ * Тип = код раздела из группы 1 (А/В/С) + код раздела из группы 2 (1–4),
+ * например «А3» — Лидер. Правило взято из черновиков Мастера.
  */
-export function calculateType(
-  questions: TestQuestion[],
-  answers: Record<string, string>,
-): string {
-  const scores = new Map<string, number>();
-  for (const q of questions) {
-    const option = q.options.find((o) => o.id === answers[q.id]);
-    option?.typeIds.forEach((t, i) => {
-      scores.set(t, (scores.get(t) ?? 0) + (i === 0 ? 2 : 1));
-    });
-  }
-  let best = "t1";
-  let bestScore = -1;
-  for (const [typeId, score] of scores) {
-    if (score > bestScore) {
-      best = typeId;
-      bestScore = score;
-    }
-  }
-  return best;
+export function calculateType(test: TypeTest, answers: TestAnswers): PersonType | undefined {
+  const code = test.groups
+    .map((g) => g.sections.find((s) => s.id === answers[g.id])?.code ?? "")
+    .join("");
+  return getPersonTypeByCode(code);
 }

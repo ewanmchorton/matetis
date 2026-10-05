@@ -35,7 +35,7 @@ export function ProgramPage() {
           </p>
         </div>
         <Link
-          href={routes.profile}
+          href={routes.program.stats}
           className={buttonVariants({ variant: "outline", size: "icon-lg" })}
           aria-label="Моя статистика"
         >

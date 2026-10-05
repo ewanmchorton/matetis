@@ -13,9 +13,7 @@ import { Logo } from "@/shared/ui/logo";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/shared/ui/sheet";
 
 const isActive = (pathname: string, href: string) =>
-  href === routes.admin.dashboard
-    ? pathname === href
-    : pathname === href || pathname.startsWith(`${href}/`);
+  pathname === href || pathname.startsWith(`${href}/`);
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
@@ -46,7 +44,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-dvh">
       <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col gap-6 border-r bg-sidebar p-4 lg:flex">
         <div>
-          <Logo href={routes.admin.dashboard} />
+          <Logo href={routes.admin.types} />
           <p className="mt-1 pl-9 text-xs text-muted-foreground">Кабинет Мастера</p>
         </div>
         <NavLinks />
@@ -60,7 +58,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background/85 px-4 backdrop-blur lg:hidden">
-          <Logo href={routes.admin.dashboard} />
+          <Logo href={routes.admin.types} />
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger render={<Button variant="ghost" size="icon" aria-label="Меню" />}>
               <Menu />

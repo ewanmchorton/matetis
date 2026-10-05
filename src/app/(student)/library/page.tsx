@@ -1,3 +1,5 @@
-import { LibraryPage } from "@/views/library";
+import { redirect } from "next/navigation";
 
-export default LibraryPage;
+export default function Page() {
+  redirect("/library/practices");
+}

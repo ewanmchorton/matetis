@@ -39,7 +39,7 @@ export function StudentsTable({ students }: { students: Student[] }) {
       </div>
 
       {rows.length === 0 ? (
-        <EmptyState icon={Users} title="Ученики не найдены" />
+        <EmptyState icon={Users} title="Пользователи не найдены" />
       ) : (
         <div className="overflow-hidden rounded-xl border bg-card">
           <Table>
@@ -56,7 +56,7 @@ export function StudentsTable({ students }: { students: Student[] }) {
               {rows.map((s) => (
                 <TableRow key={s.id}>
                   <TableCell>
-                    <Link href={routes.admin.student(s.id)} className="font-medium hover:underline">
+                    <Link href={routes.admin.user(s.id)} className="font-medium hover:underline">
                       {s.name}
                     </Link>
                     <p className="text-xs text-muted-foreground">{s.email}</p>

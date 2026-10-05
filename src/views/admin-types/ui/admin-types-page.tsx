@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Pencil } from "lucide-react";
 
-import { getPersonTypes, type PersonType } from "@/entities/person-type";
+import { getPersonTypes, TypeTraits, type PersonType } from "@/entities/person-type";
 import { Button } from "@/shared/ui/button";
 import {
   Dialog,
@@ -32,21 +32,23 @@ export function AdminTypesPage() {
     <>
       <PageHeader
         title="12 типов"
-        description="Описание каждого типа видит ученик после теста и в профиле"
+        description="Психотипы из черновика Мастера: название, тестовый код и качественные характеристики"
       />
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {types.map((t) => (
           <div key={t.id} className="flex flex-col gap-2 rounded-xl border bg-card p-4">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <p className="text-xs text-muted-foreground">Тип №{t.number}</p>
+                <p className="text-xs text-muted-foreground">
+                  Тип №{t.number} · код {t.code}
+                </p>
                 <p className="font-semibold">{t.name}</p>
               </div>
               <Button variant="ghost" size="icon-sm" aria-label="Редактировать" onClick={() => setEditing(t)}>
                 <Pencil />
               </Button>
             </div>
-            <p className="line-clamp-3 text-sm text-muted-foreground">{t.description}</p>
+            <TypeTraits type={t} />
           </div>
         ))}
       </div>
@@ -68,19 +70,25 @@ export function AdminTypesPage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="type-short">Коротко</Label>
+                <Label htmlFor="type-traits">Качественные характеристики (через запятую)</Label>
                 <Input
-                  id="type-short"
-                  value={editing.short}
-                  onChange={(e) => setEditing({ ...editing, short: e.target.value })}
+                  id="type-traits"
+                  value={editing.traits.join(", ")}
+                  onChange={(e) =>
+                    setEditing({
+                      ...editing,
+                      traits: e.target.value.split(",").map((x) => x.trim()).filter(Boolean),
+                    })
+                  }
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="type-desc">Описание</Label>
+                <Label htmlFor="type-desc">Развёрнутое описание</Label>
                 <Textarea
                   id="type-desc"
                   rows={6}
-                  value={editing.description}
+                  value={editing.description ?? ""}
+                  placeholder="Появится позже"
                   onChange={(e) => setEditing({ ...editing, description: e.target.value })}
                 />
               </div>

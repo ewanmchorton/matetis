@@ -1,1 +1,1 @@
-export { TypeTestFlow } from "./ui/type-test-flow";
+export { TypeTestFlow, type TestVariant } from "./ui/type-test-flow";

@@ -11,7 +11,7 @@ export default function NotFound() {
       <p className="text-sm text-muted-foreground">
         Возможно, материал убрали или ссылка устарела.
       </p>
-      <Link href={routes.program} className={buttonVariants()}>
+      <Link href={routes.program.home} className={buttonVariants()}>
         К программе
       </Link>
     </main>

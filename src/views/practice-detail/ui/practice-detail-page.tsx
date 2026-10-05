@@ -8,7 +8,7 @@ import { routes } from "@/shared/config/routes";
 import { ImagePlaceholder, VideoPlaceholder } from "@/shared/ui/media-placeholder";
 
 export function PracticeDetailPage({ practice }: { practice: Practice }) {
-  const backHref = practice.kind === "state" ? routes.library : routes.program;
+  const backHref = practice.kind === "state" ? routes.library.practices : routes.program.home;
 
   return (
     <article className="mx-auto max-w-2xl space-y-6">

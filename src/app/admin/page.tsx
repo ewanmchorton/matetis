@@ -1,3 +1,5 @@
-import { AdminDashboardPage } from "@/views/admin-dashboard";
+import { redirect } from "next/navigation";
 
-export default AdminDashboardPage;
+export default function Page() {
+  redirect("/admin/types");
+}

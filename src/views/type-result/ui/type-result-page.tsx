@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 import { getCurrentElement } from "@/entities/element";
-import { getPersonType } from "@/entities/person-type";
+import { getPersonType, TypeTraits } from "@/entities/person-type";
 import { useProgress } from "@/entities/progress";
 import { routes } from "@/shared/config/routes";
 import { buttonVariants } from "@/shared/ui/button";
@@ -16,18 +16,20 @@ export function TypeResultPage() {
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-8 px-5 py-8">
-      <Logo href={routes.welcome} />
-      <div className="space-y-6 rounded-3xl bg-gradient-to-br from-primary/10 via-card to-amber-50 p-6 sm:p-8 dark:to-card">
-        <p className="text-sm font-medium text-primary">Ваш тип</p>
-        <div className="space-y-2">
-          <p className="text-6xl font-semibold tabular-nums text-primary/30">
-            {type?.number}
+      <Logo href={routes.onboarding} />
+      {type && (
+        <div className="space-y-6 rounded-3xl bg-gradient-to-br from-primary/10 via-card to-amber-50 p-6 sm:p-8 dark:to-card">
+          <p className="text-sm font-medium text-primary">Ваш психотип</p>
+          <div className="space-y-1">
+            <p className="text-6xl font-semibold tabular-nums text-primary/30">{type.number}</p>
+            <h1 className="text-3xl font-semibold">{type.name}</h1>
+          </div>
+          <TypeTraits type={type} />
+          <p className="text-sm text-muted-foreground">
+            Подробное описание типа Мастер добавит позже.
           </p>
-          <h1 className="text-3xl font-semibold">{type?.name}</h1>
-          <p className="text-lg text-muted-foreground">{type?.short}</p>
         </div>
-        <p className="leading-relaxed">{type?.description}</p>
-      </div>
+      )}
       <div className="space-y-2 rounded-2xl border bg-card p-5">
         <p className="font-medium">Ваша программа готова</p>
         <p className="text-sm text-muted-foreground">
@@ -37,7 +39,7 @@ export function TypeResultPage() {
       </div>
       <div className="mt-auto flex flex-col gap-3">
         <Link
-          href={routes.program}
+          href={routes.program.home}
           className={buttonVariants({ size: "lg", className: "h-12 w-full text-base" })}
         >
           Перейти к программе
