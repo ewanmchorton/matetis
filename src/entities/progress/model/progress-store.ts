@@ -33,7 +33,7 @@ function createDemoState(): ProgressState {
     ...initialState,
     completedPractices: [daysAgo(4), daysAgo(3), daysAgo(2), daysAgo(1), daysAgo(7), daysAgo(8)],
     ritualMarks: {
-      "metal-morning-breath": [daysAgo(1), daysAgo(2)],
+      "water-sleep-ritual": [daysAgo(1), daysAgo(2)],
     },
   };
 }
