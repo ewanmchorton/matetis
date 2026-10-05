@@ -34,19 +34,10 @@ export function ProfilePage() {
         <div className="space-y-2">
           <h1 className="text-3xl font-semibold">Профиль</h1>
           <p className="text-sm text-muted-foreground">
-            Тип, стихия, статистика и настройки.
+            Тип, статистика, напоминания и настройки.
           </p>
         </div>
       </header>
-
-      <section className="space-y-3 rounded-2xl border bg-card p-4">
-        <p className="text-sm font-medium text-primary">Аккаунт</p>
-        <p className="text-lg font-semibold">Анна</p>
-        <p className="text-sm text-muted-foreground">anna@example.ru</p>
-        <p className="text-xs text-muted-foreground">
-          В прототипе данные не отправляются на сервер.
-        </p>
-      </section>
 
       {type && (
         <section className="space-y-3 rounded-2xl border bg-card p-4">
@@ -95,6 +86,35 @@ export function ProfilePage() {
           />
           <span className="text-sm leading-snug">Вечером — размышление или медитация</span>
         </Label>
+      </section>
+
+      <section aria-labelledby="profile-settings-title" className="space-y-4 rounded-2xl border bg-card p-4">
+        <h2 id="profile-settings-title" className="text-lg font-semibold">
+          Настройки профиля
+        </h2>
+        <dl className="divide-y text-sm">
+          <div className="flex justify-between gap-3 py-2.5">
+            <dt className="text-muted-foreground">Имя</dt>
+            <dd className="font-medium">Анна</dd>
+          </div>
+          <div className="flex justify-between gap-3 py-2.5">
+            <dt className="text-muted-foreground">E-mail</dt>
+            <dd className="font-medium">anna@example.ru</dd>
+          </div>
+          <div className="flex justify-between gap-3 py-2.5">
+            <dt className="text-muted-foreground">Пароль</dt>
+            <dd className="font-medium tracking-widest">••••••••</dd>
+          </div>
+        </dl>
+        <p className="text-xs text-muted-foreground">
+          В прототипе данные не отправляются на сервер.
+        </p>
+        <Link
+          href={routes.auth}
+          className={buttonVariants({ variant: "ghost", className: "w-full text-muted-foreground" })}
+        >
+          Выйти из аккаунта
+        </Link>
       </section>
     </main>
   );
