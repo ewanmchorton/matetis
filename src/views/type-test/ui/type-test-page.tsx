@@ -13,7 +13,7 @@ const variants: { id: TestVariant; title: string }[] = [
 
 export function TypeTestPage({ variant }: { variant: TestVariant }) {
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-6 px-5 py-6 sm:py-8">
+    <main className="flex flex-1 flex-col gap-6 px-5 py-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Logo href={routes.onboarding} />
         <div

@@ -1,35 +1,6 @@
 export const routes = {
-  map: "/",
   auth: "/auth",
   onboarding: "/onboarding",
   typeTest: "/test",
   typeResult: "/test/result",
-  program: {
-    home: "/program",
-    today: "/program/today",
-    rituals: "/program/rituals",
-    recommendations: "/program/recommendations",
-    stats: "/program/stats",
-  },
-  practice: (id: string) => `/practice/${id}`,
-  library: {
-    practices: "/library/practices",
-    books: "/library/books",
-    book: (id: string) => `/library/books/${id}`,
-    materials: "/library/materials",
-  },
-  profile: {
-    type: "/profile/type",
-    stats: "/profile/stats",
-    settings: "/profile/settings",
-  },
-  admin: {
-    types: "/admin/types",
-    test: "/admin/test",
-    practices: "/admin/practices",
-    programs: "/admin/programs",
-    users: "/admin/users",
-    user: (id: string) => `/admin/users/${id}`,
-    stats: "/admin/stats",
-  },
 } as const;

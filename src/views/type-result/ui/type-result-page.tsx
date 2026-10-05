@@ -15,10 +15,10 @@ export function TypeResultPage() {
   const element = getCurrentElement();
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-8 px-5 py-8">
-      <Logo href={routes.onboarding} />
+    <main className="flex flex-1 flex-col gap-8 px-5 py-8">
+      <Logo href={routes.auth} />
       {type && (
-        <div className="space-y-6 rounded-3xl bg-gradient-to-br from-primary/10 via-card to-amber-50 p-6 sm:p-8 dark:to-card">
+        <div className="space-y-6 rounded-3xl bg-gradient-to-br from-primary/10 via-card to-amber-50 p-6 dark:to-card">
           <p className="text-sm font-medium text-primary">Ваш психотип</p>
           <div className="space-y-1">
             <p className="text-6xl font-semibold tabular-nums text-primary/30">{type.number}</p>
@@ -31,24 +31,24 @@ export function TypeResultPage() {
         </div>
       )}
       <div className="space-y-2 rounded-2xl border bg-card p-5">
-        <p className="font-medium">Ваша программа готова</p>
+        <p className="font-medium">Скоро здесь будет ваша программа</p>
         <p className="text-sm text-muted-foreground">
-          Мы собрали практики для типа «{type?.name}» на стихию {element.name}. Когда
+          Мы подберём практики для типа «{type?.name}» на стихию {element.name}. Когда
           стихия сменится, программа обновится сама.
         </p>
       </div>
       <div className="mt-auto flex flex-col gap-3">
         <Link
-          href={routes.program.home}
+          href={routes.typeTest}
           className={buttonVariants({ size: "lg", className: "h-12 w-full text-base" })}
         >
-          Перейти к программе
+          Пройти тест заново
         </Link>
         <Link
-          href={routes.typeTest}
+          href={routes.auth}
           className={buttonVariants({ variant: "ghost", className: "w-full" })}
         >
-          Пройти тест заново
+          Начать первый вход сначала
         </Link>
       </div>
     </main>

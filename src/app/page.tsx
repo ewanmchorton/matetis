@@ -1,3 +1,7 @@
-import { ScreenMapPage } from "@/views/screen-map";
+import { redirect } from "next/navigation";
 
-export default ScreenMapPage;
+import { routes } from "@/shared/config/routes";
+
+export default function Home() {
+  redirect(routes.auth);
+}

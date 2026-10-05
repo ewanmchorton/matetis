@@ -97,9 +97,9 @@ export function OnboardingPage() {
   const isLast = index === slides.length - 1;
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-8 px-5 py-8 md:max-w-lg">
+    <main className="flex flex-1 flex-col gap-8 px-5 py-8">
       <div className="flex items-center justify-between">
-        <Logo href={routes.map} />
+        <Logo href={routes.auth} />
         {!isLast && (
           <Link href={routes.typeTest} className="text-sm text-muted-foreground hover:text-foreground">
             Пропустить

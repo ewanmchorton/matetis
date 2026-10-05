@@ -22,8 +22,8 @@ export function AuthPage() {
   };
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-8 px-5 py-8 md:justify-center">
-      <Logo href={routes.map} />
+    <main className="flex flex-1 flex-col gap-8 px-5 py-8">
+      <Logo href={routes.auth} />
       <div className="space-y-2">
         <h1 className="text-3xl font-semibold leading-tight">Добро пожаловать</h1>
         <p className="text-muted-foreground">
@@ -66,7 +66,7 @@ export function AuthPage() {
         </TabsContent>
 
         <TabsContent value="login" className="pt-4">
-          <form className="grid gap-4" onSubmit={submit(routes.program.home)}>
+          <form className="grid gap-4" onSubmit={submit(routes.typeResult)}>
             <div className="grid gap-2">
               <Label htmlFor="l-email">E-mail</Label>
               <Input id="l-email" type="email" defaultValue="anna@example.ru" className="h-11" />

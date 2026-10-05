@@ -52,7 +52,7 @@ function SinglePageTest({ test }: { test: TypeTest }) {
   return (
     <div className="space-y-8">
       <div className="space-y-3">
-        <h1 className="text-2xl font-semibold sm:text-3xl">Тест на определение типа</h1>
+        <h1 className="text-2xl font-semibold">Тест на определение типа</h1>
         <p className="leading-relaxed text-muted-foreground">{test.shortInstruction}</p>
         <FullInstruction test={test} />
       </div>
@@ -98,7 +98,7 @@ function StepByStepTest({ test }: { test: TypeTest }) {
 
       {step === 0 && (
         <div className="space-y-4">
-          <h1 className="text-2xl font-semibold sm:text-3xl">Как проходить тест</h1>
+          <h1 className="text-2xl font-semibold">Как проходить тест</h1>
           <ul className="space-y-3 text-[15px] leading-relaxed">
             <li>• Перед вами будут две группы описаний. В каждой выберите одно — самое похожее на вас.</li>
             <li>• Не обязательно соглашаться с каждым словом: достаточно 80–90% и общего ощущения «это про меня».</li>
@@ -110,7 +110,7 @@ function StepByStepTest({ test }: { test: TypeTest }) {
 
       {group && (
         <div className="space-y-4">
-          <h1 className="text-xl font-semibold sm:text-2xl">
+          <h1 className="text-xl font-semibold">
             Какое описание больше всего похоже на вас?
           </h1>
           <SectionChoice
@@ -123,7 +123,7 @@ function StepByStepTest({ test }: { test: TypeTest }) {
 
       {isConfirm && (
         <div className="space-y-4">
-          <h1 className="text-xl font-semibold sm:text-2xl">Похоже на вас?</h1>
+          <h1 className="text-xl font-semibold">Похоже на вас?</h1>
           <div className="space-y-3 rounded-2xl border bg-card p-5">
             <p className="text-sm text-muted-foreground">Предварительный результат</p>
             <p className="text-2xl font-semibold">{candidate?.name ?? "Тип не определён"}</p>

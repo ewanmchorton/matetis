@@ -5,14 +5,14 @@ import { buttonVariants } from "@/shared/ui/button";
 
 export default function NotFound() {
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
+    <main className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
       <p className="text-5xl font-semibold text-muted-foreground/40">404</p>
       <h1 className="text-xl font-semibold">Такой страницы нет</h1>
       <p className="text-sm text-muted-foreground">
-        Возможно, материал убрали или ссылка устарела.
+        В этой версии прототипа есть только первый вход: регистрация, знакомство и тест.
       </p>
-      <Link href={routes.program.home} className={buttonVariants()}>
-        К программе
+      <Link href={routes.auth} className={buttonVariants()}>
+        К регистрации
       </Link>
     </main>
   );
