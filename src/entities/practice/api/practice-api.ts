@@ -1,4 +1,5 @@
 import type { ElementId } from "@/entities/element";
+import { getDayNumber } from "@/shared/lib/date";
 
 import type { DailyPractice, WeeklyRitual } from "../model/types";
 
@@ -16,15 +17,34 @@ const dailyPractices: DailyPractice[] = [
     ],
     why: "В даосской стихии Воды мы бережём почки и глубинный покой. Внутренняя улыбка согревает изнутри и успокаивает страх.",
   },
+  {
+    id: "water-element-lesson",
+    elementId: "water",
+    title: "Размышление над уроком на стихию",
+    duration: "10 минут",
+    steps: [
+      "Откройте короткий урок Мастера про стихию Воды (в приложении или из записей).",
+      "Прочитайте или прослушайте спокойно, без спешки.",
+      "Запишите одну мысль: что из урока откликается вам сегодня.",
+    ],
+    why: "Стихия меняется — важно не только делать упражнения, но и понимать, зачем они в этом сезоне.",
+  },
 ];
 
 const weeklyRituals: WeeklyRitual[] = [
   {
+    id: "water-subjects-study",
+    elementId: "water",
+    title: "Освоение предметов",
+    description: "15 минут по учебнику: геометрия, физика, биология или химия",
+    schedule: "daily",
+  },
+  {
     id: "water-tuata-charge",
     elementId: "water",
     title: "Зарядка «Туата»",
-    description: "Короткий комплекс по методике Мастера — каждый день, когда получается",
-    schedule: "daily",
+    description: "Комплекс по методике Мастера — один раз в неделю",
+    schedule: "once_per_week",
   },
   {
     id: "water-weekly-audio",
@@ -33,17 +53,20 @@ const weeklyRituals: WeeklyRitual[] = [
     description: "Один раз за неделю, 25–30 минут по записи Мастера",
     schedule: "once_per_week",
   },
-  {
-    id: "water-kidney-care",
-    elementId: "water",
-    title: "Мягкое согревание поясницы",
-    description: "Раз в неделю: тёплый пояс или компресс на поясницу, 15 минут в тишине",
-    schedule: "once_per_week",
-  },
 ];
 
-export function getDailyPractice(elementId: ElementId): DailyPractice | undefined {
-  return dailyPractices.find((p) => p.elementId === elementId);
+/**
+ * Практика дня меняется каждые сутки. Номер типа сдвигает очередь,
+ * чтобы у разных типов в один день были разные практики.
+ */
+export function getDailyPractice(
+  elementId: ElementId,
+  typeNumber: number,
+  date: Date,
+): DailyPractice | undefined {
+  const list = dailyPractices.filter((p) => p.elementId === elementId);
+  if (list.length === 0) return undefined;
+  return list[(getDayNumber(date) + typeNumber) % list.length];
 }
 
 export function getWeeklyRituals(elementId: ElementId): WeeklyRitual[] {

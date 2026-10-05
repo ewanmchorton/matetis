@@ -47,6 +47,7 @@ export function ProgramPage() {
 
       {isClient ? (
         <ProgramContent
+          typeNumber={type?.number ?? 1}
           completedPractices={completedPractices}
           ritualMarks={ritualMarks}
         />
@@ -58,9 +59,11 @@ export function ProgramPage() {
 }
 
 function ProgramContent({
+  typeNumber,
   completedPractices,
   ritualMarks,
 }: {
+  typeNumber: number;
   completedPractices: string[];
   ritualMarks: Record<string, string[]>;
 }) {
@@ -69,7 +72,7 @@ function ProgramContent({
   const todayKey = toDateKey(today);
   const weekDays = getWeekDays(today);
   const weekStartKey = getWeekStartKey(today);
-  const practice = getDailyPractice(element.id);
+  const practice = getDailyPractice(element.id, typeNumber, today);
 
   return (
     <>
