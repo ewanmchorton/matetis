@@ -23,7 +23,7 @@ export function WeeklyRituals({
   const weekKeys = weekDays.map(toDateKey);
 
   return (
-    <section aria-labelledby="rituals-title" className="space-y-3">
+    <section id="weekly-rituals" aria-labelledby="rituals-title" className="scroll-mt-16 space-y-3">
       <div className="space-y-1">
         <h2 id="rituals-title" className="text-lg font-semibold">
           Еженедельные ритуалы
@@ -39,11 +39,23 @@ export function WeeklyRituals({
           const isDaily = ritual.schedule === "daily";
           const doneToday = marks.has(todayKey);
           const doneThisWeek = marks.has(weekStartKey);
+          const done = isDaily ? doneToday : doneThisWeek;
 
           return (
-            <li key={ritual.id} className="space-y-3 rounded-2xl border bg-card p-4">
+            <li
+              key={ritual.id}
+              className={cn(
+                "space-y-3 rounded-2xl border p-4 transition-colors duration-300",
+                done ? "bg-muted/60" : "bg-card",
+              )}
+            >
               <div className="flex items-start gap-3">
-                <div className="min-w-0 flex-1">
+                <div
+                  className={cn(
+                    "min-w-0 flex-1 transition-opacity duration-300",
+                    done && "opacity-50",
+                  )}
+                >
                   <p className="font-medium">{ritual.title}</p>
                   <p className="text-sm text-muted-foreground">{ritual.description}</p>
                 </div>
@@ -66,7 +78,7 @@ export function WeeklyRituals({
                   }
                   className={cn(
                     "grid size-10 shrink-0 place-items-center rounded-full border-2 transition-colors",
-                    (isDaily ? doneToday : doneThisWeek)
+                    done
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-input text-transparent hover:border-primary/50 hover:text-primary/40",
                   )}
@@ -75,7 +87,10 @@ export function WeeklyRituals({
                 </button>
               </div>
               {isDaily ? (
-                <ul className="flex gap-1" aria-label="Дни недели">
+                <ul
+                  className={cn("flex gap-1 transition-opacity duration-300", done && "opacity-60")}
+                  aria-label="Дни недели"
+                >
                   {weekKeys.map((key, i) => (
                     <li
                       key={key}
@@ -90,7 +105,7 @@ export function WeeklyRituals({
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-muted-foreground">
+                <p className={cn("text-sm text-muted-foreground", done && "opacity-60")}>
                   {doneThisWeek ? "На этой неделе отмечено" : "Можно отметить, когда сделаете"}
                 </p>
               )}
