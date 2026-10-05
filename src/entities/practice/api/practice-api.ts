@@ -20,7 +20,7 @@ const dailyPractices: DailyPractice[] = [
   {
     id: "water-element-lesson",
     elementId: "water",
-    title: "Размышление над уроком на стихию",
+    title: "Размышление над уроком стихии",
     duration: "10 минут",
     steps: [
       "Откройте короткий урок про стихию Воды в разделе «Библиотека».",
@@ -49,8 +49,8 @@ const weeklyRituals: WeeklyRitual[] = [
   {
     id: "water-weekly-audio",
     elementId: "water",
-    title: "Практика стихии Воды с аудио",
-    description: "Один раз за неделю, 25–30 минут по аудио из библиотеки",
+    title: "Размышление над уроком стихии",
+    description: "Один раз за неделю, 25–30 минут — урок и аудио из библиотеки",
     schedule: "once_per_week",
   },
 ];

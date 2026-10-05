@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 
-import { addDays, getWeekStartKey, toDateKey } from "@/shared/lib/date";
+import { addDays, getWeekDays, getWeekStartKey, toDateKey } from "@/shared/lib/date";
 
 /**
  * Результат теста и отметки о практиках в прототипе хранятся в браузере (localStorage).
@@ -32,9 +32,15 @@ const initialState: ProgressState = {
 function createDemoState(): ProgressState {
   const today = new Date();
   const daysAgo = (n: number) => toDateKey(addDays(today, -n));
+  const todayKey = toDateKey(today);
+  const weekKeys = getWeekDays(today)
+    .map((d) => toDateKey(d))
+    .filter((k) => k <= todayKey);
+  const demoThisWeek = weekKeys.slice(-3);
+  const older = [daysAgo(7), daysAgo(8), daysAgo(14)].filter((k) => !demoThisWeek.includes(k));
   return {
     ...initialState,
-    completedPractices: [daysAgo(4), daysAgo(3), daysAgo(2), daysAgo(1), daysAgo(7), daysAgo(8)],
+    completedPractices: [...new Set([...demoThisWeek, ...older])],
     ritualMarks: {
       "water-subjects-study": [daysAgo(1), daysAgo(2), daysAgo(4)],
       "water-tuata-charge": [getWeekStartKey(today)],

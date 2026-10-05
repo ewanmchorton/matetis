@@ -3,7 +3,7 @@
 import { ElementBadge, getCurrentElement, getElementGuide } from "@/entities/element";
 import { getPersonType } from "@/entities/person-type";
 import { getDailyPractice, getWeeklyRituals } from "@/entities/practice";
-import { getSoftProgramNote, useProgress } from "@/entities/progress";
+import { getProgramWeekHighlight, getSoftProgramNote, useProgress } from "@/entities/progress";
 import { routes } from "@/shared/config/routes";
 import { getWeekDays, getWeekStartKey, toDateKey } from "@/shared/lib/date";
 import { useIsClient } from "@/shared/lib/use-is-client";
@@ -92,7 +92,16 @@ function ProgramContent({
         weekStartKey={weekStartKey}
       />
       <ElementRecommendations element={element} guide={getElementGuide(element.id)} />
-      <ProgramStats note={getSoftProgramNote(completedPractices, weekDays)} />
+      {(() => {
+        const week = getProgramWeekHighlight(completedPractices, weekDays);
+        return (
+          <ProgramStats
+            headline={week.headline}
+            encouragement={week.encouragement}
+            note={getSoftProgramNote(completedPractices, weekDays)}
+          />
+        );
+      })()}
     </>
   );
 }
