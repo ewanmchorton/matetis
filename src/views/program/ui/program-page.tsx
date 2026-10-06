@@ -2,7 +2,8 @@
 
 import { ElementBadge, getCurrentElement, getElementGuide } from "@/entities/element";
 import { getPersonType } from "@/entities/person-type";
-import { filterRituals, pickDailyPractice, usePracticeCatalog } from "@/entities/practice";
+import { weakElementIdFor } from "@/entities/birth";
+import { filterRituals, filterSupport, pickDailyPractice, usePracticeCatalog } from "@/entities/practice";
 import { getProgramStats, useProgress } from "@/entities/progress";
 import { routes } from "@/shared/config/routes";
 import { getWeekDays, getWeekStartKey, toDateKey } from "@/shared/lib/date";
@@ -11,6 +12,7 @@ import { Logo } from "@/shared/ui/logo";
 
 import { ElementRecommendations } from "./element-recommendations";
 import { ProgramStats } from "./program-stats";
+import { SupportPractices } from "./support-practices";
 import { TodayPractice } from "./today-practice";
 import { WeeklyRituals } from "./weekly-rituals";
 
@@ -26,7 +28,7 @@ function ProgramSkeleton() {
 
 export function ProgramPage() {
   const isClient = useIsClient();
-  const { typeId, completedPractices, ritualMarks } = useProgress();
+  const { typeId, completedPractices, ritualMarks, birthDate, supportDone } = useProgress();
   const type = getPersonType(typeId ?? "t1");
   const element = getCurrentElement();
 
@@ -50,6 +52,8 @@ export function ProgramPage() {
           typeNumber={type?.number ?? 1}
           completedPractices={completedPractices}
           ritualMarks={ritualMarks}
+          birthDate={birthDate}
+          supportDone={supportDone}
         />
       ) : (
         <ProgramSkeleton />
@@ -62,10 +66,14 @@ function ProgramContent({
   typeNumber,
   completedPractices,
   ritualMarks,
+  birthDate,
+  supportDone,
 }: {
   typeNumber: number;
   completedPractices: string[];
   ritualMarks: Record<string, string[]>;
+  birthDate: string | null;
+  supportDone: string[];
 }) {
   const element = getCurrentElement();
   const catalog = usePracticeCatalog();
@@ -75,6 +83,8 @@ function ProgramContent({
   const weekStartKey = getWeekStartKey(today);
   const practice = pickDailyPractice(catalog.practices, element.id, typeNumber, today);
   const stats = getProgramStats(completedPractices, ritualMarks, today);
+  const weakElementId = weakElementIdFor(birthDate);
+  const support = weakElementId ? filterSupport(catalog.support, weakElementId) : [];
 
   return (
     <>
@@ -85,6 +95,8 @@ function ProgramContent({
         practice={practice}
         todayKey={todayKey}
         done={completedPractices.includes(todayKey)}
+        completedDays={completedPractices}
+        today={today}
       />
       <WeeklyRituals
         rituals={filterRituals(catalog.rituals, element.id)}
@@ -93,6 +105,9 @@ function ProgramContent({
         todayKey={todayKey}
         weekStartKey={weekStartKey}
       />
+      {support.length > 0 && (
+        <SupportPractices items={support} doneIds={supportDone} showVariantLink />
+      )}
       <ElementRecommendations element={element} guide={getElementGuide(element.id)} />
       <ProgramStats
         practices={stats.practices}

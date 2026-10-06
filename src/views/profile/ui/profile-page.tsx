@@ -6,18 +6,21 @@ import { useState } from "react";
 import { ElementBadge, getCurrentElement } from "@/entities/element";
 import { filterRituals, usePracticeCatalog } from "@/entities/practice";
 import { getPersonType, TypeTraits } from "@/entities/person-type";
-import { countInLastDays, pluralRu, useProgress } from "@/entities/progress";
+import { countInLastDays, getElementBadgeProgress, pluralRu, progressActions, useProgress } from "@/entities/progress";
 import { routes } from "@/shared/config/routes";
 import { getWeekDays, getWeekStartKey, toDateKey } from "@/shared/lib/date";
 import { useIsClient } from "@/shared/lib/use-is-client";
 import { buttonVariants } from "@/shared/ui/button";
 import { Checkbox } from "@/shared/ui/checkbox";
+import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Logo } from "@/shared/ui/logo";
 
+import { ProfileFriends } from "./profile-friends";
+
 export function ProfilePage() {
   const isClient = useIsClient();
-  const { typeId, completedPractices, ritualMarks } = useProgress();
+  const { typeId, completedPractices, ritualMarks, birthDate } = useProgress();
   const type = getPersonType(typeId ?? "t1");
   const element = getCurrentElement();
   const [remindMorning, setRemindMorning] = useState(true);
@@ -30,7 +33,7 @@ export function ProfilePage() {
         <div className="space-y-2">
           <h1 className="text-3xl font-semibold">Профиль</h1>
           <p className="text-sm text-muted-foreground">
-            Тип, статистика, напоминания и настройки.
+            Тип, статистика, друзья и настройки.
           </p>
         </div>
       </header>
@@ -46,9 +49,6 @@ export function ProfilePage() {
             <span>Текущая стихия</span>
             <ElementBadge element={element} />
           </div>
-          <Link href={routes.typeTest} className={buttonVariants({ variant: "outline", size: "sm" })}>
-            Пройти тест заново
-          </Link>
         </section>
       )}
 
@@ -56,6 +56,8 @@ export function ProfilePage() {
         <>
           <ProfileStats completedPractices={completedPractices} />
           <ProfileRituals ritualMarks={ritualMarks} />
+          <ElementBadgeCard completedPractices={completedPractices} ritualMarks={ritualMarks} />
+          <ProfileFriends />
         </>
       ) : (
         <div className="h-40 animate-pulse rounded-2xl bg-muted" aria-hidden />
@@ -102,6 +104,24 @@ export function ProfilePage() {
             <dd className="font-medium tracking-widest">••••••••</dd>
           </div>
         </dl>
+        <div className="space-y-2 border-t pt-3">
+          <Label htmlFor="birth-date">Дата рождения</Label>
+          {isClient ? (
+            <Input
+              id="birth-date"
+              type="date"
+              className="h-10"
+              value={birthDate ?? ""}
+              onChange={(event) => progressActions.setBirthDate(event.target.value || null)}
+            />
+          ) : (
+            <div className="h-10 animate-pulse rounded-lg bg-muted" aria-hidden />
+          )}
+          <p className="text-xs text-muted-foreground">
+            Если дата указана, к программе добавляются практики для одной стихии. Без даты остаётся
+            только основная программа.
+          </p>
+        </div>
         <p className="text-xs text-muted-foreground">
           В прототипе данные не отправляются на сервер.
         </p>
@@ -144,6 +164,39 @@ function ProfileStats({ completedPractices }: { completedPractices: string[] }) 
 function dailyRitualLabel(days: number): string {
   if (days === 0) return "пока не отмечено";
   return `отмечено ${days} ${pluralRu(days, "день", "дня", "дней")}`;
+}
+
+function ElementBadgeCard({
+  completedPractices,
+  ritualMarks,
+}: {
+  completedPractices: string[];
+  ritualMarks: Record<string, string[]>;
+}) {
+  const element = getCurrentElement();
+  const rituals = filterRituals(usePracticeCatalog().rituals, element.id);
+  const progress = getElementBadgeProgress(completedPractices, ritualMarks, rituals, new Date());
+
+  return (
+    <section aria-labelledby="badge-title" className="space-y-3 rounded-2xl border bg-card p-4">
+      <h2 id="badge-title" className="text-lg font-semibold">
+        Бейдж стихии
+      </h2>
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between text-sm">
+          <span className="font-medium">{element.name}</span>
+          <span className="tabular-nums text-muted-foreground">{progress.percent}%</span>
+        </div>
+        <div className="h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden>
+          <div className="h-full rounded-full bg-primary" style={{ width: `${progress.percent}%` }} />
+        </div>
+      </div>
+      <p className="text-sm leading-relaxed text-muted-foreground">
+        {progress.done} из {progress.planned} запланированных выполнений за период. Бейдж приходит в
+        конце, если будет не меньше {progress.thresholdPercent}%. Библиотека в этот счёт не входит.
+      </p>
+    </section>
+  );
 }
 
 function ProfileRituals({ ritualMarks }: { ritualMarks: Record<string, string[]> }) {

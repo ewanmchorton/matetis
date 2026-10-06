@@ -4,7 +4,7 @@ import type { ElementId } from "@/entities/element";
 import { createLocalStore } from "@/shared/lib/create-local-store";
 import { getDayNumber } from "@/shared/lib/date";
 
-import type { DailyPractice, WeeklyRitual } from "../model/types";
+import type { DailyPractice, SupportPractice, WeeklyRitual } from "../model/types";
 
 // Демо-данные стихии Воды (даосская пятерка, запуск 1 декабря). Админка дополняет их в браузере.
 const seedPractices: DailyPractice[] = [
@@ -19,6 +19,7 @@ const seedPractices: DailyPractice[] = [
       "Поблагодарите тело и медленно откройте глаза.",
     ],
     why: "В даосской стихии Воды мы бережём почки и глубинный покой. Внутренняя улыбка согревает изнутри и успокаивает страх.",
+    allowTogether: true,
   },
   {
     id: "water-element-lesson",
@@ -31,6 +32,31 @@ const seedPractices: DailyPractice[] = [
       "Запишите одну мысль: что из урока откликается вам сегодня.",
     ],
     why: "Стихия меняется — важно не только делать упражнения, но и понимать, зачем они в этом сезоне.",
+    allowTogether: false,
+  },
+];
+
+const seedSupport: SupportPractice[] = [
+  {
+    id: "wood-walk",
+    elementId: "wood",
+    title: "Прогулка без цели",
+    duration: "15 минут",
+    note: "Неспешный шаг и спокойное дыхание.",
+  },
+  {
+    id: "wood-stretch",
+    elementId: "wood",
+    title: "Мягкая растяжка",
+    duration: "8 минут",
+    note: "Плечи, бока и шаг — без усилия «дотянуться».",
+  },
+  {
+    id: "fire-breath",
+    elementId: "fire",
+    title: "Тёплое дыхание",
+    duration: "6 минут",
+    note: "Пример набора для другой стихии — в программе Воды не показывается.",
   },
 ];
 
@@ -58,11 +84,16 @@ const seedRituals: WeeklyRitual[] = [
   },
 ];
 
-type PracticeCatalog = { practices: DailyPractice[]; rituals: WeeklyRitual[] };
+type PracticeCatalog = {
+  practices: DailyPractice[];
+  rituals: WeeklyRitual[];
+  support: SupportPractice[];
+};
 
-const store = createLocalStore<PracticeCatalog>("matetis-demo-practices-v1", {
+const store = createLocalStore<PracticeCatalog>("matetis-demo-practices-v2", {
   practices: seedPractices,
   rituals: seedRituals,
+  support: seedSupport,
 });
 
 export function usePracticeCatalog(): PracticeCatalog {
@@ -88,6 +119,14 @@ export function filterRituals(rituals: WeeklyRitual[], elementId: ElementId): We
   return rituals.filter((r) => r.elementId === elementId);
 }
 
+export function filterSupport(support: SupportPractice[], elementId: ElementId): SupportPractice[] {
+  return support.filter((item) => item.elementId === elementId);
+}
+
+export function allowsTogether(practice: DailyPractice): boolean {
+  return practice.allowTogether !== false;
+}
+
 export const practiceActions = {
   addPractice(practice: DailyPractice) {
     store.update((s) => ({ ...s, practices: [...s.practices, practice] }));
@@ -100,6 +139,18 @@ export const practiceActions = {
   },
   removeRitual(id: string) {
     store.update((s) => ({ ...s, rituals: s.rituals.filter((r) => r.id !== id) }));
+  },
+  setAllowTogether(id: string, allow: boolean) {
+    store.update((s) => ({
+      ...s,
+      practices: s.practices.map((p) => (p.id === id ? { ...p, allowTogether: allow } : p)),
+    }));
+  },
+  addSupport(item: SupportPractice) {
+    store.update((s) => ({ ...s, support: [...s.support, item] }));
+  },
+  removeSupport(id: string) {
+    store.update((s) => ({ ...s, support: s.support.filter((item) => item.id !== id) }));
   },
   reset() {
     store.reset();

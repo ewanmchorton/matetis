@@ -4,8 +4,9 @@ import { Check } from "lucide-react";
 
 import type { WeeklyRitual } from "@/entities/practice";
 import { progressActions } from "@/entities/progress";
-import { toDateKey, weekDayShortNames } from "@/shared/lib/date";
+import { getPreviousWeekDays } from "@/shared/lib/date";
 import { cn } from "@/shared/lib/utils";
+import { MatetisMarks } from "@/shared/ui/matetis-marks";
 
 export function WeeklyRituals({
   rituals,
@@ -20,8 +21,6 @@ export function WeeklyRituals({
   todayKey: string;
   weekStartKey: string;
 }) {
-  const weekKeys = weekDays.map(toDateKey);
-
   return (
     <section id="weekly-rituals" aria-labelledby="rituals-title" className="scroll-mt-16 space-y-3">
       <div className="space-y-1">
@@ -29,8 +28,8 @@ export function WeeklyRituals({
           Еженедельные ритуалы
         </h2>
         <p className="text-sm text-muted-foreground">
-          Зарядка «Туата» — раз в неделю. Освоение предметов можно отмечать по дням, когда
-          занимались.
+          Зарядка «Туата» — раз в неделю. У ежедневных занятий дни показаны буквами МАТЭТИС:
+          закрашивается сделанное, новая неделя начинает новый ряд.
         </p>
       </div>
       <ul className="space-y-3">
@@ -87,23 +86,13 @@ export function WeeklyRituals({
                 </button>
               </div>
               {isDaily ? (
-                <ul
-                  className={cn("flex gap-1 transition-opacity duration-300", done && "opacity-60")}
-                  aria-label="Дни недели"
-                >
-                  {weekKeys.map((key, i) => (
-                    <li
-                      key={key}
-                      className={cn(
-                        "grid size-7 place-items-center rounded-full text-[10px] font-medium text-muted-foreground",
-                        marks.has(key) ? "bg-primary/15 text-primary" : "bg-muted",
-                        key === todayKey && "ring-2 ring-primary/40",
-                      )}
-                    >
-                      {weekDayShortNames[i]}
-                    </li>
-                  ))}
-                </ul>
+                <div className={cn("transition-opacity duration-300", done && "opacity-60")}>
+                  <MatetisMarks
+                    weeks={[weekDays, getPreviousWeekDays(weekDays[0] ?? new Date())]}
+                    todayKey={todayKey}
+                    doneKeys={marks}
+                  />
+                </div>
               ) : (
                 <p className={cn("text-sm text-muted-foreground", done && "opacity-60")}>
                   {doneThisWeek ? "На этой неделе отмечено" : "Можно отметить, когда сделаете"}

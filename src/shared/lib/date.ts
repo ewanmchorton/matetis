@@ -32,4 +32,10 @@ export function getDayNumber(date: Date): number {
   );
 }
 
-export const weekDayShortNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+/** Буквы «МАТЭТИС» вместо названий дней: понедельник … воскресенье. */
+export const matetisLetters = ["М", "А", "Т", "Е", "Т", "И", "С"] as const;
+
+/** Семь дней предыдущей недели, с понедельника. */
+export function getPreviousWeekDays(date: Date): Date[] {
+  return getWeekDays(addDays(date, -7));
+}

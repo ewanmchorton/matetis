@@ -1,49 +1,27 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ArrowRight, CalendarCheck, Repeat, Sparkles } from "lucide-react";
 
 import { ElementBadge, getCurrentElement, getElements } from "@/entities/element";
-import { getPersonTypes } from "@/entities/person-type";
+import { progressActions } from "@/entities/progress";
 import { routes } from "@/shared/config/routes";
 import { cn } from "@/shared/lib/utils";
-import { Button, buttonVariants } from "@/shared/ui/button";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
+import { Label } from "@/shared/ui/label";
 import { Logo } from "@/shared/ui/logo";
 
-/** На первом экране онбординга показываем примеры, а не все 12 названий — на телефоне иначе тесно. */
-const onboardingTypeExamples = [0, 2, 4, 6, 9, 11];
-
 function SlideSystem() {
-  const types = getPersonTypes();
-  const examples = onboardingTypeExamples.map((i) => types[i]).filter(Boolean);
-  const restCount = types.length - examples.length;
-
   return (
     <div className="space-y-4">
       <h1 className="text-3xl font-semibold leading-tight">Ваш путь развития в МАТЭТИС</h1>
       <p className="leading-relaxed text-muted-foreground">
-        В системе 12 психотипов — у каждого своё имя и своя программа. Короткий тест определит
-        ваш, и приложение соберёт практики именно для вас.
+        Короткий тест определит ваш психотип. Мы покажем несколько характеристик — и сразу перейдём
+        к практикам.
       </p>
-      <div className="space-y-3 pt-2">
-        <ul className="flex flex-wrap gap-2">
-          {examples.map((type) => (
-            <li
-              key={type.id}
-              className="rounded-full border bg-card px-3.5 py-1.5 text-sm font-medium"
-            >
-              {type.name}
-            </li>
-          ))}
-          <li className="rounded-full bg-muted px-3.5 py-1.5 text-sm text-muted-foreground">
-            и ещё {restCount}
-          </li>
-        </ul>
-        <p className="text-sm text-muted-foreground">
-          Примеры типов. Полный список откроется после теста — там будет ваш результат.
-        </p>
-      </div>
     </div>
   );
 }
@@ -102,12 +80,41 @@ function SlideProgram() {
   );
 }
 
-const slides = [SlideSystem, SlideElements, SlideProgram];
+function SlideBirth({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  return (
+    <div className="space-y-4">
+      <h1 className="text-3xl font-semibold leading-tight">Дата рождения</h1>
+      <p className="leading-relaxed text-muted-foreground">
+        По ней добавим несколько практик для стихии, которой полезно внимание. Они не заменят
+        основную программу. Дату можно не указывать — тогда останется только она.
+      </p>
+      <div className="space-y-2 pt-2">
+        <Label htmlFor="onboarding-birth">Дата</Label>
+        <Input
+          id="onboarding-birth"
+          type="date"
+          className="h-11"
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+      </div>
+      <p className="text-sm text-muted-foreground">Как именно считать стихию по дате — ещё уточняем.</p>
+    </div>
+  );
+}
+
+const slideCount = 4;
 
 export function OnboardingPage() {
+  const router = useRouter();
   const [index, setIndex] = useState(0);
-  const Slide = slides[index];
-  const isLast = index === slides.length - 1;
+  const [birthDate, setBirthDate] = useState("");
+  const isLast = index === slideCount - 1;
+
+  function finish() {
+    progressActions.setBirthDate(birthDate || null);
+    router.push(routes.typeTest);
+  }
 
   return (
     <main className="flex flex-1 flex-col gap-8 px-5 py-8">
@@ -120,11 +127,14 @@ export function OnboardingPage() {
         )}
       </div>
 
-      <Slide />
+      {index === 0 && <SlideSystem />}
+      {index === 1 && <SlideElements />}
+      {index === 2 && <SlideProgram />}
+      {index === 3 && <SlideBirth value={birthDate} onChange={setBirthDate} />}
 
       <div className="mt-auto space-y-5">
-        <div className="flex justify-center gap-2" aria-label={`Экран ${index + 1} из ${slides.length}`}>
-          {slides.map((_, i) => (
+        <div className="flex justify-center gap-2" aria-label={`Экран ${index + 1} из ${slideCount}`}>
+          {Array.from({ length: slideCount }, (_, i) => (
             <button
               key={i}
               type="button"
@@ -138,12 +148,9 @@ export function OnboardingPage() {
           ))}
         </div>
         {isLast ? (
-          <Link
-            href={routes.typeTest}
-            className={buttonVariants({ size: "lg", className: "h-12 w-full text-base" })}
-          >
-            Пройти тест
-          </Link>
+          <Button size="lg" className="h-12 w-full text-base" onClick={finish}>
+            Перейти к тесту
+          </Button>
         ) : (
           <Button size="lg" className="h-12 w-full text-base" onClick={() => setIndex(index + 1)}>
             Дальше

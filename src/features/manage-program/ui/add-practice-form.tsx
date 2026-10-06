@@ -32,6 +32,7 @@ export function AddPracticeForm() {
         .split("\n")
         .map((s) => s.trim())
         .filter(Boolean),
+      allowTogether: true,
     });
     setTitle("");
     setWhy("");

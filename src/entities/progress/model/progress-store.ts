@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 
-import { addDays, toDateKey } from "@/shared/lib/date";
+import { addDays, getWeekStartKey, toDateKey } from "@/shared/lib/date";
 
 /**
  * Результат теста и отметки о практиках в прототипе хранятся в браузере (localStorage).
@@ -18,14 +18,20 @@ export type ProgressState = {
    * Для ежедневных — ключи дней; для «раз в неделю» — ключ понедельника недели.
    */
   ritualMarks: Record<string, string[]>;
+  /** «ГГГГ-ММ-ДД» или null, если человек дату не указал */
+  birthDate: string | null;
+  /** Дополнительные практики слабой стихии, отмеченные один раз */
+  supportDone: string[];
 };
 
-const STORAGE_KEY = "matetis-demo-progress-v4";
+const STORAGE_KEY = "matetis-demo-progress-v5";
 
 const initialState: ProgressState = {
   typeId: "t7",
   completedPractices: [],
   ritualMarks: {},
+  birthDate: null,
+  supportDone: [],
 };
 
 /**
@@ -37,10 +43,33 @@ function createDemoState(): ProgressState {
   const daysAgo = (n: number) => toDateKey(addDays(today, -n));
   return {
     ...initialState,
-    completedPractices: [daysAgo(1), daysAgo(2), daysAgo(4), daysAgo(8), daysAgo(9), daysAgo(13)],
+    completedPractices: [
+      daysAgo(1),
+      daysAgo(2),
+      daysAgo(4),
+      daysAgo(6),
+      daysAgo(8),
+      daysAgo(9),
+      daysAgo(11),
+      daysAgo(12),
+      daysAgo(13),
+    ],
     ritualMarks: {
-      "water-subjects-study": [daysAgo(1), daysAgo(2), daysAgo(4)],
+      "water-subjects-study": [
+        daysAgo(1),
+        daysAgo(2),
+        daysAgo(4),
+        daysAgo(6),
+        daysAgo(8),
+        daysAgo(9),
+        daysAgo(11),
+        daysAgo(12),
+        daysAgo(13),
+      ],
+      "water-tuata-charge": [getWeekStartKey(addDays(today, -1)), getWeekStartKey(addDays(today, -8))],
     },
+    birthDate: "1992-03-14",
+    supportDone: ["wood-walk"],
   };
 }
 
@@ -96,6 +125,11 @@ export const progressActions = {
   togglePractice(day: string) {
     setState({ ...state, completedPractices: toggleDay(state.completedPractices, day) });
   },
+  /** Отметить день выполненным, не снимая уже стоящую отметку. */
+  completePractice(day: string) {
+    if (state.completedPractices.includes(day)) return;
+    setState({ ...state, completedPractices: [...state.completedPractices, day] });
+  },
   toggleDailyRitual(ritualId: string, day: string) {
     const marks = state.ritualMarks[ritualId] ?? [];
     setState({
@@ -112,6 +146,16 @@ export const progressActions = {
         ...state.ritualMarks,
         [ritualId]: done ? marks.filter((k) => k !== weekKey) : [...marks, weekKey],
       },
+    });
+  },
+  setBirthDate(birthDate: string | null) {
+    setState({ ...state, birthDate });
+  },
+  toggleSupport(id: string) {
+    const done = state.supportDone.includes(id);
+    setState({
+      ...state,
+      supportDone: done ? state.supportDone.filter((item) => item !== id) : [...state.supportDone, id],
     });
   },
   reset() {
