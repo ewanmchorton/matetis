@@ -118,48 +118,63 @@ function toggleDay(days: string[], day: string): string[] {
   return days.includes(day) ? days.filter((d) => d !== day) : [...days, day];
 }
 
+/** Действие может прийти с экрана, который сам прогресс не показывает — сначала читаем сохранённое. */
+function edit(updater: (current: ProgressState) => ProgressState) {
+  load();
+  setState(updater(state));
+}
+
 export const progressActions = {
   setType(typeId: string) {
-    setState({ ...state, typeId });
+    edit((current) => ({ ...current, typeId }));
   },
   togglePractice(day: string) {
-    setState({ ...state, completedPractices: toggleDay(state.completedPractices, day) });
+    edit((current) => ({ ...current, completedPractices: toggleDay(current.completedPractices, day) }));
   },
   /** Отметить день выполненным, не снимая уже стоящую отметку. */
   completePractice(day: string) {
-    if (state.completedPractices.includes(day)) return;
-    setState({ ...state, completedPractices: [...state.completedPractices, day] });
+    edit((current) =>
+      current.completedPractices.includes(day)
+        ? current
+        : { ...current, completedPractices: [...current.completedPractices, day] },
+    );
   },
   toggleDailyRitual(ritualId: string, day: string) {
-    const marks = state.ritualMarks[ritualId] ?? [];
-    setState({
-      ...state,
-      ritualMarks: { ...state.ritualMarks, [ritualId]: toggleDay(marks, day) },
+    edit((current) => {
+      const marks = current.ritualMarks[ritualId] ?? [];
+      return {
+        ...current,
+        ritualMarks: { ...current.ritualMarks, [ritualId]: toggleDay(marks, day) },
+      };
     });
   },
   toggleWeeklyRitual(ritualId: string, weekKey: string) {
-    const marks = state.ritualMarks[ritualId] ?? [];
-    const done = marks.includes(weekKey);
-    setState({
-      ...state,
-      ritualMarks: {
-        ...state.ritualMarks,
-        [ritualId]: done ? marks.filter((k) => k !== weekKey) : [...marks, weekKey],
-      },
+    edit((current) => {
+      const marks = current.ritualMarks[ritualId] ?? [];
+      const done = marks.includes(weekKey);
+      return {
+        ...current,
+        ritualMarks: {
+          ...current.ritualMarks,
+          [ritualId]: done ? marks.filter((key) => key !== weekKey) : [...marks, weekKey],
+        },
+      };
     });
   },
   setBirthDate(birthDate: string | null) {
-    setState({ ...state, birthDate });
+    edit((current) => ({ ...current, birthDate }));
   },
   toggleSupport(id: string) {
-    const done = state.supportDone.includes(id);
-    setState({
-      ...state,
-      supportDone: done ? state.supportDone.filter((item) => item !== id) : [...state.supportDone, id],
+    edit((current) => {
+      const done = current.supportDone.includes(id);
+      return {
+        ...current,
+        supportDone: done ? current.supportDone.filter((item) => item !== id) : [...current.supportDone, id],
+      };
     });
   },
   reset() {
-    setState(createDemoState());
+    edit(() => createDemoState());
   },
 };
 

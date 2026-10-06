@@ -15,7 +15,11 @@ export function MatetisMarks({
   return (
     <div className="space-y-1.5">
       {weeks.map((days, row) => (
-        <ul key={toDateKey(days[0] ?? new Date())} className="flex gap-1" aria-label={row === 0 ? "Эта неделя" : "Прошлая неделя"}>
+        <ul
+          key={toDateKey(days[0] ?? new Date())}
+          className="flex gap-1"
+          aria-label={row === 0 ? "Эта неделя" : "Прошлая неделя"}
+        >
           {days.map((day, index) => {
             const key = toDateKey(day);
             const done = doneKeys.has(key);
@@ -38,6 +42,7 @@ export function MatetisMarks({
           })}
         </ul>
       ))}
+      {weeks.length > 1 && <p className="text-[11px] text-muted-foreground">Нижний ряд — прошлая неделя</p>}
     </div>
   );
 }

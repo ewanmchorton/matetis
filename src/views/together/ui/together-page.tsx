@@ -51,7 +51,7 @@ function TogetherContent() {
               <p className="text-sm font-medium text-primary">Совместная практика</p>
               <h2 className="text-xl font-semibold">{item.practiceTitle}</h2>
               <p className="text-sm text-muted-foreground">
-                С {friend?.name ?? "другом"} · каждый в своё время, до конца недели
+                Вы и {friend?.name ?? "друг"} · каждый в своё время, до конца недели
               </p>
             </div>
             <ul className="space-y-2 text-sm">
