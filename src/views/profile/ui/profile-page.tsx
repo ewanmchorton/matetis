@@ -30,13 +30,22 @@ export function ProfilePage() {
     <main className="flex flex-1 flex-col gap-6 px-5 pt-6 pb-8">
       <header className="space-y-4">
         <Logo href={routes.program} />
-        <div className="space-y-2">
-          <h1 className="text-3xl font-semibold">Профиль</h1>
-          <p className="text-sm text-muted-foreground">
-            Тип, статистика, друзья и настройки.
-          </p>
-        </div>
+        <h1 className="text-3xl font-semibold">Профиль</h1>
       </header>
+
+      <section className="space-y-4 rounded-2xl border bg-card p-4">
+        <p className="text-2xl font-semibold">Анна</p>
+        <ProfileFriends embedded />
+      </section>
+
+      {isClient ? (
+        <>
+          <ProfileStats completedPractices={completedPractices} />
+          <ElementProgressCard completedPractices={completedPractices} ritualMarks={ritualMarks} />
+        </>
+      ) : (
+        <div className="h-40 animate-pulse rounded-2xl bg-muted" aria-hidden />
+      )}
 
       {type && (
         <section className="space-y-3 rounded-2xl border bg-card p-4">
@@ -52,16 +61,7 @@ export function ProfilePage() {
         </section>
       )}
 
-      {isClient ? (
-        <>
-          <ProfileStats completedPractices={completedPractices} />
-          <ProfileRituals ritualMarks={ritualMarks} />
-          <ElementBadgeCard completedPractices={completedPractices} ritualMarks={ritualMarks} />
-          <ProfileFriends />
-        </>
-      ) : (
-        <div className="h-40 animate-pulse rounded-2xl bg-muted" aria-hidden />
-      )}
+      {isClient && <ProfileRituals ritualMarks={ritualMarks} />}
 
       <section className="space-y-4 rounded-2xl border bg-card p-4">
         <h2 className="text-lg font-semibold">Напоминания</h2>
@@ -117,10 +117,6 @@ export function ProfilePage() {
           ) : (
             <div className="h-10 animate-pulse rounded-lg bg-muted" aria-hidden />
           )}
-          <p className="text-xs text-muted-foreground">
-            Если дата указана, к программе добавляются практики для одной стихии. Без даты остаётся
-            только основная программа.
-          </p>
         </div>
         <p className="text-xs text-muted-foreground">
           В прототипе данные не отправляются на сервер.
@@ -154,9 +150,6 @@ function ProfileStats({ completedPractices }: { completedPractices: string[] }) 
           <p className="text-xs text-muted-foreground">за последние 7 дней</p>
         </div>
       </div>
-      <p className="text-sm leading-relaxed text-muted-foreground">
-        Каждая отметка — это время, которое вы нашли для себя.
-      </p>
     </section>
   );
 }
@@ -166,7 +159,7 @@ function dailyRitualLabel(days: number): string {
   return `отмечено ${days} ${pluralRu(days, "день", "дня", "дней")}`;
 }
 
-function ElementBadgeCard({
+function ElementProgressCard({
   completedPractices,
   ritualMarks,
 }: {
@@ -178,9 +171,9 @@ function ElementBadgeCard({
   const progress = getElementBadgeProgress(completedPractices, ritualMarks, rituals, new Date());
 
   return (
-    <section aria-labelledby="badge-title" className="space-y-3 rounded-2xl border bg-card p-4">
-      <h2 id="badge-title" className="text-lg font-semibold">
-        Бейдж стихии
+    <section aria-labelledby="element-progress-title" className="space-y-3 rounded-2xl border bg-card p-4">
+      <h2 id="element-progress-title" className="text-lg font-semibold">
+        Прогресс стихии
       </h2>
       <div className="space-y-1.5">
         <div className="flex items-center justify-between text-sm">
@@ -191,10 +184,6 @@ function ElementBadgeCard({
           <div className="h-full rounded-full bg-primary" style={{ width: `${progress.percent}%` }} />
         </div>
       </div>
-      <p className="text-sm leading-relaxed text-muted-foreground">
-        {progress.done} из {progress.planned} запланированных выполнений за период. Бейдж приходит в
-        конце, если будет не меньше {progress.thresholdPercent}%. Библиотека в этот счёт не входит.
-      </p>
     </section>
   );
 }

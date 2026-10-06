@@ -28,10 +28,7 @@ export function InvitePanel({
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="font-medium">Предложить практику</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Друг принимает приглашение и делает практику в удобное время до конца недели. Выполнение
-            засчитывается и в личную программу.
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">Друг может принять или отклонить приглашение.</p>
         </div>
         <button type="button" className="text-sm text-muted-foreground underline-offset-4 hover:underline" onClick={onClose}>
           Закрыть

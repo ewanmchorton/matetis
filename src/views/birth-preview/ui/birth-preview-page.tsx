@@ -1,21 +1,21 @@
 "use client";
 
 import Link from "next/link";
+import { Check } from "lucide-react";
 
 import { demoElementShares, demoSquare, demoTraits } from "@/entities/birth";
 import { ElementBadge, getElement } from "@/entities/element";
 import { filterSupport, usePracticeCatalog } from "@/entities/practice";
-import { useProgress } from "@/entities/progress";
+import { progressActions, useProgress } from "@/entities/progress";
 import { routes } from "@/shared/config/routes";
 import { useIsClient } from "@/shared/lib/use-is-client";
 import { cn } from "@/shared/lib/utils";
 import { Logo } from "@/shared/ui/logo";
-import { SupportPractices } from "@/views/program/ui/support-practices";
 
 export function BirthPreviewPage({ view }: { view: "practices" | "square" }) {
   const isClient = useIsClient();
   const { supportDone } = useProgress();
-  const support = filterSupport(usePracticeCatalog().support, "wood");
+  const support = filterSupport(usePracticeCatalog().support, "wood").slice(0, 2);
 
   return (
     <main className="flex flex-1 flex-col gap-6 px-5 pt-6 pb-8">
@@ -45,7 +45,41 @@ export function BirthPreviewPage({ view }: { view: "practices" | "square" }) {
       {view === "square" && <SquareVariant />}
 
       {isClient ? (
-        <SupportPractices items={support} doneIds={supportDone} />
+        <ul className="space-y-3">
+          {support.map((item) => {
+            const done = supportDone.includes(item.id);
+            return (
+              <li
+                key={item.id}
+                className={cn(
+                  "flex items-start gap-3 rounded-2xl border p-4",
+                  done ? "bg-muted/60" : "bg-card",
+                )}
+              >
+                <div className={cn("min-w-0 flex-1", done && "opacity-50")}>
+                  <p className="font-medium">{item.title}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {item.duration}
+                    {item.note ? ` · ${item.note}` : ""}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  aria-pressed={done}
+                  onClick={() => progressActions.toggleSupport(item.id)}
+                  className={cn(
+                    "grid size-10 shrink-0 place-items-center rounded-full border-2",
+                    done
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-input text-transparent",
+                  )}
+                >
+                  <Check className="size-5" />
+                </button>
+              </li>
+            );
+          })}
+        </ul>
       ) : (
         <div className="h-40 animate-pulse rounded-2xl bg-muted" aria-hidden />
       )}
@@ -105,10 +139,6 @@ function SquareVariant() {
             );
           })}
         </ul>
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          Если слабых стихий несколько и они равны, правило выбора ещё не зафиксировано. В примере
-          слабая одна — Дерево, поэтому ниже практики именно для неё.
-        </p>
       </div>
     </section>
   );

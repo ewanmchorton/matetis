@@ -12,7 +12,6 @@ import { Logo } from "@/shared/ui/logo";
 
 import { ElementRecommendations } from "./element-recommendations";
 import { ProgramStats } from "./program-stats";
-import { SupportPractices } from "./support-practices";
 import { TodayPractice } from "./today-practice";
 import { WeeklyRituals } from "./weekly-rituals";
 
@@ -95,19 +94,16 @@ function ProgramContent({
         practice={practice}
         todayKey={todayKey}
         done={completedPractices.includes(todayKey)}
-        completedDays={completedPractices}
-        today={today}
       />
       <WeeklyRituals
         rituals={filterRituals(catalog.rituals, element.id)}
+        supportItems={support.slice(0, 2)}
+        supportDone={supportDone}
         ritualMarks={ritualMarks}
         weekDays={weekDays}
         todayKey={todayKey}
         weekStartKey={weekStartKey}
       />
-      {support.length > 0 && (
-        <SupportPractices items={support} doneIds={supportDone} showVariantLink />
-      )}
       <ElementRecommendations element={element} guide={getElementGuide(element.id)} />
       <ProgramStats
         practices={stats.practices}

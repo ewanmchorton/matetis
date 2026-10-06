@@ -8,17 +8,19 @@ import { Button } from "@/shared/ui/button";
 import { Checkbox } from "@/shared/ui/checkbox";
 import { Label } from "@/shared/ui/label";
 
-export function ProfileFriends() {
+export function ProfileFriends({ embedded = false }: { embedded?: boolean }) {
   const { relations, shareActivity } = useSocial();
   const friends = people.filter((person) => relations[person.id] === "friend");
   const incoming = people.filter((person) => relations[person.id] === "incoming");
   const outgoing = people.filter((person) => relations[person.id] === "outgoing");
 
-  return (
-    <section aria-labelledby="friends-title" className="space-y-4 rounded-2xl border bg-card p-4">
-      <h2 id="friends-title" className="text-lg font-semibold">
-        Друзья
-      </h2>
+  const body = (
+    <>
+      {!embedded && (
+        <h2 id="friends-title" className="text-lg font-semibold">
+          Друзья
+        </h2>
+      )}
       <Label className="flex items-start gap-3 font-normal">
         <Checkbox
           className="mt-0.5"
@@ -70,6 +72,16 @@ export function ProfileFriends() {
       {friends.length === 0 && incoming.length === 0 && (
         <p className="text-sm text-muted-foreground">Пока никого нет — откройте профиль человека и отправьте запрос.</p>
       )}
+    </>
+  );
+
+  if (embedded) {
+    return <div className="space-y-4">{body}</div>;
+  }
+
+  return (
+    <section aria-labelledby="friends-title" className="space-y-4 rounded-2xl border bg-card p-4">
+      {body}
     </section>
   );
 }

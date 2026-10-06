@@ -32,13 +32,13 @@ export function ElementResultPage({ earned }: { earned: boolean }) {
           <h1 className="text-2xl font-semibold">
             {earned ? `Бейдж стихии ${element.name}` : `Период стихии ${element.name} завершён`}
           </h1>
-          <p className="text-sm text-muted-foreground">Выполнено {percent}% программы периода. Бейдж — от 70%.</p>
+          <p className="text-sm text-muted-foreground">Выполнено {percent}% программы периода</p>
         </div>
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          {earned
-            ? "Это отметка периода. Библиотека в процент не входила, повторные отметки тоже."
-            : "Можно просто идти дальше: следующая стихия начнётся со своей программой."}
-        </p>
+        {!earned && (
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Следующая стихия начнётся со своей программой.
+          </p>
+        )}
       </section>
       <div className="mt-auto flex flex-col gap-3">
         <Link href={routes.typeTest} className={buttonVariants({ size: "lg", className: "h-12 w-full text-base" })}>

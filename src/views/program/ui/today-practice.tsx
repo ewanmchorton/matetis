@@ -6,26 +6,14 @@ import { ArrowDown, Check, Clock, Sparkles } from "lucide-react";
 import { allowsTogether, type DailyPractice } from "@/entities/practice";
 import { progressActions } from "@/entities/progress";
 import { socialActions } from "@/entities/social";
-import { getPreviousWeekDays, getWeekDays } from "@/shared/lib/date";
 import { InvitePanel } from "@/features/invite-practice";
 import { Button } from "@/shared/ui/button";
-import { MatetisMarks } from "@/shared/ui/matetis-marks";
 
 function scrollToRituals() {
   document.getElementById("weekly-rituals")?.scrollIntoView({ behavior: "smooth" });
 }
 
-function PracticeDone({
-  todayKey,
-  practice,
-  completedDays,
-  today,
-}: {
-  todayKey: string;
-  practice: DailyPractice;
-  completedDays: string[];
-  today: Date;
-}) {
+function PracticeDone({ todayKey, practice }: { todayKey: string; practice: DailyPractice }) {
   return (
     <section
       aria-live="polite"
@@ -41,7 +29,6 @@ function PracticeDone({
           ритуалам.
         </p>
       </div>
-      <WeekMarks today={today} todayKey={todayKey} completedDays={completedDays} />
       <Button size="lg" className="h-11 w-full text-base" onClick={scrollToRituals}>
         К еженедельным ритуалам
         <ArrowDown />
@@ -58,27 +45,6 @@ function PracticeDone({
         Отметили по ошибке? Вернуть практику
       </button>
     </section>
-  );
-}
-
-function WeekMarks({
-  today,
-  todayKey,
-  completedDays,
-}: {
-  today: Date;
-  todayKey: string;
-  completedDays: string[];
-}) {
-  return (
-    <div className="space-y-2 text-left">
-      <p className="text-xs text-muted-foreground">Буквы МАТЭТИС — дни с понедельника</p>
-      <MatetisMarks
-        weeks={[getWeekDays(today), getPreviousWeekDays(today)]}
-        todayKey={todayKey}
-        doneKeys={new Set(completedDays)}
-      />
-    </div>
   );
 }
 
@@ -103,14 +69,10 @@ export function TodayPractice({
   practice,
   todayKey,
   done,
-  completedDays,
-  today,
 }: {
   practice: DailyPractice | undefined;
   todayKey: string;
   done: boolean;
-  completedDays: string[];
-  today: Date;
 }) {
   if (!practice) {
     return (
@@ -121,16 +83,7 @@ export function TodayPractice({
     );
   }
 
-  if (done) {
-    return (
-      <PracticeDone
-        todayKey={todayKey}
-        practice={practice}
-        completedDays={completedDays}
-        today={today}
-      />
-    );
-  }
+  if (done) return <PracticeDone todayKey={todayKey} practice={practice} />;
 
   return (
     <section
@@ -162,8 +115,6 @@ export function TodayPractice({
           </li>
         ))}
       </ol>
-
-      <WeekMarks today={today} todayKey={todayKey} completedDays={completedDays} />
 
       <Button
         size="lg"
