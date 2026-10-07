@@ -35,4 +35,6 @@ export type WeeklyRitual = {
   title: string;
   description: string;
   schedule: WeeklyRitualSchedule;
+  /** Шаги в карточке ритуала. На списке остаётся короткое описание. */
+  steps?: string[];
 };

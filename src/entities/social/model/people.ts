@@ -23,7 +23,7 @@ export const people: DemoPerson[] = [
     id: "denis",
     name: "Денис",
     about: "В программе стихии Воды",
-    unavailablePracticeIds: ["water-inner-smile"],
+    unavailablePracticeIds: ["water-koan-day"],
   },
   {
     id: "olga",
@@ -50,7 +50,7 @@ export const feedEvents: FeedEvent[] = [
     personId: "svetlana",
     kind: "first",
     title: "Первая практика",
-    text: "Светлана выполнила первую практику — «Внутренняя улыбка».",
+    text: "Светлана выполнила первую практику — «Коан дня».",
   },
   {
     id: "e-week",

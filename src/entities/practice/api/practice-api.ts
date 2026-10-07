@@ -9,17 +9,17 @@ import type { DailyPractice, SupportPractice, WeeklyRitual } from "../model/type
 // Демо-данные стихии Воды (даосская пятерка, запуск 1 декабря). Админка дополняет их в браузере.
 const seedPractices: DailyPractice[] = [
   {
-    id: "water-inner-smile",
+    id: "water-koan-day",
     elementId: "water",
-    title: "Внутренняя улыбка",
+    title: "Коан дня",
     duration: "5 мин",
-    summary: "Тёплая улыбка внутрь, в область почек.",
+    summary: "Одна короткая формула для размышления.",
     steps: [
-      "Сядьте удобно, закройте глаза, дышите спокойно.",
-      "Улыбнитесь глазами и направьте это тепло в область почек — «мягкое солнце внутри».",
-      "Поблагодарите тело и медленно откройте глаза.",
+      "Прочитайте формулу дня и задержитесь на ней.",
+      "Не ищите правильный ответ — заметьте, что откликается.",
+      "Вернитесь к делам. Формула может всплыть сама.",
     ],
-    why: "В даосской стихии Воды мы бережём почки и глубинный покой. Внутренняя улыбка согревает изнутри и успокаивает страх.",
+    why: "Коан не объясняет. Он оставляет короткую зацепку, с которой день идёт иначе.",
     allowTogether: true,
   },
   {
@@ -69,13 +69,11 @@ const seedRituals: WeeklyRitual[] = [
     title: "Освоение предметов",
     description: "15 минут по учебнику: геометрия, физика, биология или химия",
     schedule: "daily",
-  },
-  {
-    id: "water-koan-day",
-    elementId: "water",
-    title: "Коан дня",
-    description: "Одна короткая формула для размышления",
-    schedule: "daily",
+    steps: [
+      "Откройте учебник: геометрия, физика, биология или химия.",
+      "15 минут спокойно разберите одну тему.",
+      "Отметьте ритуал, когда закончите.",
+    ],
   },
   {
     id: "water-weekly-audio",
@@ -83,6 +81,11 @@ const seedRituals: WeeklyRitual[] = [
     title: "Размышление над уроком стихии",
     description: "Один раз за неделю, 25–30 минут — урок и аудио из библиотеки",
     schedule: "once_per_week",
+    steps: [
+      "Откройте урок стихии в библиотеке.",
+      "Послушайте аудио спокойно, 25–30 минут.",
+      "Одной фразой отметьте, что отозвалось.",
+    ],
   },
 ];
 
@@ -92,7 +95,7 @@ type PracticeCatalog = {
   support: SupportPractice[];
 };
 
-const store = createLocalStore<PracticeCatalog>("matetis-demo-practices-v3", {
+const store = createLocalStore<PracticeCatalog>("matetis-demo-practices-v4", {
   practices: seedPractices,
   rituals: seedRituals,
   support: seedSupport,

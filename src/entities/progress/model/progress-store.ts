@@ -66,7 +66,6 @@ function createDemoState(): ProgressState {
         daysAgo(12),
         daysAgo(13),
       ],
-      "water-koan-day": [daysAgo(3), daysAgo(5)],
     },
     birthDate: "1992-03-14",
     supportDone: ["wood-walk"],
