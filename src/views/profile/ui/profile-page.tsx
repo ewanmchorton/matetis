@@ -7,6 +7,7 @@ import { ElementBadge, getCurrentElement } from "@/entities/element";
 import { filterRituals, usePracticeCatalog } from "@/entities/practice";
 import { getPersonType, TypeTraits } from "@/entities/person-type";
 import { countInLastDays, getElementBadgeProgress, pluralRu, progressActions, useProgress } from "@/entities/progress";
+import { socialActions, useSocial } from "@/entities/social";
 import { routes } from "@/shared/config/routes";
 import { getWeekDays, getWeekStartKey, toDateKey } from "@/shared/lib/date";
 import { useIsClient } from "@/shared/lib/use-is-client";
@@ -20,6 +21,7 @@ import { ProfileFriends } from "./profile-friends";
 
 export function ProfilePage() {
   const isClient = useIsClient();
+  const { shareActivity } = useSocial();
   const { typeId, completedPractices, ritualMarks, birthDate } = useProgress();
   const type = getPersonType(typeId ?? "t1");
   const element = getCurrentElement();
@@ -35,6 +37,14 @@ export function ProfilePage() {
 
       <section className="space-y-4 rounded-2xl border bg-card p-4">
         <p className="text-2xl font-semibold">Анна</p>
+        <Label className="flex items-center justify-between gap-3 font-normal">
+          <span className="text-sm text-muted-foreground">Делиться прогрессом с друзьями</span>
+          <Checkbox
+            checked={shareActivity}
+            onCheckedChange={(value) => socialActions.setShareActivity(value === true)}
+            aria-label="Делиться прогрессом с друзьями"
+          />
+        </Label>
         <ProfileFriends embedded />
       </section>
 
