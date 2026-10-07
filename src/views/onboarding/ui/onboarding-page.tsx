@@ -5,31 +5,44 @@ import { useState } from "react";
 import { ArrowRight, CalendarCheck, Repeat, Sparkles } from "lucide-react";
 
 import { ElementBadge, getCurrentElement, getElements } from "@/entities/element";
+import { getPersonTypes } from "@/entities/person-type";
 import { routes } from "@/shared/config/routes";
 import { cn } from "@/shared/lib/utils";
 import { Button, buttonVariants } from "@/shared/ui/button";
 import { Logo } from "@/shared/ui/logo";
 
+/** На первом экране онбординга показываем примеры, а не все 12 названий — на телефоне иначе тесно. */
+const onboardingTypeExamples = [0, 2, 4, 6, 9, 11];
+
 function SlideSystem() {
+  const types = getPersonTypes();
+  const examples = onboardingTypeExamples.map((i) => types[i]).filter(Boolean);
+  const restCount = types.length - examples.length;
+
   return (
     <div className="space-y-4">
-      <h1 className="text-3xl font-semibold leading-tight">Ваш путь развития по системе Мастера</h1>
+      <h1 className="text-3xl font-semibold leading-tight">Ваш путь развития в МАТЭТИС</h1>
       <p className="leading-relaxed text-muted-foreground">
-        В системе 12 психотипов людей. Короткий тест определит ваш, и приложение соберёт
-        программу практик именно для вас.
+        В системе 12 психотипов — у каждого своё имя и своя программа. Короткий тест определит
+        ваш, и приложение соберёт практики именно для вас.
       </p>
-      <div className="grid grid-cols-4 gap-2 pt-2" aria-hidden>
-        {Array.from({ length: 12 }, (_, i) => (
-          <span
-            key={i}
-            className={cn(
-              "grid aspect-square place-items-center rounded-xl border bg-card text-sm text-muted-foreground",
-              i === 6 && "border-primary bg-primary/10 font-semibold text-primary",
-            )}
-          >
-            {i + 1}
-          </span>
-        ))}
+      <div className="space-y-3 pt-2">
+        <ul className="flex flex-wrap gap-2">
+          {examples.map((type) => (
+            <li
+              key={type.id}
+              className="rounded-full border bg-card px-3.5 py-1.5 text-sm font-medium"
+            >
+              {type.name}
+            </li>
+          ))}
+          <li className="rounded-full bg-muted px-3.5 py-1.5 text-sm text-muted-foreground">
+            и ещё {restCount}
+          </li>
+        </ul>
+        <p className="text-sm text-muted-foreground">
+          Примеры типов. Полный список откроется после теста — там будет ваш результат.
+        </p>
       </div>
     </div>
   );
@@ -65,7 +78,7 @@ function SlideElements() {
 const programParts = [
   { icon: Sparkles, title: "Практика на сегодня", text: "Одно небольшое задание каждый день" },
   { icon: Repeat, title: "Ритуалы недели", text: "Зарядка, медитации — отмечайте галочкой" },
-  { icon: CalendarCheck, title: "Рекомендации стихии", text: "Видео Мастера, книги и фильмы" },
+  { icon: CalendarCheck, title: "Рекомендации стихии", text: "Видео, книги и фильмы в библиотеке" },
 ];
 
 function SlideProgram() {

@@ -1,6 +1,6 @@
 import type { Element, ElementGuide, ElementId } from "../model/types";
 
-// Демо-данные. Даты и порядок стихий условные — уточняются у Мастера.
+// Демо-данные. Прототип собран под стихию Воды (запуск программы — 1 декабря).
 const elements: Element[] = [
   {
     id: "wood",
@@ -32,7 +32,7 @@ const elements: Element[] = [
     season: "Поздняя осень",
     period: "октябрь — ноябрь",
     tone: "bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-100",
-    hasContent: true,
+    hasContent: false,
   },
   {
     id: "water",
@@ -40,30 +40,31 @@ const elements: Element[] = [
     season: "Зима",
     period: "декабрь — январь",
     tone: "bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-200",
-    hasContent: false,
+    hasContent: true,
   },
 ];
 
 const guides: ElementGuide[] = [
   {
-    elementId: "metal",
-    title: "Металл: время собирать и отпускать",
-    videoTitle: "Вводное слово Мастера о стихии Металла",
-    videoDuration: "18 мин",
-    text: "Металл — время ясности, структуры и завершения. В этот период полезно разбирать накопленное, отпускать лишнее и выстраивать ритм. Обратите внимание на дыхание: практики этой стихии во многом построены вокруг него.",
+    elementId: "water",
+    title: "Вода: покой, почки и внутренняя опора",
+    videoTitle: "Вводное слово о даосской стихии Воды",
+    videoDuration: "20 мин",
+    text: "В даосской пятёрке стихий Вода — зима, Север, глубина и сила почек. Её эмоция — страх, которому на смену приходит мудрость, если мы не форсируем себя. Сейчас полезны тишина, согревание, мягкое движение и практики вроде внутренней улыбки.",
     books: [
       { title: "Дао дэ цзин", author: "Лао-цзы" },
-      { title: "Искусство жить", author: "Тит Нат Хан" },
-      { title: "Тело помнит всё", author: "Бессел ван дер Колк" },
+      { title: "Цигун для начинающих", author: "Мантак Чиа" },
+      { title: "Путь воды", author: "Джон А. Дейвис" },
     ],
     films: [
       { title: "Весна, лето, осень, зима… и снова весна", year: 2003 },
-      { title: "Идеальные дни", year: 2023 },
+      { title: "Путь домой", year: 2019 },
     ],
   },
 ];
 
-export const currentElementId: ElementId = "metal";
+/** Активная стихия в прототипе. С 1 декабря — Вода (см. period у элемента). */
+export const currentElementId: ElementId = "water";
 
 export function getElements(): Element[] {
   return elements;
