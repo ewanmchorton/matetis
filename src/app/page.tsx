@@ -1,7 +1,16 @@
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 import { routes } from "@/shared/config/routes";
 
 export default function Home() {
-  redirect(routes.auth);
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace(routes.auth);
+  }, [router]);
+
+  return null;
 }

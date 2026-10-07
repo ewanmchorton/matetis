@@ -1,6 +1,19 @@
+"use client";
+
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+
 import { TypeTestPage } from "@/views/type-test";
 
-export default async function Page({ searchParams }: PageProps<"/test">) {
-  const { variant } = await searchParams;
-  return <TypeTestPage variant={variant === "page" ? "page" : "steps"} />;
+function TestFromQuery() {
+  const params = useSearchParams();
+  return <TypeTestPage variant={params.get("variant") === "page" ? "page" : "steps"} />;
+}
+
+export default function Page() {
+  return (
+    <Suspense>
+      <TestFromQuery />
+    </Suspense>
+  );
 }

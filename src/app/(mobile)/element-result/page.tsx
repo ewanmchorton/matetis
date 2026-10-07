@@ -1,10 +1,19 @@
+"use client";
+
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+
 import { ElementResultPage } from "@/views/element-result";
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<{ badge?: string | string[] }>;
-}) {
-  const params = await searchParams;
-  return <ElementResultPage earned={params.badge !== "0"} />;
+function ElementResultFromQuery() {
+  const params = useSearchParams();
+  return <ElementResultPage earned={params.get("badge") !== "0"} />;
+}
+
+export default function Page() {
+  return (
+    <Suspense>
+      <ElementResultFromQuery />
+    </Suspense>
+  );
 }
