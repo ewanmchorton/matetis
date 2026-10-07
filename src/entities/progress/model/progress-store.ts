@@ -66,7 +66,7 @@ function createDemoState(): ProgressState {
         daysAgo(12),
         daysAgo(13),
       ],
-      "water-tuata-charge": [getWeekStartKey(addDays(today, -1)), getWeekStartKey(addDays(today, -8))],
+      "water-koan-day": [daysAgo(3), daysAgo(5)],
     },
     birthDate: "1992-03-14",
     supportDone: ["wood-walk"],

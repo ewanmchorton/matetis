@@ -71,11 +71,11 @@ const seedRituals: WeeklyRitual[] = [
     schedule: "daily",
   },
   {
-    id: "water-tuata-charge",
+    id: "water-koan-day",
     elementId: "water",
-    title: "Зарядка «Туата»",
-    description: "Комплекс «Туата» — один раз в неделю",
-    schedule: "once_per_week",
+    title: "Коан дня",
+    description: "Одна короткая формула для размышления",
+    schedule: "daily",
   },
   {
     id: "water-weekly-audio",

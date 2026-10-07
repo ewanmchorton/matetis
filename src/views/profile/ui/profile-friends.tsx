@@ -27,9 +27,7 @@ export function ProfileFriends({ embedded = false }: { embedded?: boolean }) {
           checked={shareActivity}
           onCheckedChange={(value) => socialActions.setShareActivity(value === true)}
         />
-        <span className="text-sm leading-snug">
-          Показывать друзьям выполненные практики. Можно выключить в любой момент.
-        </span>
+        <span className="text-sm leading-snug">Показывать друзьям выполненные практики</span>
       </Label>
 
       {incoming.length > 0 && (
