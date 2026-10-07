@@ -3,9 +3,11 @@
 import { Trash2 } from "lucide-react";
 
 import { ElementBadge, getElement } from "@/entities/element";
-import { practiceActions, usePracticeCatalog } from "@/entities/practice";
+import { allowsTogether, practiceActions, usePracticeCatalog } from "@/entities/practice";
 import { AddPracticeForm, AddRitualForm } from "@/features/manage-program";
 import { Button } from "@/shared/ui/button";
+import { Checkbox } from "@/shared/ui/checkbox";
+import { Label } from "@/shared/ui/label";
 
 export function AdminProgramPage() {
   const { practices, rituals } = usePracticeCatalog();
@@ -43,6 +45,13 @@ export function AdminProgramPage() {
                 </Button>
               </div>
               {p.why && <p className="text-sm text-muted-foreground">{p.why}</p>}
+              <Label className="flex items-center gap-2 font-normal">
+                <Checkbox
+                  checked={allowsTogether(p)}
+                  onCheckedChange={(value) => practiceActions.setAllowTogether(p.id, value === true)}
+                />
+                <span className="text-sm">Можно выполнять вместе с другом</span>
+              </Label>
             </li>
           ))}
         </ul>

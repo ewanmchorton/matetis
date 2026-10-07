@@ -3,10 +3,12 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ExternalLink, LayoutDashboard, Library, ListChecks, RotateCcw, Users } from "lucide-react";
+import { ExternalLink, LayoutDashboard, Library, ListChecks, RotateCcw, Sprout, Users } from "lucide-react";
 
 import { libraryActions } from "@/entities/library";
 import { practiceActions } from "@/entities/practice";
+import { progressActions } from "@/entities/progress";
+import { socialActions } from "@/entities/social";
 import { routes } from "@/shared/config/routes";
 import { cn } from "@/shared/lib/utils";
 import { Button, buttonVariants } from "@/shared/ui/button";
@@ -15,13 +17,16 @@ const nav = [
   { href: routes.admin, label: "Обзор", icon: LayoutDashboard },
   { href: routes.adminMaterials, label: "Материалы", icon: Library },
   { href: routes.adminProgram, label: "Практики и ритуалы", icon: ListChecks },
+  { href: routes.adminSupport, label: "Доп. практики", icon: Sprout },
   { href: routes.adminStudents, label: "Ученики", icon: Users },
 ];
 
 function resetDemo() {
-  if (!window.confirm("Вернуть материалы, практики и ритуалы к исходным демо-данным?")) return;
+  if (!window.confirm("Вернуть демо-данные приложения и админки?")) return;
   libraryActions.reset();
   practiceActions.reset();
+  progressActions.reset();
+  socialActions.reset();
 }
 
 export function AdminShell({ children }: { children: ReactNode }) {
