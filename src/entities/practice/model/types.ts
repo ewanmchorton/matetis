@@ -5,6 +5,8 @@ export type DailyPractice = {
   elementId: ElementId;
   title: string;
   duration: string;
+  /** Одна строка на карточке дня. Шаги открываются отдельно. */
+  summary: string;
   steps: string[];
   /** Короткое пояснение, зачем эта практика в текущую стихию */
   why: string;

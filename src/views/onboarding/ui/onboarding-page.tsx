@@ -1,17 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ArrowRight, CalendarCheck, Repeat, Sparkles } from "lucide-react";
 
 import { ElementBadge, getCurrentElement, getElements } from "@/entities/element";
-import { progressActions } from "@/entities/progress";
 import { routes } from "@/shared/config/routes";
 import { cn } from "@/shared/lib/utils";
-import { Button } from "@/shared/ui/button";
-import { Input } from "@/shared/ui/input";
-import { Label } from "@/shared/ui/label";
+import { Button, buttonVariants } from "@/shared/ui/button";
 import { Logo } from "@/shared/ui/logo";
 
 function SlideSystem() {
@@ -80,41 +76,12 @@ function SlideProgram() {
   );
 }
 
-function SlideBirth({ value, onChange }: { value: string; onChange: (value: string) => void }) {
-  return (
-    <div className="space-y-4">
-      <h1 className="text-3xl font-semibold leading-tight">Дата рождения</h1>
-      <p className="leading-relaxed text-muted-foreground">
-        По ней добавим несколько практик для стихии, которой полезно внимание. Они не заменят
-        основную программу. Дату можно не указывать — тогда останется только она.
-      </p>
-      <div className="space-y-2 pt-2">
-        <Label htmlFor="onboarding-birth">Дата</Label>
-        <Input
-          id="onboarding-birth"
-          type="date"
-          className="h-11"
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-        />
-      </div>
-      <p className="text-sm text-muted-foreground">Как именно считать стихию по дате — ещё уточняем.</p>
-    </div>
-  );
-}
-
-const slideCount = 4;
+const slides = [SlideSystem, SlideElements, SlideProgram];
 
 export function OnboardingPage() {
-  const router = useRouter();
   const [index, setIndex] = useState(0);
-  const [birthDate, setBirthDate] = useState("");
-  const isLast = index === slideCount - 1;
-
-  function finish() {
-    progressActions.setBirthDate(birthDate || null);
-    router.push(routes.typeTest);
-  }
+  const Slide = slides[index];
+  const isLast = index === slides.length - 1;
 
   return (
     <main className="flex flex-1 flex-col gap-8 px-5 py-8">
@@ -127,14 +94,11 @@ export function OnboardingPage() {
         )}
       </div>
 
-      {index === 0 && <SlideSystem />}
-      {index === 1 && <SlideElements />}
-      {index === 2 && <SlideProgram />}
-      {index === 3 && <SlideBirth value={birthDate} onChange={setBirthDate} />}
+      {Slide && <Slide />}
 
       <div className="mt-auto space-y-5">
-        <div className="flex justify-center gap-2" aria-label={`Экран ${index + 1} из ${slideCount}`}>
-          {Array.from({ length: slideCount }, (_, i) => (
+        <div className="flex justify-center gap-2" aria-label={`Экран ${index + 1} из ${slides.length}`}>
+          {slides.map((_, i) => (
             <button
               key={i}
               type="button"
@@ -148,9 +112,9 @@ export function OnboardingPage() {
           ))}
         </div>
         {isLast ? (
-          <Button size="lg" className="h-12 w-full text-base" onClick={finish}>
-            Перейти к тесту
-          </Button>
+          <Link href={routes.typeTest} className={buttonVariants({ size: "lg", className: "h-12 w-full text-base" })}>
+            Пройти тест
+          </Link>
         ) : (
           <Button size="lg" className="h-12 w-full text-base" onClick={() => setIndex(index + 1)}>
             Дальше

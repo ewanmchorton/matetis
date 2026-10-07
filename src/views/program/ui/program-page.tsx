@@ -15,6 +15,13 @@ import { ProgramStats } from "./program-stats";
 import { TodayPractice } from "./today-practice";
 import { WeeklyRituals } from "./weekly-rituals";
 
+function dayGreeting(date: Date): string {
+  const hour = date.getHours();
+  if (hour < 12) return "Доброе утро";
+  if (hour < 18) return "Твой день начинается с со-настройки";
+  return "Путь к себе начинается с маленького действия";
+}
+
 function ProgramSkeleton() {
   return (
     <div className="space-y-4" aria-hidden>
@@ -36,7 +43,9 @@ export function ProgramPage() {
       <header className="space-y-4">
         <Logo href={routes.program} />
         <div className="space-y-2">
-          <h1 className="text-3xl font-semibold">Программа</h1>
+          <h1 className="text-3xl font-semibold leading-tight">
+            {isClient ? dayGreeting(new Date()) : "Доброе утро"}
+          </h1>
           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             {type && <span>Тип «{type.name}»</span>}
             <span aria-hidden>·</span>

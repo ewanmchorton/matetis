@@ -12,7 +12,8 @@ const seedPractices: DailyPractice[] = [
     id: "water-inner-smile",
     elementId: "water",
     title: "Внутренняя улыбка",
-    duration: "12 минут",
+    duration: "5 мин",
+    summary: "Тёплая улыбка внутрь, в область почек.",
     steps: [
       "Сядьте удобно, закройте глаза, дышите спокойно.",
       "Улыбнитесь глазами и направьте это тепло в область почек — «мягкое солнце внутри».",
@@ -25,7 +26,8 @@ const seedPractices: DailyPractice[] = [
     id: "water-element-lesson",
     elementId: "water",
     title: "Размышление над уроком стихии",
-    duration: "10 минут",
+    duration: "5 мин",
+    summary: "Короткий урок стихии и одна мысль на сегодня.",
     steps: [
       "Откройте короткий урок про стихию Воды в разделе «Библиотека».",
       "Прочитайте или прослушайте спокойно, без спешки.",
@@ -90,7 +92,7 @@ type PracticeCatalog = {
   support: SupportPractice[];
 };
 
-const store = createLocalStore<PracticeCatalog>("matetis-demo-practices-v2", {
+const store = createLocalStore<PracticeCatalog>("matetis-demo-practices-v3", {
   practices: seedPractices,
   rituals: seedRituals,
   support: seedSupport,
