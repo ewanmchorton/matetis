@@ -2,18 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, RotateCcw } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 import { progressActions } from "@/entities/progress";
 import type { TypeTest } from "@/entities/type-test";
 import { routes } from "@/shared/config/routes";
 import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
 import { Progress } from "@/shared/ui/progress";
 
 import { calculateType, type TestAnswers } from "../model/calculate-type";
 import { SectionChoice } from "./section-choice";
-
-export type TestVariant = "steps" | "page";
 
 function FullInstruction({ test }: { test: TypeTest }) {
   return (
@@ -30,59 +29,47 @@ function FullInstruction({ test }: { test: TypeTest }) {
   );
 }
 
-export function TypeTestFlow({ test, variant }: { test: TypeTest; variant: TestVariant }) {
-  return variant === "page" ? <SinglePageTest test={test} /> : <StepByStepTest test={test} />;
-}
-
 function useFinish(test: TypeTest) {
   const router = useRouter();
-  return (answers: TestAnswers) => {
+  return (answers: TestAnswers, birthDate: string) => {
     const type = calculateType(test, answers);
     if (type) progressActions.setType(type.id);
+    progressActions.setBirthDate(birthDate);
     router.push(routes.typeResult);
   };
 }
 
-/** Вариант из черновика: инструкция и обе группы на одной странице. */
-function SinglePageTest({ test }: { test: TypeTest }) {
-  const [answers, setAnswers] = useState<TestAnswers>({});
-  const finish = useFinish(test);
-  const complete = test.groups.every((g) => answers[g.id]);
-
+function BirthDateFields({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
   return (
-    <div className="space-y-8">
-      <div className="space-y-3">
-        <h1 className="text-2xl font-semibold">Тест на определение типа</h1>
-        <p className="leading-relaxed text-muted-foreground">{test.shortInstruction}</p>
-        <FullInstruction test={test} />
-      </div>
-      {test.groups.map((g) => (
-        <section key={g.id} className="space-y-3">
-          <h2 className="text-lg font-semibold">{g.title}</h2>
-          <SectionChoice
-            group={g}
-            value={answers[g.id]}
-            onChange={(id) => setAnswers({ ...answers, [g.id]: id })}
-          />
-        </section>
-      ))}
-      <Button size="lg" className="h-12 w-full text-base" disabled={!complete} onClick={() => finish(answers)}>
-        Узнать свой тип
-      </Button>
+    <div className="space-y-4">
+      <h1 className="text-2xl font-semibold">Укажите вашу дату рождения</h1>
+      <Input
+        type="date"
+        className="h-12"
+        aria-label="Дата рождения"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      />
     </div>
   );
 }
 
-/** Вариант «по шагам»: инструкция → по одной группе на экран → проверка результата. */
-function StepByStepTest({ test }: { test: TypeTest }) {
+/** Инструкция → по одной группе → дата рождения → результат. */
+export function TypeTestFlow({ test }: { test: TypeTest }) {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<TestAnswers>({});
+  const [birthDate, setBirthDate] = useState("");
   const finish = useFinish(test);
 
   const totalSteps = test.groups.length + 2;
   const group = step >= 1 && step <= test.groups.length ? test.groups[step - 1] : undefined;
-  const isConfirm = step === totalSteps - 1;
-  const candidate = isConfirm ? calculateType(test, answers) : undefined;
+  const isBirth = step === totalSteps - 1;
 
   return (
     <div className="flex flex-1 flex-col gap-6">
@@ -110,9 +97,7 @@ function StepByStepTest({ test }: { test: TypeTest }) {
 
       {group && (
         <div className="space-y-4">
-          <h1 className="text-xl font-semibold">
-            Какое описание больше всего похоже на вас?
-          </h1>
+          <h1 className="text-xl font-semibold">Какое описание больше всего похоже на вас?</h1>
           <SectionChoice
             group={group}
             value={answers[group.id]}
@@ -121,35 +106,22 @@ function StepByStepTest({ test }: { test: TypeTest }) {
         </div>
       )}
 
-      {isConfirm && (
-        <div className="space-y-4">
-          <h1 className="text-xl font-semibold">Похоже на вас?</h1>
-          <div className="space-y-3 rounded-2xl border bg-card p-5">
-            <p className="text-sm text-muted-foreground">Предварительный результат</p>
-            <p className="text-2xl font-semibold">{candidate?.name ?? "Тип не определён"}</p>
-            <div className="flex flex-wrap gap-2">
-              {candidate?.traits.map((t) => (
-                <span key={t} className="rounded-full bg-muted px-3 py-1 text-sm">
-                  {t}
-                </span>
-              ))}
-            </div>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Если описание совсем не про вас, вернитесь и выберите заново — это нормально.
-          </p>
-        </div>
-      )}
+      {isBirth && <BirthDateFields value={birthDate} onChange={setBirthDate} />}
 
       <div className="mt-auto flex gap-3 pt-4">
-        {isConfirm ? (
+        {isBirth ? (
           <>
-            <Button variant="outline" size="lg" className="h-11" onClick={() => setStep(1)}>
-              <RotateCcw />
-              Выбрать заново
+            <Button variant="outline" size="lg" className="h-11" onClick={() => setStep(step - 1)}>
+              <ArrowLeft />
+              Назад
             </Button>
-            <Button size="lg" className="h-11 flex-1" onClick={() => finish(answers)}>
-              Да, это про меня
+            <Button
+              size="lg"
+              className="h-11 flex-1"
+              disabled={!birthDate}
+              onClick={() => finish(answers, birthDate)}
+            >
+              Дальше
             </Button>
           </>
         ) : (

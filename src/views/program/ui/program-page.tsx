@@ -2,7 +2,8 @@
 
 import { ElementBadge, getCurrentElement, getElementGuide } from "@/entities/element";
 import { getPersonType } from "@/entities/person-type";
-import { filterRituals, pickDailyPractice, usePracticeCatalog } from "@/entities/practice";
+import { weakElementIdFor } from "@/entities/birth";
+import { filterRituals, filterSupport, pickDailyPractice, usePracticeCatalog } from "@/entities/practice";
 import { getProgramStats, useProgress } from "@/entities/progress";
 import { routes } from "@/shared/config/routes";
 import { getWeekDays, getWeekStartKey, toDateKey } from "@/shared/lib/date";
@@ -13,6 +14,13 @@ import { ElementRecommendations } from "./element-recommendations";
 import { ProgramStats } from "./program-stats";
 import { TodayPractice } from "./today-practice";
 import { WeeklyRituals } from "./weekly-rituals";
+
+function dayGreeting(date: Date): string {
+  const hour = date.getHours();
+  if (hour < 12) return "Доброе утро";
+  if (hour < 18) return "Твой день начинается с со-настройки";
+  return "Путь к себе начинается с маленького действия";
+}
 
 function ProgramSkeleton() {
   return (
@@ -26,7 +34,7 @@ function ProgramSkeleton() {
 
 export function ProgramPage() {
   const isClient = useIsClient();
-  const { typeId, completedPractices, ritualMarks } = useProgress();
+  const { typeId, completedPractices, ritualMarks, birthDate, supportDone } = useProgress();
   const type = getPersonType(typeId ?? "t1");
   const element = getCurrentElement();
 
@@ -35,7 +43,9 @@ export function ProgramPage() {
       <header className="space-y-4">
         <Logo href={routes.program} />
         <div className="space-y-2">
-          <h1 className="text-3xl font-semibold">Программа</h1>
+          <h1 className="text-3xl font-semibold leading-tight">
+            {isClient ? dayGreeting(new Date()) : "Доброе утро"}
+          </h1>
           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             {type && <span>Тип «{type.name}»</span>}
             <span aria-hidden>·</span>
@@ -50,6 +60,8 @@ export function ProgramPage() {
           typeNumber={type?.number ?? 1}
           completedPractices={completedPractices}
           ritualMarks={ritualMarks}
+          birthDate={birthDate}
+          supportDone={supportDone}
         />
       ) : (
         <ProgramSkeleton />
@@ -62,10 +74,14 @@ function ProgramContent({
   typeNumber,
   completedPractices,
   ritualMarks,
+  birthDate,
+  supportDone,
 }: {
   typeNumber: number;
   completedPractices: string[];
   ritualMarks: Record<string, string[]>;
+  birthDate: string | null;
+  supportDone: string[];
 }) {
   const element = getCurrentElement();
   const catalog = usePracticeCatalog();
@@ -75,6 +91,8 @@ function ProgramContent({
   const weekStartKey = getWeekStartKey(today);
   const practice = pickDailyPractice(catalog.practices, element.id, typeNumber, today);
   const stats = getProgramStats(completedPractices, ritualMarks, today);
+  const weakElementId = weakElementIdFor(birthDate);
+  const support = weakElementId ? filterSupport(catalog.support, weakElementId) : [];
 
   return (
     <>
@@ -88,6 +106,8 @@ function ProgramContent({
       />
       <WeeklyRituals
         rituals={filterRituals(catalog.rituals, element.id)}
+        supportItems={support.slice(0, 2)}
+        supportDone={supportDone}
         ritualMarks={ritualMarks}
         weekDays={weekDays}
         todayKey={todayKey}

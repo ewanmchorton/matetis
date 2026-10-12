@@ -32,4 +32,12 @@ export function getDayNumber(date: Date): number {
   );
 }
 
-export const weekDayShortNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+/** Последний день текущей недели (воскресенье) — для совместных практик. */
+export function getWeekEndDate(date: Date): Date {
+  const days = getWeekDays(date);
+  return days[6] ?? date;
+}
+
+export function formatWeekDeadline(date: Date): string {
+  return getWeekEndDate(date).toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
+}

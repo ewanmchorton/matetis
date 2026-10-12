@@ -25,9 +25,6 @@ export function TypeResultPage() {
             <h1 className="text-3xl font-semibold">{type.name}</h1>
           </div>
           <TypeTraits type={type} />
-          <p className="text-sm text-muted-foreground">
-            Подробное описание типа появится в одном из следующих обновлений.
-          </p>
         </div>
       )}
       <div className="space-y-2 rounded-2xl border bg-card p-5">
@@ -43,16 +40,6 @@ export function TypeResultPage() {
           className={buttonVariants({ size: "lg", className: "h-12 w-full text-base" })}
         >
           Перейти к программе
-        </Link>
-        <Link
-          href={routes.typeTest}
-          className={buttonVariants({
-            variant: "outline",
-            size: "lg",
-            className: "h-12 w-full text-base",
-          })}
-        >
-          Пройти тест заново
         </Link>
         <Link
           href={routes.auth}

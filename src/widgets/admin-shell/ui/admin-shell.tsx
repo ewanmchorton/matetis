@@ -3,10 +3,13 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ExternalLink, LayoutDashboard, Library, ListChecks, RotateCcw, Users } from "lucide-react";
+import { ExternalLink, LayoutDashboard, Library, ListChecks, RotateCcw, Sprout, Users } from "lucide-react";
 
 import { libraryActions } from "@/entities/library";
 import { practiceActions } from "@/entities/practice";
+import { progressActions } from "@/entities/progress";
+import { socialActions } from "@/entities/social";
+import { APP_NAME } from "@/shared/config/brand";
 import { routes } from "@/shared/config/routes";
 import { cn } from "@/shared/lib/utils";
 import { Button, buttonVariants } from "@/shared/ui/button";
@@ -15,13 +18,16 @@ const nav = [
   { href: routes.admin, label: "Обзор", icon: LayoutDashboard },
   { href: routes.adminMaterials, label: "Материалы", icon: Library },
   { href: routes.adminProgram, label: "Практики и ритуалы", icon: ListChecks },
+  { href: routes.adminSupport, label: "Доп. практики", icon: Sprout },
   { href: routes.adminStudents, label: "Ученики", icon: Users },
 ];
 
 function resetDemo() {
-  if (!window.confirm("Вернуть материалы, практики и ритуалы к исходным демо-данным?")) return;
+  if (!window.confirm("Вернуть демо-данные приложения и админки?")) return;
   libraryActions.reset();
   practiceActions.reset();
+  progressActions.reset();
+  socialActions.reset();
 }
 
 export function AdminShell({ children }: { children: ReactNode }) {
@@ -32,9 +38,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
       <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r bg-background p-4 md:flex">
         <Link href={routes.admin} className="mb-8 flex items-center gap-2 px-2 font-semibold">
           <span className="grid size-7 place-items-center rounded-lg bg-primary text-xs font-bold text-primary-foreground">
-            М
+            {APP_NAME.charAt(0)}
           </span>
-          <span className="tracking-[0.18em]">МАТЭТИС</span>
+          <span className="tracking-[0.18em]">{APP_NAME}</span>
         </Link>
         <p className="mb-2 px-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
           Админка

@@ -20,13 +20,17 @@ import {
 const prototypeScreens: { href: string; label: string; note?: string }[] = [
   { href: routes.auth, label: "Регистрация и вход" },
   { href: routes.onboarding, label: "Онбординг" },
-  { href: routes.typeTest, label: "Тест на тип", note: "по шагам" },
-  { href: `${routes.typeTest}?variant=page`, label: "Тест на тип", note: "одной страницей" },
+  { href: routes.typeTest, label: "Тест на тип" },
   { href: routes.typeResult, label: "Результат теста" },
   { href: routes.program, label: "Программа" },
+  { href: routes.together, label: "Вместе" },
   { href: routes.library, label: "Библиотека" },
   { href: routes.profile, label: "Профиль" },
+  { href: `${routes.person}/pavel`, label: "Профиль Павла", note: "запрос в друзья" },
+  { href: `${routes.elementResult}?badge=1`, label: "Итог стихии", note: "бейдж" },
+  { href: `${routes.elementResult}?badge=0`, label: "Итог стихии", note: "без бейджа" },
   { href: routes.admin, label: "Админка", note: "веб-версия" },
+  { href: routes.adminSupport, label: "Админка", note: "доп. практики" },
 ];
 
 function isActive(pathname: string, href: string): boolean {

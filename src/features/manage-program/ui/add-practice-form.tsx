@@ -14,7 +14,7 @@ import { Textarea } from "@/shared/ui/textarea";
 
 export function AddPracticeForm() {
   const [title, setTitle] = useState("");
-  const [duration, setDuration] = useState("10 минут");
+  const [duration, setDuration] = useState("5 мин");
   const [why, setWhy] = useState("");
   const [steps, setSteps] = useState("");
   const [elementId, setElementId] = useState<ElementId>("water");
@@ -26,12 +26,14 @@ export function AddPracticeForm() {
       id: createId("practice"),
       elementId,
       title: title.trim(),
-      duration: duration.trim() || "10 минут",
+      duration: duration.trim() || "5 мин",
+      summary: why.trim(),
       why: why.trim(),
       steps: steps
         .split("\n")
         .map((s) => s.trim())
         .filter(Boolean),
+      allowTogether: true,
     });
     setTitle("");
     setWhy("");
