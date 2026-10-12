@@ -28,8 +28,6 @@ const prototypeScreens: { href: string; label: string; note?: string }[] = [
   { href: routes.library, label: "Библиотека" },
   { href: routes.profile, label: "Профиль" },
   { href: `${routes.person}/pavel`, label: "Профиль Павла", note: "запрос в друзья" },
-  { href: routes.birth, label: "Дата рождения", note: "только практики" },
-  { href: `${routes.birth}?view=square`, label: "Дата рождения", note: "квадрат" },
   { href: `${routes.elementResult}?badge=1`, label: "Итог стихии", note: "бейдж" },
   { href: `${routes.elementResult}?badge=0`, label: "Итог стихии", note: "без бейджа" },
   { href: routes.admin, label: "Админка", note: "веб-версия" },

@@ -8,7 +8,6 @@ export const routes = {
   library: "/library",
   profile: "/profile",
   person: "/people",
-  birth: "/birth",
   elementResult: "/element-result",
   admin: "/admin",
   adminMaterials: "/admin/materials",
