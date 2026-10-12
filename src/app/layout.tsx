@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
 
+import { APP_NAME } from "@/shared/config/brand";
 import { RegisterServiceWorker } from "@/shared/pwa/register-sw";
 
 import "./globals.css";
@@ -11,14 +12,14 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "МАТЭТИС — практики по типу и стихии",
+  title: `${APP_NAME} — практики по типу и стихии`,
   description:
     "Ежедневные практики, ритуалы и рекомендации по вашему типу и текущей стихии.",
-  applicationName: "МАТЭТИС",
+  applicationName: APP_NAME,
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: "МАТЭТИС",
+    title: APP_NAME,
     statusBarStyle: "default",
   },
   icons: {

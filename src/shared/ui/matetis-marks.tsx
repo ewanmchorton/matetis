@@ -1,7 +1,8 @@
-import { matetisLetters, toDateKey } from "@/shared/lib/date";
+import { APP_WEEK_LETTERS } from "@/shared/config/brand";
+import { toDateKey } from "@/shared/lib/date";
 import { cn } from "@/shared/lib/utils";
 
-/** Одна строка букв МАТЭТИС на текущую неделю. */
+/** Одна строка букв названия на текущую неделю. */
 export function MatetisMarks({
   weekDays,
   todayKey,
@@ -17,7 +18,7 @@ export function MatetisMarks({
         const key = toDateKey(day);
         const done = doneKeys.has(key);
         const isToday = key === todayKey;
-        const letter = matetisLetters[index] ?? "";
+        const letter = APP_WEEK_LETTERS[index] ?? "";
         return (
           <li
             key={key}

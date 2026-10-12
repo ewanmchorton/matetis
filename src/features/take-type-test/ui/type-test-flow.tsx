@@ -14,8 +14,6 @@ import { Progress } from "@/shared/ui/progress";
 import { calculateType, type TestAnswers } from "../model/calculate-type";
 import { SectionChoice } from "./section-choice";
 
-export type TestVariant = "steps" | "page";
-
 function FullInstruction({ test }: { test: TypeTest }) {
   return (
     <details className="group rounded-xl border bg-card p-4 text-sm">
@@ -29,10 +27,6 @@ function FullInstruction({ test }: { test: TypeTest }) {
       </div>
     </details>
   );
-}
-
-export function TypeTestFlow({ test, variant }: { test: TypeTest; variant: TestVariant }) {
-  return variant === "page" ? <SinglePageTest test={test} /> : <StepByStepTest test={test} />;
 }
 
 function useFinish(test: TypeTest) {
@@ -66,62 +60,8 @@ function BirthDateFields({
   );
 }
 
-/** Вариант из черновика: инструкция и обе группы на одной странице. */
-function SinglePageTest({ test }: { test: TypeTest }) {
-  const [answers, setAnswers] = useState<TestAnswers>({});
-  const [birthDate, setBirthDate] = useState("");
-  const [askBirth, setAskBirth] = useState(false);
-  const finish = useFinish(test);
-  const complete = test.groups.every((g) => answers[g.id]);
-
-  if (askBirth) {
-    return (
-      <div className="flex flex-1 flex-col gap-6">
-        <BirthDateFields value={birthDate} onChange={setBirthDate} />
-        <div className="mt-auto flex gap-3">
-          <Button variant="outline" size="lg" className="h-11" onClick={() => setAskBirth(false)}>
-            <ArrowLeft />
-            Назад
-          </Button>
-          <Button
-            size="lg"
-            className="h-11 flex-1"
-            disabled={!birthDate}
-            onClick={() => finish(answers, birthDate)}
-          >
-            Дальше
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-8">
-      <div className="space-y-3">
-        <h1 className="text-2xl font-semibold">Тест на определение типа</h1>
-        <p className="leading-relaxed text-muted-foreground">{test.shortInstruction}</p>
-        <FullInstruction test={test} />
-      </div>
-      {test.groups.map((g) => (
-        <section key={g.id} className="space-y-3">
-          <h2 className="text-lg font-semibold">{g.title}</h2>
-          <SectionChoice
-            group={g}
-            value={answers[g.id]}
-            onChange={(id) => setAnswers({ ...answers, [g.id]: id })}
-          />
-        </section>
-      ))}
-      <Button size="lg" className="h-12 w-full text-base" disabled={!complete} onClick={() => setAskBirth(true)}>
-        Дальше
-      </Button>
-    </div>
-  );
-}
-
-/** Вариант «по шагам»: инструкция → по одной группе → дата рождения → результат. */
-function StepByStepTest({ test }: { test: TypeTest }) {
+/** Инструкция → по одной группе → дата рождения → результат. */
+export function TypeTestFlow({ test }: { test: TypeTest }) {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<TestAnswers>({});
   const [birthDate, setBirthDate] = useState("");
@@ -157,9 +97,7 @@ function StepByStepTest({ test }: { test: TypeTest }) {
 
       {group && (
         <div className="space-y-4">
-          <h1 className="text-xl font-semibold">
-            Какое описание больше всего похоже на вас?
-          </h1>
+          <h1 className="text-xl font-semibold">Какое описание больше всего похоже на вас?</h1>
           <SectionChoice
             group={group}
             value={answers[group.id]}

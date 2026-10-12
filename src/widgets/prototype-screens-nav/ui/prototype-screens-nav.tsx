@@ -20,8 +20,7 @@ import {
 const prototypeScreens: { href: string; label: string; note?: string }[] = [
   { href: routes.auth, label: "Регистрация и вход" },
   { href: routes.onboarding, label: "Онбординг" },
-  { href: routes.typeTest, label: "Тест на тип", note: "по шагам" },
-  { href: `${routes.typeTest}?variant=page`, label: "Тест на тип", note: "одной страницей" },
+  { href: routes.typeTest, label: "Тест на тип" },
   { href: routes.typeResult, label: "Результат теста" },
   { href: routes.program, label: "Программа" },
   { href: routes.together, label: "Вместе" },

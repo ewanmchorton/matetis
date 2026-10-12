@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { ArrowRight, CalendarCheck, Repeat, Share, Smartphone, Sparkles } from "lucide-react";
 
 import { ElementBadge, getCurrentElement, getElements } from "@/entities/element";
+import { APP_NAME } from "@/shared/config/brand";
 import { routes } from "@/shared/config/routes";
 import { cn } from "@/shared/lib/utils";
 import { Button, buttonVariants } from "@/shared/ui/button";
@@ -14,7 +15,7 @@ import { Logo } from "@/shared/ui/logo";
 function SlideSystem() {
   return (
     <div className="space-y-4">
-      <h1 className="text-3xl font-semibold leading-tight">Ваш путь развития в МАТЭТИС</h1>
+      <h1 className="text-3xl font-semibold leading-tight">Ваш путь развития в {APP_NAME}</h1>
       <p className="leading-relaxed text-muted-foreground">
         Короткий тест определит ваш психотип. Мы покажем несколько характеристик — и сразу перейдём
         к практикам.
@@ -93,7 +94,7 @@ function InstallSlide({
 }) {
   return (
     <div className="space-y-4">
-      <h1 className="text-3xl font-semibold leading-tight">Поставьте МАТЭТИС на экран «Домой»</h1>
+      <h1 className="text-3xl font-semibold leading-tight">Поставьте {APP_NAME} на экран «Домой»</h1>
       <p className="leading-relaxed text-muted-foreground">
         Сайт откроется как приложение. Тест удобно пройти уже с иконки.
       </p>

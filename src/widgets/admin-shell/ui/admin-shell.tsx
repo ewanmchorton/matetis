@@ -9,6 +9,7 @@ import { libraryActions } from "@/entities/library";
 import { practiceActions } from "@/entities/practice";
 import { progressActions } from "@/entities/progress";
 import { socialActions } from "@/entities/social";
+import { APP_NAME } from "@/shared/config/brand";
 import { routes } from "@/shared/config/routes";
 import { cn } from "@/shared/lib/utils";
 import { Button, buttonVariants } from "@/shared/ui/button";
@@ -37,9 +38,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
       <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r bg-background p-4 md:flex">
         <Link href={routes.admin} className="mb-8 flex items-center gap-2 px-2 font-semibold">
           <span className="grid size-7 place-items-center rounded-lg bg-primary text-xs font-bold text-primary-foreground">
-            М
+            {APP_NAME.charAt(0)}
           </span>
-          <span className="tracking-[0.18em]">МАТЭТИС</span>
+          <span className="tracking-[0.18em]">{APP_NAME}</span>
         </Link>
         <p className="mb-2 px-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
           Админка
