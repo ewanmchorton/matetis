@@ -25,24 +25,21 @@ export function TypeResultPage() {
             <h1 className="text-3xl font-semibold">{type.name}</h1>
           </div>
           <TypeTraits type={type} />
-          <p className="text-sm text-muted-foreground">
-            Подробное описание типа Мастер добавит позже.
-          </p>
         </div>
       )}
       <div className="space-y-2 rounded-2xl border bg-card p-5">
-        <p className="font-medium">Скоро здесь будет ваша программа</p>
+        <p className="font-medium">Ваша программа готова</p>
         <p className="text-sm text-muted-foreground">
-          Мы подберём практики для типа «{type?.name}» на стихию {element.name}. Когда
+          Мы подобрали практики для типа «{type?.name}» на стихию {element.name}. Когда
           стихия сменится, программа обновится сама.
         </p>
       </div>
       <div className="mt-auto flex flex-col gap-3">
         <Link
-          href={routes.typeTest}
+          href={routes.program}
           className={buttonVariants({ size: "lg", className: "h-12 w-full text-base" })}
         >
-          Пройти тест заново
+          Перейти к программе
         </Link>
         <Link
           href={routes.auth}
