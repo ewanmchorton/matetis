@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   env: {
     NEXT_PUBLIC_BASE_PATH: isGithubPages ? "/matetis" : "",
+    // На GitHub Pages нет сервера: проверки входа там пропускаются (см. src/shared/auth/session.ts).
+    NEXT_PUBLIC_STATIC_PROTOTYPE: isGithubPages ? "true" : "",
   },
   ...(isGithubPages
     ? {

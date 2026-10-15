@@ -51,9 +51,11 @@ pnpm db:migrate              # применить миграции из папк
 
 - Таблицы описаны в `src/shared/db/schema/`. После их изменения: `pnpm db:generate`, затем `pnpm db:migrate`.
 - Вход и регистрация — Better Auth, адрес `/api/auth/*`, настройки в `src/shared/auth/server.ts`.
-- Назначить админа можно только запросом в базу:
-  `docker compose exec db psql -U matetis -d matetis -c "update \"user\" set role = 'admin' where email = '...'"`.
-- На GitHub Pages публикуются только экраны прототипа, без серверной части.
+- Назначить администратора (человек должен быть уже зарегистрирован): `pnpm admin:promote <email>`.
+  Команде нужен доступ к базе (`DATABASE_URL`), из приложения роль сменить нельзя.
+- Вход в админку — `/admin/login`. Страницы `/admin/*` сервер открывает только роли `admin`.
+  Для обработчиков запросов админки — `getAdminUser()` из `src/shared/auth/session.ts`.
+- На GitHub Pages публикуются только экраны прототипа, без серверной части и без проверки входа.
 
 ## Структура (FSD)
 

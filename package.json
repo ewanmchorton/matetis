@@ -11,7 +11,8 @@
     "db:up": "docker compose up -d",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "admin:promote": "node scripts/admin-promote.mts"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

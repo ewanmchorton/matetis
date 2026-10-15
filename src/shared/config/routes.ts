@@ -10,6 +10,7 @@ export const routes = {
   person: "/people",
   elementResult: "/element-result",
   admin: "/admin",
+  adminLogin: "/admin/login",
   adminMaterials: "/admin/materials",
   adminProgram: "/admin/program",
   adminSupport: "/admin/support",
