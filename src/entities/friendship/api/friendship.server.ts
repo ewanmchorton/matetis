@@ -21,9 +21,7 @@ export type FriendshipStatus =
   /** Он прислал мне запрос, я ещё не ответил. */
   | "incoming"
   /** Я отправил запрос, он ещё не ответил. */
-  | "outgoing"
-  /** Он отклонил мой запрос. Можно отправить снова. */
-  | "declined";
+  | "outgoing";
 
 export type PublicProfile = {
   person: PublicPerson;
@@ -80,14 +78,13 @@ export async function getPublicProfile(
     .limit(1);
   if (!person) return null;
 
+  // Отклонённый запрос никому не показывается: оба видят «нет связи».
   let friendship: FriendshipStatus = "none";
   if (personId !== viewerId) {
     const request = await findPairRequest(viewerId, personId);
     if (request?.status === "accepted") friendship = "friend";
     else if (request?.status === "pending") {
       friendship = request.fromUserId === viewerId ? "outgoing" : "incoming";
-    } else if (request?.status === "declined" && request.fromUserId === viewerId) {
-      friendship = "declined";
     }
   }
   return { person, friendship };

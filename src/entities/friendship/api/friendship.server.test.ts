@@ -81,10 +81,10 @@ describe("Публичный профиль", () => {
     expect((await getPublicProfile(vera, anna))?.friendship).toBe("none");
   });
 
-  it("об отклонении узнаёт только отправитель, получатель видит «нет связи»", async () => {
+  it("об отклонении никто не узнаёт: оба снова видят друг друга просто как не друзей", async () => {
     await sendFriendRequest(anna, boris);
     await declineFriendRequest(boris, anna);
-    expect((await getPublicProfile(anna, boris))?.friendship).toBe("declined");
+    expect((await getPublicProfile(anna, boris))?.friendship).toBe("none");
     expect((await getPublicProfile(boris, anna))?.friendship).toBe("none");
   });
 });
