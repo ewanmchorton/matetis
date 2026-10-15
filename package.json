@@ -12,7 +12,9 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
-    "admin:promote": "node scripts/admin-promote.mts"
+    "admin:promote": "node scripts/admin-promote.mts",
+    "test": "vitest run",
+    "db:seed-friends": "node scripts/seed-friends.mts"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
@@ -38,7 +40,8 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.8",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^5.0.4"
   },
   "packageManager": "pnpm@10.33.3"
 }
