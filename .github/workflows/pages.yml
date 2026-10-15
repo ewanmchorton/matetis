@@ -33,6 +33,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Pages показывает только экраны прототипа. Серверная часть (вход, база)
+      # там работать не может, поэтому перед сборкой её убираем.
+      - name: Remove server routes
+        run: rm -rf src/app/api
+
       - name: Build static site
         run: pnpm build
         env:

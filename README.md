@@ -39,6 +39,22 @@ pnpm dev          # http://localhost:4317
 
 - `pnpm typecheck` · `pnpm lint` · `pnpm build`
 
+## База и вход (локально)
+
+Нужен Docker (на Mac — OrbStack).
+
+```bash
+cp .env.example .env.local   # затем впишите BETTER_AUTH_SECRET: openssl rand -base64 32
+pnpm db:up                   # база PostgreSQL и почтовый ящик Mailpit (http://localhost:8025)
+pnpm db:migrate              # применить миграции из папки drizzle/
+```
+
+- Таблицы описаны в `src/shared/db/schema/`. После их изменения: `pnpm db:generate`, затем `pnpm db:migrate`.
+- Вход и регистрация — Better Auth, адрес `/api/auth/*`, настройки в `src/shared/auth/server.ts`.
+- Назначить админа можно только запросом в базу:
+  `docker compose exec db psql -U matetis -d matetis -c "update \"user\" set role = 'admin' where email = '...'"`.
+- На GitHub Pages публикуются только экраны прототипа, без серверной части.
+
 ## Структура (FSD)
 
 ```
