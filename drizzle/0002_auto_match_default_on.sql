@@ -1,0 +1,1 @@
+ALTER TABLE "person_settings" ALTER COLUMN "auto_match_consent" SET DEFAULT true;

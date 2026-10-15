@@ -54,7 +54,7 @@ export const personSettings = pgTable("person_settings", {
     .primaryKey()
     .references(() => user.id, { onDelete: "cascade" }),
   publishEvents: boolean("publish_events").notNull().default(true),
-  autoMatchConsent: boolean("auto_match_consent").notNull().default(false),
+  autoMatchConsent: boolean("auto_match_consent").notNull().default(true),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow()

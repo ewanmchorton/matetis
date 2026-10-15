@@ -11,7 +11,7 @@ export type PersonSettings = {
   autoMatchConsent: boolean;
 };
 
-const defaults: PersonSettings = { publishEvents: true, autoMatchConsent: false };
+const defaults: PersonSettings = { publishEvents: true, autoMatchConsent: true };
 
 export async function getMySettings(viewerId: string): Promise<PersonSettings> {
   const [row] = await db
