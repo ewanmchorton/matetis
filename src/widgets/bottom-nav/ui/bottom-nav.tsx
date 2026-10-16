@@ -21,7 +21,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Главное меню"
-      className="fixed bottom-[calc(var(--safe-bottom)+var(--nav-bottom))] left-1/2 z-40 h-(--nav-height) w-[calc(min(100vw,390px)-2*var(--nav-side))] -translate-x-1/2 rounded-3xl border border-white/60 bg-background/72 shadow-[0_4px_20px_rgb(41_44_40/0.08)] backdrop-blur-[6px]"
+      className="fixed bottom-[max(var(--nav-bottom),calc(var(--safe-bottom)-12px))] left-1/2 z-40 h-(--nav-height) w-[calc(min(100vw,440px)-2*var(--nav-side))] -translate-x-1/2 rounded-3xl border border-white/60 bg-background/72 shadow-[0_4px_20px_rgb(41_44_40/0.08)] backdrop-blur-[6px]"
     >
       <ul className="grid h-full grid-cols-4">
         {tabs.map((tab) => {

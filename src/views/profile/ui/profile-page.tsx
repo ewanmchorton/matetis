@@ -270,7 +270,7 @@ function BirthDateField() {
         <input
           id="birth-date"
           type="date"
-          className="h-(--button-height) w-full rounded-2xl border border-input bg-background/70 px-4 type-body outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="block h-(--field-height) w-full min-w-0 max-w-full appearance-none rounded-2xl border border-input bg-background/70 px-4 py-0 text-left type-body leading-[calc(var(--field-height)-2px)] outline-none focus-visible:ring-3 focus-visible:ring-ring/50 [&::-webkit-date-and-time-value]:m-0 [&::-webkit-date-and-time-value]:text-left [&::-webkit-date-and-time-value]:leading-[calc(var(--field-height)-2px)]"
           value={birthDate ?? ""}
           onChange={(event) => progressActions.setBirthDate(event.target.value || null)}
         />

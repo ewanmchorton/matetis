@@ -7,6 +7,17 @@ import { StepDots } from "@/shared/ui/step-dots";
 /** Фоны из design/backgrounds, уменьшенные до 780 px в ширину (2× от 390). Лежат в public/backgrounds. */
 export type ScreenBackground = "01_reg" | "06_profile";
 
+/**
+ * Для экранов с картинкой: на какой высоте картинки (в ширинах экрана) должен оказаться
+ * верх заголовка. Выше этой точки — пейзаж, ниже — светлая часть, на которой лежит текст.
+ */
+const heroTextLine: Partial<Record<ScreenBackground, number>> = {
+  "01_reg": 0.9,
+};
+
+/** Высота фоновых картинок в ширинах экрана: 1690 / 780. */
+const BACKGROUND_RATIO = 1690 / 780;
+
 type ScreenLayoutProps = {
   /**
    * hero — картинка сверху, текст и кнопка прижаты к низу экрана (вход, онбординг).
@@ -14,6 +25,8 @@ type ScreenLayoutProps = {
    */
   variant: "hero" | "page";
   background?: ScreenBackground;
+  /** Плотнее: подзаголовок 15 px и меньше промежутки. Для экранов с длинной формой. */
+  compact?: boolean;
   /** Правая часть строки с логотипом: например, «Пропустить». */
   headerAction?: ReactNode;
   title: ReactNode;
@@ -26,21 +39,21 @@ type ScreenLayoutProps = {
 };
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-
+const screenWidth = "min(100vw, 440px)";
 const ivory = (alpha: number) => `rgb(250 247 242 / ${alpha})`;
 
-// Верх экрана плавно переходит в сплошной Ivory — того же цвета полоса под часами.
-// Низ тоже уходит в Ivory: если картинка короче экрана, обрыва не видно.
-const fades = {
-  hero: [
-    `linear-gradient(to bottom, ${ivory(1)} 0, ${ivory(0)} 110px)`,
-    `linear-gradient(to bottom, ${ivory(0)} 18%, ${ivory(0.78)} 34%, ${ivory(0.85)} 85%, ${ivory(1)} 100%)`,
-  ],
-  page: [
-    `linear-gradient(to bottom, ${ivory(1)} 0, ${ivory(0.65)} 140px, ${ivory(0)} 280px)`,
-    `linear-gradient(to bottom, ${ivory(0)} 80%, ${ivory(0.9)} 100%)`,
-  ],
-};
+/**
+ * Плавный переход из сплошного Ivory (как полоса под часами) в картинку за height пикселей.
+ * Прозрачность убывает по плавной кривой, поэтому границы перехода не видно.
+ */
+function topFade(height: number, from = 1) {
+  const stops = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1].map((t) => {
+    const alpha = from * (1 - t) * (1 - t) * (1 + 2 * t); // плавное затухание без излома
+    return `${ivory(Number(alpha.toFixed(3)))} ${Math.round(t * height)}px`;
+  });
+  return `linear-gradient(to bottom, ${stops.join(", ")})`;
+}
+const imageUrl = (background: ScreenBackground) => `url(${basePath}/backgrounds/${background}.jpg)`;
 
 /**
  * Общий каркас экрана. Положение логотипа, заголовка, индикатора шагов и кнопок
@@ -49,6 +62,7 @@ const fades = {
 export function ScreenLayout({
   variant,
   background,
+  compact = false,
   headerAction,
   title,
   subtitle,
@@ -56,49 +70,94 @@ export function ScreenLayout({
   actions,
   steps,
 }: ScreenLayoutProps) {
+  const header = (
+    <header className="px-(--screen-gutter) pt-[calc(var(--safe-top)+var(--header-top))]">
+      <div className="flex h-(--header-height) items-center justify-between gap-4">
+        <Logo />
+        {headerAction}
+      </div>
+    </header>
+  );
+
+  const textLine = background ? (heroTextLine[background] ?? 0.9) : 0.9;
+  // Сколько картинки остаётся ниже верха заголовка.
+  const belowTitle = `calc(${screenWidth} * ${BACKGROUND_RATIO - textLine})`;
+
   return (
-    <div className="relative isolate flex min-h-dvh flex-1 flex-col">
-      {background && (
+    <div className="relative isolate flex min-h-dvh flex-1 flex-col overflow-clip">
+      {background && variant === "page" && (
         <div
           aria-hidden
-          className="pointer-events-none fixed inset-y-0 left-1/2 -z-10 w-full max-w-[390px] -translate-x-1/2 bg-background bg-cover bg-top"
+          className="pointer-events-none fixed inset-y-0 left-1/2 -z-10 w-full max-w-[440px] -translate-x-1/2 bg-background bg-cover bg-top"
           style={{
-            backgroundImage: [...fades[variant], `url(${basePath}/backgrounds/${background}.jpg)`].join(", "),
+            backgroundImage: [
+              // Мягкий переход из полосы под часами (Ivory) в картинку.
+              topFade(110),
+              `linear-gradient(to bottom, ${ivory(0)} 80%, ${ivory(0.9)} 100%)`,
+              imageUrl(background),
+            ].join(", "),
           }}
         />
       )}
 
-      <header className="px-(--screen-gutter) pt-[calc(var(--safe-top)+var(--header-top))]">
-        <div className="flex h-(--header-height) items-center justify-between gap-4">
-          <Logo />
-          {headerAction}
-        </div>
-      </header>
+      {background && variant === "page" && (
+        // Светлое пятно под заголовком экрана, как в макетах: заголовок читается, картинка вокруг — нет.
+        <div
+          aria-hidden
+          className="pointer-events-none absolute top-[calc(var(--safe-top)+var(--header-top)+var(--header-height)+var(--page-title-gap)-30px)] left-0 -z-10 h-[100px] w-[260px] blur-xl"
+          style={{
+            background: `radial-gradient(ellipse 60% 50% at 38% 50%, ${ivory(0.92)} 0%, ${ivory(0.7)} 45%, ${ivory(0)} 100%)`,
+          }}
+        />
+      )}
 
-      <main
-        className={cn(
-          "flex flex-1 flex-col px-(--screen-gutter)",
-          // Отступ под нижним меню добавляет раскладка вкладок, здесь — только 24 px.
-          variant === "hero" ? "pb-[calc(var(--safe-bottom)+var(--action-bottom))]" : "pb-6",
-        )}
-      >
-        {variant === "hero" && (
-          // Растягивается и опускает текст к низу экрана, но не даёт заголовку подняться выше 160 px.
+      {variant === "hero" ? (
+        // Верхняя часть растягивается и опускает текст к низу экрана.
+        // Картинка привязана к заголовку: над ним — пейзаж, под ним — светлая часть.
+        <div className="relative flex flex-1 flex-col">
+          {background && (
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 top-0 -z-10 bg-background bg-bottom bg-no-repeat"
+              style={{
+                bottom: `calc(-1 * ${belowTitle})`,
+                backgroundSize: "100% auto",
+                backgroundImage: [
+                  topFade(110),
+                  `linear-gradient(to bottom, ${ivory(0)} calc(100% - ${belowTitle} - 40px), ${ivory(0.45)} calc(100% - ${belowTitle} + 40px), ${ivory(0.6)} 80%, ${ivory(1)} 100%)`,
+                  imageUrl(background),
+                ].join(", "),
+              }}
+            />
+          )}
+          {header}
           <div
             aria-hidden
             className="min-h-[calc(var(--hero-min-title-top)-var(--header-top)-var(--header-height))] flex-1"
           />
-        )}
+        </div>
+      ) : (
+        header
+      )}
 
-        <div className={cn("space-y-2", variant === "page" && "mt-(--page-title-gap)")}>
+      <main
+        className={cn(
+          "flex flex-col px-(--screen-gutter)",
+          // Отступ под нижним меню добавляет раскладка вкладок, здесь — только 24 px.
+          variant === "hero" ? "pb-[calc(var(--safe-bottom)+var(--action-bottom))]" : "flex-1 pb-6",
+        )}
+      >
+        <div className={cn(compact ? "space-y-1.5" : "space-y-2", variant === "page" && "mt-(--page-title-gap)")}>
           <h1 className="type-title text-foreground">{title}</h1>
-          {subtitle && <p className="type-body text-muted-foreground">{subtitle}</p>}
+          {subtitle && (
+            <p className={cn(compact ? "type-secondary" : "type-body", "text-muted-foreground")}>{subtitle}</p>
+          )}
         </div>
 
-        <div className="mt-6 flex flex-col gap-6">{children}</div>
+        <div className={cn("flex flex-col", compact ? "mt-4 gap-4" : "mt-6 gap-6")}>{children}</div>
 
         {variant === "hero" && (actions || steps) && (
-          <div className="flex flex-col gap-6 pt-6">
+          <div className={cn("flex flex-col gap-6", compact ? "pt-4" : "pt-6")}>
             {steps && <StepDots count={steps.count} current={steps.current} />}
             {actions && <div className="flex gap-3">{actions}</div>}
           </div>

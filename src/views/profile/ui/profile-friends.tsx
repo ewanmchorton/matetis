@@ -49,7 +49,7 @@ export function ProfileFriends({
   return (
     <>
       {incoming.map((person) => (
-        <CardInset key={person.id} className="space-y-3">
+        <CardInset key={person.id} className="space-y-3 border border-primary/10 bg-primary/8">
           <p className="type-secondary text-foreground">{person.name} хочет добавить вас в друзья</p>
           <div className="flex gap-3">
             <Button size="cta-sm" onClick={() => onAnswer(person.id, "accept")}>

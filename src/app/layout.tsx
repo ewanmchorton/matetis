@@ -44,7 +44,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ru" className={`${manrope.variable} ${cormorant.variable} h-full antialiased`}>
-      <body className="min-h-full bg-background min-[391px]:bg-muted">
+      <body className="min-h-full bg-background min-[441px]:bg-muted">
         <RegisterServiceWorker />
         {children}
       </body>

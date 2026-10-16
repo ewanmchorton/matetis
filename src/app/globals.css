@@ -96,7 +96,7 @@
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --screen-gutter: 24px;
-  --header-top: 16px;
+  --header-top: 10px;
   --header-height: 44px;
   --page-title-gap: 16px;
   --hero-min-title-top: 160px;
@@ -105,7 +105,7 @@
   --button-height: 48px;
   --nav-height: 64px;
   --nav-side: 16px;
-  --nav-bottom: 12px;
+  --nav-bottom: 8px;
 }
 
 .dark {

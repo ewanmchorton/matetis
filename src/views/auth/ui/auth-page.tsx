@@ -91,6 +91,7 @@ export function AuthPage() {
     <ScreenLayout
       variant="hero"
       background="01_reg"
+      compact
       title="Добро пожаловать"
       subtitle={
         mode === "register"
@@ -104,7 +105,7 @@ export function AuthPage() {
       }
     >
       <Tabs value={mode} onValueChange={(value) => switchMode(value as Mode)}>
-        <SegmentedList>
+        <SegmentedList className="h-10! rounded-[14px] [&_[data-slot=tabs-trigger]]:rounded-[11px]">
           <SegmentedTrigger value="register">Регистрация</SegmentedTrigger>
           <SegmentedTrigger value="login">Вход</SegmentedTrigger>
         </SegmentedList>
@@ -112,17 +113,18 @@ export function AuthPage() {
 
       {/* Обе формы лежат друг на друге, видна одна. Место занимает более длинная (регистрация),
           поэтому при переключении заголовок и кнопка не прыгают. */}
-      <div className="-mt-2 grid">
+      <div className="-mt-1 grid">
         <form
           id="register-form"
-          className={cn("col-start-1 row-start-1 grid content-start gap-3", mode !== "register" && "invisible")}
+          className={cn("col-start-1 row-start-1 grid content-start gap-1.5", mode !== "register" && "invisible")}
           inert={mode !== "register"}
           onSubmit={register}
           noValidate
         >
-          <TextField id="r-name" name="name" label="Имя" autoComplete="given-name" required />
-          <TextField id="r-email" name="email" type="email" label="E-mail" autoComplete="email" inputMode="email" required />
+          <TextField compact id="r-name" name="name" label="Имя" autoComplete="given-name" required />
+          <TextField compact id="r-email" name="email" type="email" label="E-mail" autoComplete="email" inputMode="email" required />
           <TextField
+            compact
             id="r-password"
             name="password"
             type="password"
@@ -131,7 +133,7 @@ export function AuthPage() {
             minLength={MIN_PASSWORD_LENGTH}
             required
           />
-          <label className="flex min-h-11 cursor-pointer items-center gap-3">
+          <label className="flex min-h-10 cursor-pointer items-center gap-3 pt-1">
             <Checkbox
               className="size-6 shrink-0 rounded-md border-primary/40 bg-background/70 [&_svg]:size-4!"
               aria-label="Согласие на обработку персональных данных"
@@ -146,13 +148,13 @@ export function AuthPage() {
 
         <form
           id="login-form"
-          className={cn("col-start-1 row-start-1 grid content-start gap-3", mode !== "login" && "invisible")}
+          className={cn("col-start-1 row-start-1 grid content-start gap-1.5", mode !== "login" && "invisible")}
           inert={mode !== "login"}
           onSubmit={login}
           noValidate
         >
-          <TextField id="l-email" name="email" type="email" label="E-mail" autoComplete="email" inputMode="email" required />
-          <TextField id="l-password" name="password" type="password" label="Пароль" autoComplete="current-password" required />
+          <TextField compact id="l-email" name="email" type="email" label="E-mail" autoComplete="email" inputMode="email" required />
+          <TextField compact id="l-password" name="password" type="password" label="Пароль" autoComplete="current-password" required />
         </form>
       </div>
 
