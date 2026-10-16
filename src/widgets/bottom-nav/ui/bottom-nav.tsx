@@ -14,15 +14,16 @@ const tabs = [
   { href: routes.profile, label: "Профиль", icon: UserRound },
 ];
 
+/** Нижнее меню: плавающая панель, положение — docs/design-guide.md, раздел «Расположение». */
 export function BottomNav() {
   const pathname = usePathname();
 
   return (
     <nav
       aria-label="Главное меню"
-      className="sticky bottom-0 z-10 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
+      className="fixed bottom-[calc(var(--safe-bottom)+var(--nav-bottom))] left-1/2 z-40 h-(--nav-height) w-[calc(min(100vw,390px)-2*var(--nav-side))] -translate-x-1/2 rounded-3xl border border-white/60 bg-background/72 shadow-[0_4px_20px_rgb(41_44_40/0.08)] backdrop-blur-[6px]"
     >
-      <ul className="grid grid-cols-4">
+      <ul className="grid h-full grid-cols-4">
         {tabs.map((tab) => {
           const active =
             tab.href === routes.profile
@@ -34,18 +35,11 @@ export function BottomNav() {
                 href={tab.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex flex-col items-center gap-1 py-2.5 text-xs font-medium text-muted-foreground transition-colors",
+                  "flex h-full flex-col items-center justify-center gap-1 type-caption text-muted-foreground transition-colors",
                   active && "text-primary",
                 )}
               >
-                <span
-                  className={cn(
-                    "grid h-7 w-12 place-items-center rounded-full transition-colors",
-                    active && "bg-primary/10",
-                  )}
-                >
-                  <tab.icon className="size-5" />
-                </span>
+                <tab.icon className="size-6" strokeWidth={1.5} />
                 {tab.label}
               </Link>
             </li>

@@ -1,97 +1,166 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
+import { authClient } from "@/shared/auth/client";
+import { isStaticPrototype } from "@/shared/config/env";
 import { routes } from "@/shared/config/routes";
+import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { Checkbox } from "@/shared/ui/checkbox";
-import { Input } from "@/shared/ui/input";
-import { Label } from "@/shared/ui/label";
-import { Logo } from "@/shared/ui/logo";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
+import { SegmentedList, SegmentedTrigger } from "@/shared/ui/segmented";
+import { Tabs } from "@/shared/ui/tabs";
+import { TextField } from "@/shared/ui/text-field";
+import { ScreenLayout } from "@/widgets/screen-layout";
+
+type Mode = "register" | "login";
+
+const MIN_PASSWORD_LENGTH = 8;
+
+/** Тексты ошибок Better Auth по коду. Остальные ошибки сервера уже на русском (см. shared/auth/server.ts). */
+const authErrorText: Record<string, string> = {
+  USER_ALREADY_EXISTS: "Аккаунт с таким e-mail уже есть. Войдите",
+  USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL: "Аккаунт с таким e-mail уже есть. Войдите",
+  INVALID_EMAIL: "Проверьте e-mail",
+  INVALID_EMAIL_OR_PASSWORD: "Неверный e-mail или пароль",
+  PASSWORD_TOO_SHORT: `Пароль — не короче ${MIN_PASSWORD_LENGTH} символов`,
+  PASSWORD_TOO_LONG: "Слишком длинный пароль",
+};
+
+function errorText(error: { code?: string; message?: string; status?: number }): string {
+  if (error.code && authErrorText[error.code]) return authErrorText[error.code];
+  if (error.status === 400 && error.message && /[а-яё]/i.test(error.message)) return error.message;
+  return "Не получилось. Проверьте интернет и попробуйте ещё раз";
+}
 
 export function AuthPage() {
   const router = useRouter();
-  const [agree, setAgree] = useState(true);
+  const [mode, setMode] = useState<Mode>("register");
+  const [agree, setAgree] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const submit = (next: string) => (e: FormEvent) => {
-    e.preventDefault();
-    router.push(next);
-  };
+  function switchMode(next: Mode) {
+    setMode(next);
+    setError(null);
+  }
+
+  async function register(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const name = String(form.get("name") ?? "").trim();
+    const email = String(form.get("email") ?? "").trim();
+    const password = String(form.get("password") ?? "");
+
+    if (!name) return setError("Укажите имя");
+    if (!agree) return setError("Нужно согласие на обработку персональных данных");
+    if (password.length < MIN_PASSWORD_LENGTH) return setError(authErrorText.PASSWORD_TOO_SHORT);
+
+    // На GitHub Pages сервера нет: просто показываем следующий экран.
+    if (isStaticPrototype) return router.push(routes.onboarding);
+
+    setPending(true);
+    setError(null);
+    // consent проверяет сервер (shared/auth/server.ts). В типах клиента такого поля нет,
+    // поэтому передаём его через отдельный объект, а не прямо в вызове.
+    const body = { name, email, password, consent: true };
+    const { error: signUpError } = await authClient.signUp.email(body);
+    setPending(false);
+    if (signUpError) return setError(errorText(signUpError));
+    router.push(routes.onboarding);
+  }
+
+  async function login(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const email = String(form.get("email") ?? "").trim();
+    const password = String(form.get("password") ?? "");
+
+    if (isStaticPrototype) return router.push(routes.program);
+
+    setPending(true);
+    setError(null);
+    const { error: signInError } = await authClient.signIn.email({ email, password });
+    setPending(false);
+    if (signInError) return setError(errorText(signInError));
+    router.push(routes.program);
+  }
 
   return (
-    <main className="flex flex-1 flex-col gap-8 px-5 py-8">
-      <Logo href={routes.auth} />
-      <div className="space-y-2">
-        <h1 className="text-3xl font-semibold leading-tight">Добро пожаловать</h1>
-        <p className="text-muted-foreground">
-          Создайте аккаунт, чтобы получить свою программу практик.
-        </p>
-      </div>
-
-      <Tabs defaultValue="register">
-        <TabsList className="w-full">
-          <TabsTrigger value="register">Регистрация</TabsTrigger>
-          <TabsTrigger value="login">Вход</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="register" className="pt-4">
-          <form className="grid gap-4" onSubmit={submit(routes.onboarding)}>
-            <div className="grid gap-2">
-              <Label htmlFor="r-name">Имя</Label>
-              <Input id="r-name" defaultValue="Анна" className="h-11" />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="r-email">E-mail</Label>
-              <Input id="r-email" type="email" defaultValue="anna@example.ru" className="h-11" />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="r-pass">Пароль</Label>
-              <Input id="r-pass" type="password" defaultValue="demo-password" className="h-11" />
-            </div>
-            <Label className="flex items-start gap-2 text-sm font-normal leading-snug text-muted-foreground">
-              <Checkbox
-                className="mt-0.5"
-                checked={agree}
-                onCheckedChange={(v) => setAgree(v === true)}
-              />
-              Согласна на обработку персональных данных и принимаю условия использования
-            </Label>
-            <Button type="submit" size="lg" className="h-11 text-base" disabled={!agree}>
-              Создать аккаунт
-            </Button>
-          </form>
-        </TabsContent>
-
-        <TabsContent value="login" className="pt-4">
-          <form className="grid gap-4" onSubmit={submit(routes.typeResult)}>
-            <div className="grid gap-2">
-              <Label htmlFor="l-email">E-mail</Label>
-              <Input id="l-email" type="email" defaultValue="anna@example.ru" className="h-11" />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="l-pass">Пароль</Label>
-              <Input id="l-pass" type="password" defaultValue="demo-password" className="h-11" />
-            </div>
-            <Button type="submit" size="lg" className="h-11 text-base">
-              Войти
-            </Button>
-            <button type="button" className="text-sm text-muted-foreground hover:text-foreground">
-              Забыли пароль?
-            </button>
-          </form>
-        </TabsContent>
+    <ScreenLayout
+      variant="hero"
+      background="01_reg"
+      title="Добро пожаловать"
+      subtitle={
+        mode === "register"
+          ? "Создайте аккаунт, чтобы получить свою программу практик."
+          : "Войдите, чтобы продолжить свою программу практик."
+      }
+      actions={
+        <Button type="submit" form={`${mode}-form`} size="cta" disabled={pending}>
+          {mode === "register" ? "Создать аккаунт" : "Войти"}
+        </Button>
+      }
+    >
+      <Tabs value={mode} onValueChange={(value) => switchMode(value as Mode)}>
+        <SegmentedList>
+          <SegmentedTrigger value="register">Регистрация</SegmentedTrigger>
+          <SegmentedTrigger value="login">Вход</SegmentedTrigger>
+        </SegmentedList>
       </Tabs>
 
-      <p className="text-center text-xs text-muted-foreground">
-        Прототип: данные никуда не отправляются. Способ входа (e-mail, код, Telegram) ещё
-        обсуждается.{" "}
-        <Link href={routes.onboarding} className="underline">
-          Пропустить
-        </Link>
-      </p>
-    </main>
+      {/* Обе формы лежат друг на друге, видна одна. Место занимает более длинная (регистрация),
+          поэтому при переключении заголовок и кнопка не прыгают. */}
+      <div className="-mt-2 grid">
+        <form
+          id="register-form"
+          className={cn("col-start-1 row-start-1 grid content-start gap-3", mode !== "register" && "invisible")}
+          inert={mode !== "register"}
+          onSubmit={register}
+          noValidate
+        >
+          <TextField id="r-name" name="name" label="Имя" autoComplete="given-name" required />
+          <TextField id="r-email" name="email" type="email" label="E-mail" autoComplete="email" inputMode="email" required />
+          <TextField
+            id="r-password"
+            name="password"
+            type="password"
+            label="Пароль"
+            autoComplete="new-password"
+            minLength={MIN_PASSWORD_LENGTH}
+            required
+          />
+          <label className="flex min-h-11 cursor-pointer items-center gap-3">
+            <Checkbox
+              className="size-6 shrink-0 rounded-md border-primary/40 bg-background/70 [&_svg]:size-4!"
+              aria-label="Согласие на обработку персональных данных"
+              checked={agree}
+              onCheckedChange={(value) => setAgree(value === true)}
+            />
+            <span className="type-caption font-normal text-muted-foreground">
+              Даю согласие на обработку персональных данных и принимаю условия использования
+            </span>
+          </label>
+        </form>
+
+        <form
+          id="login-form"
+          className={cn("col-start-1 row-start-1 grid content-start gap-3", mode !== "login" && "invisible")}
+          inert={mode !== "login"}
+          onSubmit={login}
+          noValidate
+        >
+          <TextField id="l-email" name="email" type="email" label="E-mail" autoComplete="email" inputMode="email" required />
+          <TextField id="l-password" name="password" type="password" label="Пароль" autoComplete="current-password" required />
+        </form>
+      </div>
+
+      {error && (
+        <p role="alert" className="type-secondary -mt-3 text-destructive">
+          {error}
+        </p>
+      )}
+    </ScreenLayout>
   );
 }

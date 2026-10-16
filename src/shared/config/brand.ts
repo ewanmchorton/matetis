@@ -1,5 +1,5 @@
 /** Название приложения в интерфейсе. */
-export const APP_NAME = "МАТЕТИС";
+export const APP_NAME = "МАТЭТИС";
 
 /** Буквы недели для ежедневных ритуалов: понедельник … воскресенье. */
-export const APP_WEEK_LETTERS = ["М", "А", "Т", "Е", "Т", "И", "С"] as const;
+export const APP_WEEK_LETTERS = ["М", "А", "Т", "Э", "Т", "И", "С"] as const;

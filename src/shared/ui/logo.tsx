@@ -3,13 +3,20 @@ import Link from "next/link";
 import { APP_NAME } from "@/shared/config/brand";
 import { cn } from "@/shared/lib/utils";
 
-export function Logo({ href = "/", className }: { href?: string; className?: string }) {
-  return (
-    <Link href={href} className={cn("inline-flex items-center gap-2 font-semibold", className)}>
-      <span className="grid size-7 place-items-center rounded-lg bg-primary text-xs font-bold text-primary-foreground">
-        {APP_NAME.charAt(0)}
-      </span>
-      <span className="tracking-[0.18em]">{APP_NAME}</span>
-    </Link>
+/**
+ * Текстовый логотип. Размер и цвет — из docs/design-guide.md, раздел «Логотип».
+ * Положение на экране задаёт ScreenLayout, а не сам логотип.
+ */
+export function Logo({ href, className }: { href?: string; className?: string }) {
+  const text = (
+    <span
+      className={cn(
+        "font-[family-name:var(--font-display)] text-[22px] leading-none font-medium tracking-[0.2em] text-primary",
+        className,
+      )}
+    >
+      {APP_NAME}
+    </span>
   );
+  return href ? <Link href={href}>{text}</Link> : text;
 }

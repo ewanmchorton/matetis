@@ -18,14 +18,14 @@ import {
 
 /** Для разработки прототипа: быстрый переход между экранами. */
 const prototypeScreens: { href: string; label: string; note?: string }[] = [
-  { href: routes.auth, label: "Регистрация и вход" },
+  { href: routes.auth, label: "Регистрация и вход", note: "чистовой" },
   { href: routes.onboarding, label: "Онбординг" },
   { href: routes.typeTest, label: "Тест на тип" },
   { href: routes.typeResult, label: "Результат теста" },
   { href: routes.program, label: "Программа" },
   { href: routes.together, label: "Вместе" },
   { href: routes.library, label: "Библиотека" },
-  { href: routes.profile, label: "Профиль" },
+  { href: routes.profile, label: "Профиль", note: "чистовой" },
   { href: `${routes.person}/pavel`, label: "Профиль Павла", note: "запрос в друзья" },
   { href: `${routes.elementResult}?badge=1`, label: "Итог стихии", note: "бейдж" },
   { href: `${routes.elementResult}?badge=0`, label: "Итог стихии", note: "без бейджа" },
@@ -47,19 +47,20 @@ export function PrototypeScreensNav() {
         render={
           <Button
             variant="ghost"
-            size="sm"
-            className="h-8 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground"
+            size="icon-sm"
+            aria-label="Экраны (для разработки)"
+            title="Экраны (для разработки)"
+            className="pointer-events-auto rounded-full text-muted-foreground opacity-35 hover:bg-background/70 hover:opacity-100"
           />
         }
       >
-        <LayoutGrid className="size-4" />
-        Экраны
+        <LayoutGrid className="size-3.5" />
       </SheetTrigger>
       <SheetContent side="right" className="w-[min(100%,390px)] sm:max-w-[390px]">
         <SheetHeader>
           <SheetTitle>Все экраны</SheetTitle>
           <SheetDescription>
-            Быстрый переход по прототипу. На продакшене этого меню не будет.
+            Быстрый переход к любому экрану, минуя вход. Только на время разработки.
           </SheetDescription>
         </SheetHeader>
         <nav aria-label="Экраны прототипа">

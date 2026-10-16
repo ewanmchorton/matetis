@@ -3,7 +3,8 @@ import type { NextConfig } from "next";
 const isGithubPages = process.env.GITHUB_PAGES === "true";
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ["127.0.0.1"],
+  // Открыть локальный сервер с телефона в той же Wi-Fi-сети.
+  allowedDevOrigins: ["127.0.0.1", "192.168.*.*", "10.*.*.*", "172.*.*.*"],
   devIndicators: false,
   env: {
     NEXT_PUBLIC_BASE_PATH: isGithubPages ? "/matetis" : "",

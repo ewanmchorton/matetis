@@ -11,8 +11,16 @@ function isBlank(value: unknown): boolean {
   return typeof value !== "string" || value.trim() === "";
 }
 
+// При локальном запуске приложение открывают и с телефона в той же Wi-Fi-сети
+// (адрес вида http://192.168.0.151:4317). Без этого вход с телефона отклоняется.
+const localNetworkOrigins =
+  process.env.NODE_ENV === "development"
+    ? ["http://192.168.*.*:4317", "http://10.*.*.*:4317", "http://172.*.*.*:4317"]
+    : [];
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: "pg", schema }),
+  trustedOrigins: localNetworkOrigins,
   emailAndPassword: { enabled: true },
   user: {
     additionalFields: {

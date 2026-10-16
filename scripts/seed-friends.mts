@@ -1,4 +1,5 @@
-// Создаёт двух тестовых людей, которые дружат, — чтобы посмотреть данные в pnpm db:studio.
+// Создаёт тестовых людей: Анна и Борис дружат, Ольга прислала Анне запрос в друзья.
+// Чтобы посмотреть данные в pnpm db:studio или войти Анной и открыть профиль.
 // Запуск: pnpm db:seed-friends
 // Повторный запуск ничего не дублирует. Только для локальной базы.
 import { randomUUID } from "node:crypto";
@@ -28,6 +29,7 @@ const TEST_PASSWORD = "matetis-test-123";
 const people = [
   { name: "Анна Тестовая", email: "anna.test@matetis.local" },
   { name: "Борис Тестовый", email: "boris.test@matetis.local" },
+  { name: "Ольга Тестовая", email: "olga.test@matetis.local" },
 ];
 
 const client = new pg.Client({ connectionString: databaseUrl });
@@ -65,9 +67,16 @@ try {
      do update set status = 'accepted', responded_at = now()`,
     [annaId, borisId],
   );
+  const olgaId = await ensurePerson(people[2].name, people[2].email);
+  // Запрос Ольги не перезаписывается, если Анна уже ответила на него в приложении.
+  await client.query(
+    `insert into friend_request (from_user_id, to_user_id) values ($1, $2)
+     on conflict (least(from_user_id, to_user_id), greatest(from_user_id, to_user_id)) do nothing`,
+    [olgaId, annaId],
+  );
   await client.query("commit");
-  console.log("Готово: Анна Тестовая и Борис Тестовый дружат.");
-  console.log(`Почты: ${people[0].email}, ${people[1].email}. Пароль записан в scripts/seed-friends.mts.`);
+  console.log("Готово: Анна Тестовая и Борис Тестовый дружат, Ольга Тестовая прислала Анне запрос.");
+  console.log(`Почты: ${people.map((p) => p.email).join(", ")}. Пароль записан в scripts/seed-friends.mts.`);
 } catch (error) {
   await client.query("rollback");
   throw error;

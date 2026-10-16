@@ -30,6 +30,9 @@ const buttonVariants = cva(
         "icon-sm":
           "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
         "icon-lg": "size-9",
+        // Кнопки экранов приложения: docs/design-guide.md, раздел «Кнопки».
+        cta: "h-(--button-height) w-full gap-2 rounded-2xl px-6 type-button",
+        "cta-sm": "h-11 gap-1.5 rounded-2xl px-5 type-button",
       },
     },
     defaultVariants: {

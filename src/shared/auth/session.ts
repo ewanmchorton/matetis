@@ -4,11 +4,10 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 
+import { isStaticPrototype } from "@/shared/config/env";
 import { routes } from "@/shared/config/routes";
 
-// Сборка для GitHub Pages: сервера и базы нет, показываем только прототип.
-// В сборке для сервера флаг всегда выключен.
-export const isStaticPrototype = process.env.NEXT_PUBLIC_STATIC_PROTOTYPE === "true";
+export { isStaticPrototype };
 
 export const getCurrentUser = cache(async () => {
   // Модуль входа подключается к базе, поэтому загружаем его только при запросе:
