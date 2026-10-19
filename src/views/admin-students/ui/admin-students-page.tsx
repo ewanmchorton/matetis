@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { getPersonType } from "@/entities/person-type";
@@ -38,7 +39,9 @@ function formatDate(value: string): string {
 }
 
 export function AdminStudentsPage() {
+  const router = useRouter();
   const [state, setState] = useState<ListState>({ status: "loading" });
+  const studentHref = (id: string) => `${routes.adminStudent}?id=${encodeURIComponent(id)}`;
 
   useEffect(() => {
     if (isStaticPrototype) {
@@ -85,14 +88,20 @@ export function AdminStudentsPage() {
             </TableHeader>
             <TableBody>
               {state.rows.map((row) => (
-                <TableRow key={row.id}>
+                <TableRow
+                  key={row.id}
+                  // Нажимается вся строка. Ссылка на имени остаётся для клавиатуры и «открыть в новой вкладке».
+                  className={isStaticPrototype ? undefined : "cursor-pointer"}
+                  onClick={isStaticPrototype ? undefined : () => router.push(studentHref(row.id))}
+                >
                   <TableCell className="font-medium">
                     {isStaticPrototype ? (
                       row.name
                     ) : (
                       <Link
-                        href={`${routes.adminStudent}?id=${encodeURIComponent(row.id)}`}
+                        href={studentHref(row.id)}
                         className="text-primary underline-offset-4 hover:underline"
+                        onClick={(event) => event.stopPropagation()}
                       >
                         {row.name}
                       </Link>
