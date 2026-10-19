@@ -15,4 +15,5 @@ export const routes = {
   adminProgram: "/admin/program",
   adminSupport: "/admin/support",
   adminStudents: "/admin/students",
+  adminStudent: "/admin/students/person",
 } as const;

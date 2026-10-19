@@ -48,7 +48,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
         <nav aria-label="Разделы админки">
           <ul className="space-y-1">
             {nav.map((item) => {
-              const active = pathname === item.href;
+              const active = pathname === item.href || (item.href !== routes.admin && pathname.startsWith(`${item.href}/`));
               return (
                 <li key={item.href}>
                   <Link

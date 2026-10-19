@@ -8,7 +8,8 @@ type SignedInUser = NonNullable<Awaited<ReturnType<typeof getCurrentUser>>>;
 
 /**
  * Выполняет обработчик от имени вошедшего человека.
- * Не вошёл — 401. Нарушено правило приложения (AppError) — 400 с понятным текстом.
+ * Не вошёл — 401. Нет прав (AppError «forbidden») — 403.
+ * Нарушено правило приложения (AppError) — 400 с понятным текстом.
  */
 export async function withUser(handler: (user: SignedInUser) => Promise<unknown>) {
   const user = await getCurrentUser();
@@ -19,7 +20,8 @@ export async function withUser(handler: (user: SignedInUser) => Promise<unknown>
     return NextResponse.json(await handler(user));
   } catch (error) {
     if (error instanceof AppError) {
-      return NextResponse.json({ code: error.code, message: error.message }, { status: 400 });
+      const status = error.code === "forbidden" ? 403 : 400;
+      return NextResponse.json({ code: error.code, message: error.message }, { status });
     }
     throw error;
   }
@@ -30,3 +32,4 @@ export async function readJsonObject(request: Request): Promise<Record<string, u
   const body: unknown = await request.json().catch(() => null);
   return body && typeof body === "object" && !Array.isArray(body) ? (body as Record<string, unknown>) : {};
 }
+
