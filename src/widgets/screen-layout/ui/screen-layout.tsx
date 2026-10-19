@@ -5,7 +5,7 @@ import { Logo } from "@/shared/ui/logo";
 import { StepDots } from "@/shared/ui/step-dots";
 
 /** Фоны из design/backgrounds, уменьшенные до 780 px в ширину (2× от 390). Лежат в public/backgrounds. */
-export type ScreenBackground = "01_reg" | "06_profile";
+export type ScreenBackground = "01_reg" | "03_1_test" | "03_4_test" | "03_result" | "06_profile";
 
 /**
  * Для экранов с картинкой: на какой высоте картинки (в ширинах экрана) должен оказаться
@@ -13,6 +13,7 @@ export type ScreenBackground = "01_reg" | "06_profile";
  */
 const heroTextLine: Partial<Record<ScreenBackground, number>> = {
   "01_reg": 0.9,
+  "03_4_test": 1.2,
 };
 
 /** Высота фоновых картинок в ширинах экрана: 1690 / 780. */
@@ -21,7 +22,7 @@ const BACKGROUND_RATIO = 1690 / 780;
 type ScreenLayoutProps = {
   /**
    * hero — картинка сверху, текст и кнопка прижаты к низу экрана (вход, онбординг).
-   * page — заголовок сразу под логотипом, длинная прокрутка (вкладки приложения).
+   * page — заголовок сразу под логотипом, длинная прокрутка (вкладки приложения, шаги теста).
    */
   variant: "hero" | "page";
   background?: ScreenBackground;
@@ -29,10 +30,19 @@ type ScreenLayoutProps = {
   compact?: boolean;
   /** Правая часть строки с логотипом: например, «Пропустить». */
   headerAction?: ReactNode;
+  /**
+   * Текст лежит прямо на картинке, без карточек (page): под заголовком и содержимым
+   * светлая дымка, картинка за текстом приглушается.
+   */
+  haze?: boolean;
+  /** Блок после содержимого, уже без дымки: например, карточка, у которой своя подложка. */
+  afterHaze?: ReactNode;
+  /** Над заголовком: например, «Шаг 2 из 4» с полосой прогресса. */
+  beforeTitle?: ReactNode;
   title: ReactNode;
   subtitle?: ReactNode;
   children?: ReactNode;
-  /** Кнопки внизу экрана (только для hero). */
+  /** Кнопки внизу экрана. В page — после содержимого, прижаты к низу экрана. */
   actions?: ReactNode;
   /** Индикатор шагов над кнопками (только для hero). */
   steps?: { count: number; current: number };
@@ -64,6 +74,9 @@ export function ScreenLayout({
   background,
   compact = false,
   headerAction,
+  haze = false,
+  afterHaze,
+  beforeTitle,
   title,
   subtitle,
   children,
@@ -121,8 +134,11 @@ export function ScreenLayout({
               className="pointer-events-none absolute inset-x-0 top-0 -z-10 bg-background bg-bottom bg-no-repeat"
               style={{
                 bottom: `calc(-1 * ${belowTitle})`,
-                backgroundSize: "100% auto",
+                // Если картинка ниже экрана, над ней остаётся Ivory: второй переход
+                // привязан к верхнему краю картинки и прячет его.
+                backgroundSize: `100% 100%, 100% calc(${screenWidth} * ${BACKGROUND_RATIO}), 100% 100%, 100% auto`,
                 backgroundImage: [
+                  topFade(110),
                   topFade(110),
                   `linear-gradient(to bottom, ${ivory(0)} calc(100% - ${belowTitle} - 40px), ${ivory(0.45)} calc(100% - ${belowTitle} + 40px), ${ivory(0.6)} 80%, ${ivory(1)} 100%)`,
                   imageUrl(background),
@@ -144,21 +160,43 @@ export function ScreenLayout({
         className={cn(
           "flex flex-col px-(--screen-gutter)",
           // Отступ под нижним меню добавляет раскладка вкладок, здесь — только 24 px.
-          variant === "hero" ? "pb-[calc(var(--safe-bottom)+var(--action-bottom))]" : "flex-1 pb-6",
+          variant === "hero" || actions ? "pb-[calc(var(--safe-bottom)+var(--action-bottom))]" : "pb-6",
+          variant === "page" && "flex-1",
         )}
       >
-        <div className={cn(compact ? "space-y-1.5" : "space-y-2", variant === "page" && "mt-(--page-title-gap)")}>
-          <h1 className="type-title text-foreground">{title}</h1>
-          {subtitle && (
-            <p className={cn(compact ? "type-secondary" : "type-body", "text-muted-foreground")}>{subtitle}</p>
+        <div className="relative">
+          {haze && (
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -inset-x-(--screen-gutter) -top-10 -bottom-6 -z-10 bg-background/60 backdrop-blur-[6px]"
+              style={{
+                // Края дымки растворяются: сверху за 40 px, снизу — в промежутке до следующего блока.
+                maskImage: "linear-gradient(to bottom, transparent 0, black 40px, black calc(100% - 48px), transparent 100%)",
+              }}
+            />
           )}
+          {beforeTitle && (
+            <div className={cn("mb-4", variant === "page" && "mt-(--page-title-gap)")}>{beforeTitle}</div>
+          )}
+          <div
+            className={cn(
+              compact ? "space-y-1.5" : "space-y-2",
+              variant === "page" && !beforeTitle && "mt-(--page-title-gap)",
+            )}
+          >
+            <h1 className="type-title text-foreground">{title}</h1>
+            {subtitle && (
+              <p className={cn(compact ? "type-secondary" : "type-body", "text-muted-foreground")}>{subtitle}</p>
+            )}
+          </div>
+
+          <div className={cn("flex flex-col", compact ? "mt-4 gap-4" : "mt-6 gap-6")}>{children}</div>
         </div>
+        {afterHaze && <div className={cn("flex flex-col", compact ? "mt-4 gap-4" : "mt-6 gap-6")}>{afterHaze}</div>}
 
-        <div className={cn("flex flex-col", compact ? "mt-4 gap-4" : "mt-6 gap-6")}>{children}</div>
-
-        {variant === "hero" && (actions || steps) && (
-          <div className={cn("flex flex-col gap-6", compact ? "pt-4" : "pt-6")}>
-            {steps && <StepDots count={steps.count} current={steps.current} />}
+        {(actions || (variant === "hero" && steps)) && (
+          <div className={cn("flex flex-col gap-6", compact ? "pt-4" : "pt-6", variant === "page" && "mt-auto")}>
+            {variant === "hero" && steps && <StepDots count={steps.count} current={steps.current} />}
             {actions && <div className="flex gap-3">{actions}</div>}
           </div>
         )}
