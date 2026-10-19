@@ -11,12 +11,13 @@ export async function clearDatabase() {
 }
 
 /** Создаёт человека напрямую в базе, минуя регистрацию. */
-export async function createPerson(name: string) {
+export async function createPerson(name: string, role: "user" | "admin" = "user") {
   const id = randomUUID();
   await db.insert(user).values({
     id,
     name,
     email: `${id}@test.local`,
+    role,
     consentedAt: new Date(),
   });
   return id;
