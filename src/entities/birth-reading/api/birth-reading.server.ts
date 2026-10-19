@@ -2,7 +2,8 @@
 // Расчёт видят только сам человек и администратор. Проверку входа делает вызывающий код.
 import { eq } from "drizzle-orm";
 
-import { birthReading, db, user } from "@/shared/db";
+import { assertAdmin } from "@/shared/auth/assert-admin";
+import { birthReading, db } from "@/shared/db";
 import { AppError } from "@/shared/lib/app-error";
 
 import { calculateBirthSquare, digits, scoreElements, type DigitCounts, type ElementScore } from "../model/calculate";
@@ -66,7 +67,6 @@ export async function getBirthReadingForAdmin(
   adminId: string,
   personId: string,
 ): Promise<BirthReading | null> {
-  const [viewer] = await db.select({ role: user.role }).from(user).where(eq(user.id, adminId)).limit(1);
-  if (viewer?.role !== "admin") throw new AppError("forbidden", "Доступно только администратору");
+  await assertAdmin(adminId);
   return findReading(personId);
 }

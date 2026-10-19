@@ -29,6 +29,13 @@
       "when": 1792406214919,
       "tag": "0003_birth_reading",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792407152462,
+      "tag": "0004_type_test_attempt",
+      "breakpoints": true
     }
   ]
 }
