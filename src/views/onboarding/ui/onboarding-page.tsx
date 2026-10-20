@@ -2,19 +2,26 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ComponentType, type MouseEvent, type ReactNode, type TouchEvent } from "react";
-import { CalendarCheck, Ellipsis, ExternalLink, Menu, Repeat, Share, SquarePlus, Sparkles } from "lucide-react";
+import { CalendarCheck, ExternalLink, Repeat, Share, SquarePlus, Sparkles } from "lucide-react";
 
 import { ElementBadge, getElements } from "@/entities/element";
+import {
+  detectDevice,
+  InstallSheet,
+  markShown,
+  openedFromHomeScreen,
+  openInBrowserUrl,
+  readReminderState,
+  saveReminderState,
+  useInstallPrompt,
+} from "@/features/install-app";
 import { APP_NAME } from "@/shared/config/brand";
 import { routes } from "@/shared/config/routes";
 import { cn } from "@/shared/lib/utils";
 import { typograph } from "@/shared/lib/typograph";
 import { Button, buttonVariants } from "@/shared/ui/button";
 import { GlassCard } from "@/shared/ui/glass-card";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/shared/ui/sheet";
 import { backgroundSrc, ScreenLayout, type ScreenBackground } from "@/widgets/screen-layout";
-
-import { detectDevice, openInBrowserUrl, type Device } from "../model/device";
 
 type Slide = {
   /** page — заголовок сверху, картинка видна целиком под карточками (как в макете 02_3). */
@@ -135,17 +142,6 @@ const slides: Slide[] = [
   },
 ];
 
-/** Событие Chrome на Android: можно показать системное окно «Установить приложение». */
-type BeforeInstallPromptEvent = Event & {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-};
-
-function openedFromHomeScreen(): boolean {
-  const nav = navigator as Navigator & { standalone?: boolean };
-  return window.matchMedia("(display-mode: standalone)").matches || nav.standalone === true;
-}
-
 const installCards = {
   iphone: {
     icon: Share,
@@ -164,111 +160,14 @@ const installCards = {
   },
 };
 
-const installSteps = {
-  iphone: [
-    { icon: Share, text: "Нажмите ⋯ справа внизу, затем «Поделиться»" },
-    { icon: SquarePlus, text: "Пролистайте вниз и выберите «Добавить на экран „Домой“»" },
-  ],
-  other: [
-    { icon: Menu, text: "Откройте меню браузера" },
-    { icon: SquarePlus, text: "Выберите «Установить приложение» или «Добавить на главный экран»" },
-  ],
-};
-
-/** «⋯» в тексте шага — заметным кружком, как кнопка меню в Safari. */
-function withMenuButton(text: string): ReactNode {
-  const [before, after] = text.split("⋯");
-  if (after === undefined) return text;
-  return (
-    <>
-      {before}
-      <span className="mx-0.5 inline-grid size-7 place-items-center rounded-full bg-background align-middle text-foreground shadow-[0_1px_4px_rgb(41_44_40/0.12)]">
-        <Ellipsis className="size-5" strokeWidth={3} aria-label="Меню" />
-      </span>
-      {after}
-    </>
-  );
-}
-
-/**
- * Подсказка, когда браузер не умеет показать системное окно установки.
- * Safari на iPhone не даёт сайту установить себя: человек делает это сам в два касания.
- */
-function InstallHelpSheet({
-  device,
-  open,
-  onOpenChange,
-}: {
-  device: Device;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
-  const steps = device === "iphone" ? installSteps.iphone : installSteps.other;
-  return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="bottom"
-        className="rounded-t-3xl bg-background px-(--screen-gutter) pt-6 pb-[calc(var(--safe-bottom)+24px)]"
-      >
-        <SheetHeader className="p-0">
-          <SheetTitle className="type-section!">Установка приложения</SheetTitle>
-          <SheetDescription className="type-secondary!">
-            {typograph(
-              device === "iphone"
-                ? `После установки откройте ${APP_NAME} с иконки на экране «Домой» и войдите.`
-                : `После установки откройте ${APP_NAME} с иконки на главном экране и войдите.`,
-            )}
-          </SheetDescription>
-        </SheetHeader>
-        <ol className="space-y-3">
-          {steps.map((step) => (
-            <li key={step.text} className="flex items-center gap-4 rounded-2xl bg-secondary/55 p-4">
-              <step.icon className="size-6 shrink-0 text-primary" />
-              <span className="type-body">{withMenuButton(typograph(step.text))}</span>
-            </li>
-          ))}
-        </ol>
-      </SheetContent>
-    </Sheet>
-  );
-}
-
-function useInstallPrompt() {
-  const [event, setEvent] = useState<BeforeInstallPromptEvent | null>(null);
-  const [installed, setInstalled] = useState(false);
-
-  useEffect(() => {
-    const onPrompt = (e: Event) => {
-      e.preventDefault();
-      setEvent(e as BeforeInstallPromptEvent);
-    };
-    const onInstalled = () => setInstalled(true);
-    window.addEventListener("beforeinstallprompt", onPrompt);
-    window.addEventListener("appinstalled", onInstalled);
-    return () => {
-      window.removeEventListener("beforeinstallprompt", onPrompt);
-      window.removeEventListener("appinstalled", onInstalled);
-    };
-  }, []);
-
-  /** Показывает системное окно установки. false — браузер такого окна не даёт. */
-  async function prompt() {
-    if (!event) return false;
-    await event.prompt();
-    const { outcome } = await event.userChoice;
-    setEvent(null);
-    if (outcome === "accepted") setInstalled(true);
-    return true;
-  }
-
-  return { prompt, installed };
-}
-
 function InstallScreen() {
   const router = useRouter();
   const install = useInstallPrompt();
   const [help, setHelp] = useState(false);
   const device = detectDevice(navigator.userAgent, navigator.maxTouchPoints);
+
+  // Экран установки считается показом напоминания: следующее — не раньше чем через 3 дня.
+  useEffect(() => saveReminderState(markShown("onboarding", readReminderState(), Date.now())), []);
   const cards =
     device === "iphone"
       ? [installCards.iphone]
@@ -330,7 +229,7 @@ function InstallScreen() {
         {cards.map((card) => (
           <IconCard key={card.title} {...card} />
         ))}
-        <InstallHelpSheet device={device} open={help} onOpenChange={setHelp} />
+        <InstallSheet device={device} open={help} onOpenChange={setHelp} />
       </div>
     </ScreenLayout>
   );

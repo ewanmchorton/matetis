@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { getCurrentElement } from "@/entities/element";
 import { getPersonType, type PersonType } from "@/entities/person-type";
 import { useProgress } from "@/entities/progress";
+import { InstallReminder } from "@/features/install-app";
 import { request, type RequestError } from "@/shared/api/request";
 import { isDevelopment, isStaticPrototype } from "@/shared/config/env";
 import { routes } from "@/shared/config/routes";
@@ -94,6 +95,8 @@ export function TypeResultPage() {
               программа обновится сама.
             </p>
           </GlassCard>
+          {/* Сначала человек видит результат, потом — предложение поставить приложение на «Домой». */}
+          <InstallReminder occasion="after-test" delayMs={3000} />
         </>
       )}
     </ScreenLayout>
