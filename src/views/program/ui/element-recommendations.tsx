@@ -85,7 +85,7 @@ export function ElementRecommendations({
           Рекомендации стихии
         </h2>
         <p className="rounded-2xl border bg-card p-4 text-sm text-muted-foreground">
-          Рекомендации для стихии {element.name} появятся позже — загляните в библиотеку.
+          Рекомендации для стихии {element.genitive} появятся позже — загляните в библиотеку.
         </p>
       </section>
     );

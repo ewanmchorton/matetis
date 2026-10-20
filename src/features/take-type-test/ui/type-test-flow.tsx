@@ -9,6 +9,7 @@ import type { RequestError } from "@/shared/api/request";
 import { routes } from "@/shared/config/routes";
 import { toDateKey } from "@/shared/lib/date";
 import { cn } from "@/shared/lib/utils";
+import { BackButton } from "@/shared/ui/back-button";
 import { Button } from "@/shared/ui/button";
 import { GlassCard } from "@/shared/ui/glass-card";
 import { Input } from "@/shared/ui/input";
@@ -43,14 +44,6 @@ function FullInstruction({ test }: { test: TypeTest }) {
         </div>
       </details>
     </GlassCard>
-  );
-}
-
-function BackButton({ onClick }: { onClick: () => void }) {
-  return (
-    <Button variant="outline" size="cta" className="w-auto border-white/60 bg-background/80" onClick={onClick}>
-      Назад
-    </Button>
   );
 }
 
@@ -102,12 +95,9 @@ export function TypeTestFlow({ test }: { test: TypeTest }) {
         beforeTitle={<StepProgress current={1} total={totalSteps} />}
         title="Как проходить тест"
         actions={
-          <>
-            <BackButton onClick={() => router.back()} />
-            <Button size="cta" className="flex-1" onClick={() => goTo(1)}>
-              Начать
-            </Button>
-          </>
+          <Button size="cta" className="flex-1" onClick={() => goTo(1)}>
+            Начать
+          </Button>
         }
       >
         <ul className="list-disc space-y-4 pl-6 type-body text-foreground marker:text-foreground">

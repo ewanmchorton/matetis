@@ -3,6 +3,8 @@ export type ElementId = "wood" | "fire" | "earth" | "metal" | "water";
 export type Element = {
   id: ElementId;
   name: string;
+  /** Название в родительном падеже: «стихия Воды», «период стихии Дерева». */
+  genitive: string;
   season: string;
   period: string;
   /** Tailwind-классы для цветовой метки стихии */

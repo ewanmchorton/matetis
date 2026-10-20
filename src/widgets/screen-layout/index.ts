@@ -1,1 +1,1 @@
-export { ScreenLayout, type ScreenBackground } from "./ui/screen-layout";
+export { backgroundSrc, ScreenLayout, type ScreenBackground } from "./ui/screen-layout";

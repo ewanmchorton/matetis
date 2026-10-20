@@ -1,11 +1,22 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
+import { typograph } from "@/shared/lib/typograph";
 import { cn } from "@/shared/lib/utils";
 import { Logo } from "@/shared/ui/logo";
 import { StepDots } from "@/shared/ui/step-dots";
 
 /** Фоны из design/backgrounds, уменьшенные до 780 px в ширину (2× от 390). Лежат в public/backgrounds. */
-export type ScreenBackground = "01_reg" | "03_1_test" | "03_4_test" | "03_result" | "06_profile";
+export type ScreenBackground =
+  | "01_reg"
+  | "02_0_intro_underlay"
+  | "02_1_onboard"
+  | "02_2_onboard"
+  | "02_3_onboard"
+  | "02_4_onboard"
+  | "03_1_test"
+  | "03_4_test"
+  | "03_result"
+  | "06_profile";
 
 /**
  * Для экранов с картинкой: на какой высоте картинки (в ширинах экрана) должен оказаться
@@ -13,7 +24,22 @@ export type ScreenBackground = "01_reg" | "03_1_test" | "03_4_test" | "03_result
  */
 const heroTextLine: Partial<Record<ScreenBackground, number>> = {
   "01_reg": 0.9,
+  "02_1_onboard": 1.5,
   "03_4_test": 1.2,
+};
+
+/**
+ * Картинки, у которых главное — вверху (онбординг 02_1, 02_2): на коротком телефоне
+ * верх не уходит за край экрана, картинка прижимается к верху, а текст ложится на светлый низ.
+ */
+const keepImageTop: ScreenBackground[] = ["02_1_onboard", "02_2_onboard"];
+
+/**
+ * Экраны page: картинка прижата к верху. Здесь — насколько её поднять, если она выше экрана
+ * (0 % — верх, 100 % — низ). 02_3: шар у воды должен оказаться между карточками и кнопкой.
+ */
+const pageImageY: Partial<Record<ScreenBackground, string>> = {
+  "02_3_onboard": "60%",
 };
 
 /** Высота фоновых картинок в ширинах экрана: 1690 / 780. */
@@ -26,6 +52,13 @@ type ScreenLayoutProps = {
    */
   variant: "hero" | "page";
   background?: ScreenBackground;
+  /**
+   * Текст по центру, содержимое под заголовком — узкой колонкой (hero): вписано в просвет картинки,
+   * например во врата на первом экране онбординга.
+   */
+  centered?: boolean;
+  /** Шире поля по бокам: по краям картинки графика (листья), на ней текст плохо читается. */
+  narrow?: boolean;
   /** Плотнее: подзаголовок 15 px и меньше промежутки. Для экранов с длинной формой. */
   compact?: boolean;
   /** Правая часть строки с логотипом: например, «Пропустить». */
@@ -35,6 +68,11 @@ type ScreenLayoutProps = {
    * светлая дымка, картинка за текстом приглушается.
    */
   haze?: boolean;
+  /**
+   * Мягкое светлое пятно под заголовком и подзаголовком, когда картинка за текстом пёстрая.
+   * Только градиент: без размытия и масок, которые в Safari рисуются с резкими краями.
+   */
+  textGlow?: boolean;
   /** Блок после содержимого, уже без дымки: например, карточка, у которой своя подложка. */
   afterHaze?: ReactNode;
   /** Над заголовком: например, «Шаг 2 из 4» с полосой прогресса. */
@@ -44,7 +82,7 @@ type ScreenLayoutProps = {
   children?: ReactNode;
   /** Кнопки внизу экрана. В page — после содержимого, прижаты к низу экрана. */
   actions?: ReactNode;
-  /** Индикатор шагов над кнопками (только для hero). */
+  /** Индикатор шагов над кнопками. */
   steps?: { count: number; current: number };
 };
 
@@ -63,7 +101,9 @@ function topFade(height: number, from = 1) {
   });
   return `linear-gradient(to bottom, ${stops.join(", ")})`;
 }
-const imageUrl = (background: ScreenBackground) => `url(${basePath}/backgrounds/${background}.jpg)`;
+/** Адрес фоновой картинки: для CSS и для предзагрузки следующих экранов. */
+export const backgroundSrc = (background: ScreenBackground) => `${basePath}/backgrounds/${background}.jpg`;
+const imageUrl = (background: ScreenBackground) => `url(${backgroundSrc(background)})`;
 
 /**
  * Общий каркас экрана. Положение логотипа, заголовка, индикатора шагов и кнопок
@@ -73,8 +113,11 @@ export function ScreenLayout({
   variant,
   background,
   compact = false,
+  centered = false,
+  narrow = false,
   headerAction,
   haze = false,
+  textGlow = false,
   afterHaze,
   beforeTitle,
   title,
@@ -103,10 +146,12 @@ export function ScreenLayout({
           aria-hidden
           className="pointer-events-none fixed inset-y-0 left-1/2 -z-10 w-full max-w-[440px] -translate-x-1/2 bg-background bg-cover bg-top"
           style={{
+            backgroundPosition: pageImageY[background] && `center, center, center ${pageImageY[background]}`,
             backgroundImage: [
               // Мягкий переход из полосы под часами (Ivory) в картинку.
               topFade(110),
-              `linear-gradient(to bottom, ${ivory(0)} 80%, ${ivory(0.9)} 100%)`,
+              // Низ уходит в сплошной Ivory: обрыва картинки над панелью браузера не видно.
+              `linear-gradient(to bottom, ${ivory(0)} 85%, ${ivory(1)} 100%)`,
               imageUrl(background),
             ].join(", "),
           }}
@@ -134,13 +179,18 @@ export function ScreenLayout({
               className="pointer-events-none absolute inset-x-0 top-0 -z-10 bg-background bg-bottom bg-no-repeat"
               style={{
                 bottom: `calc(-1 * ${belowTitle})`,
+                // keepImageTop: верх картинки не уходит за край экрана (max(0px, …)).
+                // Второй переход — вместе с картинкой, остальные слои на весь блок.
+                backgroundPosition: keepImageTop.includes(background)
+                  ? "center, center max(0px, 100%), center, center max(0px, 100%)"
+                  : undefined,
                 // Если картинка ниже экрана, над ней остаётся Ivory: второй переход
                 // привязан к верхнему краю картинки и прячет его.
                 backgroundSize: `100% 100%, 100% calc(${screenWidth} * ${BACKGROUND_RATIO}), 100% 100%, 100% auto`,
                 backgroundImage: [
                   topFade(110),
                   topFade(110),
-                  `linear-gradient(to bottom, ${ivory(0)} calc(100% - ${belowTitle} - 40px), ${ivory(0.45)} calc(100% - ${belowTitle} + 40px), ${ivory(0.6)} 80%, ${ivory(1)} 100%)`,
+                  `linear-gradient(to bottom, ${ivory(0)} calc(100% - ${belowTitle} - 60px), ${ivory(0.45)} calc(100% - ${belowTitle}), ${ivory(0.6)} 80%, ${ivory(1)} 100%)`,
                   imageUrl(background),
                 ].join(", "),
               }}
@@ -157,6 +207,8 @@ export function ScreenLayout({
       )}
 
       <main
+        // narrow: свой отступ по бокам, на него же опирается дымка.
+        style={narrow ? ({ "--screen-gutter": "var(--narrow-gutter)" } as CSSProperties) : undefined}
         className={cn(
           "flex flex-col px-(--screen-gutter)",
           // Отступ под нижним меню добавляет раскладка вкладок, здесь — только 24 px.
@@ -164,7 +216,17 @@ export function ScreenLayout({
           variant === "page" && "flex-1",
         )}
       >
-        <div className="relative">
+        <div className={cn("relative", centered && "text-center")}>
+          {textGlow && (
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -inset-x-(--screen-gutter) -top-6 -bottom-4 -z-10"
+              style={{
+                // Эллипс вписан в блок: к краям пятно растворяется полностью.
+                background: `radial-gradient(ellipse 70% 50% at 45% 50%, ${ivory(0.6)} 45%, ${ivory(0)} 100%)`,
+              }}
+            />
+          )}
           {haze && (
             <div
               aria-hidden
@@ -184,19 +246,31 @@ export function ScreenLayout({
               variant === "page" && !beforeTitle && "mt-(--page-title-gap)",
             )}
           >
-            <h1 className="type-title text-foreground">{title}</h1>
+            <h1 className="type-title text-foreground">{typeof title === "string" ? typograph(title) : title}</h1>
             {subtitle && (
-              <p className={cn(compact ? "type-secondary" : "type-body", "text-muted-foreground")}>{subtitle}</p>
+              <p className={cn(compact ? "type-secondary" : "type-body", "text-muted-foreground")}>
+                {typeof subtitle === "string" ? typograph(subtitle) : subtitle}
+              </p>
             )}
           </div>
 
-          <div className={cn("flex flex-col", compact ? "mt-4 gap-4" : "mt-6 gap-6")}>{children}</div>
+          {children && (
+            <div
+              className={cn(
+                "flex flex-col",
+                compact ? "mt-4 gap-4" : "mt-6 gap-6",
+                centered && "mx-auto w-full max-w-(--centered-text-width)",
+              )}
+            >
+              {children}
+            </div>
+          )}
         </div>
         {afterHaze && <div className={cn("flex flex-col", compact ? "mt-4 gap-4" : "mt-6 gap-6")}>{afterHaze}</div>}
 
-        {(actions || (variant === "hero" && steps)) && (
+        {(actions || steps) && (
           <div className={cn("flex flex-col gap-6", compact ? "pt-4" : "pt-6", variant === "page" && "mt-auto")}>
-            {variant === "hero" && steps && <StepDots count={steps.count} current={steps.current} />}
+            {steps && <StepDots count={steps.count} current={steps.current} />}
             {actions && <div className="flex gap-3">{actions}</div>}
           </div>
         )}

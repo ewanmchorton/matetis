@@ -5,6 +5,7 @@ const elements: Element[] = [
   {
     id: "wood",
     name: "Дерево",
+    genitive: "Дерева",
     season: "Весна",
     period: "февраль — апрель",
     tone: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200",
@@ -13,6 +14,7 @@ const elements: Element[] = [
   {
     id: "fire",
     name: "Огонь",
+    genitive: "Огня",
     season: "Лето",
     period: "май — июль",
     tone: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-200",
@@ -21,6 +23,7 @@ const elements: Element[] = [
   {
     id: "earth",
     name: "Земля",
+    genitive: "Земли",
     season: "Ранняя осень",
     period: "август — сентябрь",
     tone: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200",
@@ -29,6 +32,7 @@ const elements: Element[] = [
   {
     id: "metal",
     name: "Металл",
+    genitive: "Металла",
     season: "Поздняя осень",
     period: "октябрь — ноябрь",
     tone: "bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-100",
@@ -37,6 +41,7 @@ const elements: Element[] = [
   {
     id: "water",
     name: "Вода",
+    genitive: "Воды",
     season: "Зима",
     period: "декабрь — январь",
     tone: "bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-200",

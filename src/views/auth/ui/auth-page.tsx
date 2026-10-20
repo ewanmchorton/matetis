@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
+import { request } from "@/shared/api/request";
 import { authClient } from "@/shared/auth/client";
 import { isStaticPrototype } from "@/shared/config/env";
 import { routes } from "@/shared/config/routes";
@@ -84,7 +85,10 @@ export function AuthPage() {
     const { error: signInError } = await authClient.signIn.email({ email, password });
     setPending(false);
     if (signInError) return setError(errorText(signInError));
-    router.push(routes.program);
+    // Онбординг уже был после регистрации: после входа — сразу тест, а если он пройден — программа.
+    // Не удалось узнать — открываем программу, как раньше.
+    const current = await request<{ type: unknown }>("/api/type-test").catch(() => null);
+    router.push(current && !current.type ? routes.typeTest : routes.program);
   }
 
   return (

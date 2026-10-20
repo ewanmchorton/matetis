@@ -90,7 +90,7 @@ export function TypeResultPage() {
               Ваша программа готова
             </h2>
             <p className="type-secondary text-muted-foreground">
-              Мы подобрали практики для типа «{state.type.name}» на стихию {element.name}. Когда стихия сменится,
+              Мы подобрали практики для типа «{state.type.name}» на стихию {element.genitive}. Когда стихия сменится,
               программа обновится сама.
             </p>
           </GlassCard>

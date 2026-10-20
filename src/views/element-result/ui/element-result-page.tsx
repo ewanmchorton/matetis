@@ -30,7 +30,7 @@ export function ElementResultPage({ earned }: { earned: boolean }) {
         )}
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold">
-            {earned ? `Бейдж стихии ${element.name}` : `Период стихии ${element.name} завершён`}
+            {earned ? `Бейдж стихии ${element.genitive}` : `Период стихии ${element.genitive} завершён`}
           </h1>
           <p className="text-sm text-muted-foreground">Выполнено {percent}% программы периода</p>
         </div>

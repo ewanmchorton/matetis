@@ -100,8 +100,12 @@
   --header-height: 44px;
   --page-title-gap: 16px;
   --hero-min-title-top: 160px;
+  /* Ширина текста по центру картинки: первый экран онбординга, текст вписан во врата. */
+  --centered-text-width: 220px;
+  /* Отступ по бокам на экранах с графикой по краям (онбординг): колонка текста уже. */
+  --narrow-gutter: 40px;
   --field-height: 44px;
-  --action-bottom: 24px;
+  --action-bottom: 12px;
   --button-height: 48px;
   --nav-height: 64px;
   --nav-side: 16px;
