@@ -90,7 +90,9 @@ export function InstallSheet({
           </ol>
         )}
         <SheetDescription className="type-secondary!">
-          {typograph(`После установки откройте ${APP_NAME} с иконки на главном экране и войдите.`)}
+          {typograph(
+            `После установки откройте ${APP_NAME} с иконки на главном экране и войдите. Приложение будет открываться в одно касание, и можно будет настроить уведомления, чтобы не пропускать практики.`,
+          )}
         </SheetDescription>
         {reminder && (
           <Button variant="ghost" size="cta" className="text-muted-foreground" onClick={() => onOpenChange(false)}>
