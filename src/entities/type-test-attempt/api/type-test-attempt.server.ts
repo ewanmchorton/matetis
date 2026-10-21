@@ -25,9 +25,15 @@ function typeFor(group1: unknown, group2: unknown): PersonType {
   return type;
 }
 
-/** Сохранить новое прохождение теста. Прежние прохождения остаются в истории. */
+export const RETAKE_MESSAGE = "Повторно пройти тест можно будет после окончания текущей стихии";
+
+/**
+ * Сохранить прохождение теста. Пока нет календаря стихий, тест проходят один раз;
+ * разрешение пройти заново после окончания стихии добавится вместе с календарём (этап 7).
+ */
 export async function saveMyTypeTest(viewerId: string, answers: Partial<Record<keyof TypeTestAnswers, unknown>>) {
   const type = typeFor(answers.group1, answers.group2);
+  if (await getMyCurrentType(viewerId)) throw new AppError("test_already_taken", RETAKE_MESSAGE);
   const [row] = await db
     .insert(typeTestAttempt)
     .values({ userId: viewerId, group1Code: type.code[0], group2Code: type.code.slice(1) })

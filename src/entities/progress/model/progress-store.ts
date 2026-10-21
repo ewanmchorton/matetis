@@ -11,6 +11,8 @@ import { addDays, getWeekStartKey, toDateKey } from "@/shared/lib/date";
  */
 export type ProgressState = {
   typeId: string | null;
+  /** Тест пройден в этом браузере. typeId выше задан заранее для демо, поэтому нужен отдельный признак. */
+  testTaken: boolean;
   /** Дни («ГГГГ-ММ-ДД»), в которые выполнена практика дня */
   completedPractices: string[];
   /**
@@ -28,6 +30,7 @@ const STORAGE_KEY = "matetis-demo-progress-v5";
 
 const initialState: ProgressState = {
   typeId: "t7",
+  testTaken: false,
   completedPractices: [],
   ritualMarks: {},
   birthDate: null,
@@ -125,7 +128,7 @@ function edit(updater: (current: ProgressState) => ProgressState) {
 
 export const progressActions = {
   setType(typeId: string) {
-    edit((current) => ({ ...current, typeId }));
+    edit((current) => ({ ...current, typeId, testTaken: true }));
   },
   togglePractice(day: string) {
     edit((current) => ({ ...current, completedPractices: toggleDay(current.completedPractices, day) }));

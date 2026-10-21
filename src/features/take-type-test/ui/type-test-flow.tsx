@@ -16,6 +16,7 @@ import { Input } from "@/shared/ui/input";
 import { ScreenLayout } from "@/widgets/screen-layout";
 
 import { saveTestResult } from "../api/save-test-result";
+import { useTestTaken } from "../api/use-test-taken";
 import { calculateType, type TestAnswers } from "../model/calculate-type";
 import { SectionChoice } from "./section-choice";
 import { StepProgress } from "./step-progress";
@@ -56,6 +57,8 @@ export function TypeTestFlow({ test }: { test: TypeTest }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const testTaken = useTestTaken();
+
   const totalSteps = test.groups.length + 2;
   const group = step >= 1 && step <= test.groups.length ? test.groups[step - 1] : undefined;
   const today = toDateKey(new Date());
@@ -83,6 +86,37 @@ export function TypeTestFlow({ test }: { test: TypeTest }) {
       setError((saveError as Error).message);
       setPending(false);
     }
+  }
+
+  // Пока проверяем, не пройден ли тест, ничего не показываем — чтобы не мелькнула инструкция.
+  if (testTaken === null) return null;
+
+  if (testTaken && !pending) {
+    return (
+      <ScreenLayout
+        variant="page"
+        background="03_1_test"
+        haze
+        afterHaze={
+          <Button
+            variant="outline"
+            size="cta"
+            className="border-white/60 bg-background/80"
+            onClick={() => router.push(routes.typeResult)}
+          >
+            Мой результат
+          </Button>
+        }
+        title="Тест уже пройден"
+        actions={
+          <Button size="cta" onClick={() => router.push(routes.program)}>
+            Перейти к программе
+          </Button>
+        }
+      >
+        <p className="type-body text-foreground">Повторно пройти тест можно будет после окончания текущей стихии.</p>
+      </ScreenLayout>
+    );
   }
 
   if (step === 0) {

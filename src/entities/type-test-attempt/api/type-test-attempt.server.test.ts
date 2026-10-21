@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { getPersonTypes } from "@/entities/person-type";
+import { db, typeTestAttempt } from "@/shared/db";
 import { getTypeTest } from "@/entities/type-test";
 
 import { clearDatabase, createPerson } from "../../../../tests/people";
@@ -34,9 +35,18 @@ describe("Прохождение теста на тип", () => {
     expect(codes.sort()).toEqual(getPersonTypes().map((type) => type.code).sort());
   });
 
-  it("повторный тест меняет текущий тип, прежний остаётся в истории", async () => {
+  it("повторный тест не принимается, тип остаётся прежним", async () => {
     await saveMyTypeTest(anna, { group1: "А", group2: "2" });
-    await saveMyTypeTest(anna, { group1: "С", group2: "4" });
+    await expect(saveMyTypeTest(anna, { group1: "С", group2: "4" })).rejects.toThrow(
+      "Повторно пройти тест можно будет после окончания текущей стихии",
+    );
+    expect((await getMyCurrentType(anna))?.name).toBe("Радикал");
+  });
+
+  it("текущий тип — по последнему прохождению, прежние остаются в истории", async () => {
+    // Второе прохождение — как будто после окончания стихии: записываем напрямую, пока нет календаря.
+    await saveMyTypeTest(anna, { group1: "А", group2: "2" });
+    await db.insert(typeTestAttempt).values({ userId: anna, group1Code: "С", group2Code: "4" });
     expect((await getMyCurrentType(anna))?.name).toBe("Прагматик");
     const history = await getTypeTestHistoryForAdmin(admin, anna);
     expect(history.map((attempt) => attempt.type.name)).toEqual(["Прагматик", "Радикал"]);

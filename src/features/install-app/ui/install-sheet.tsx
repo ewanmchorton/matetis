@@ -74,11 +74,6 @@ export function InstallSheet({
       >
         <SheetHeader className="p-0">
           <SheetTitle className="type-section!">{reminder ? "Установите приложение" : "Установка приложения"}</SheetTitle>
-          {reminder && (
-            <p className="type-secondary text-muted-foreground">
-              {typograph(`С иконки ${APP_NAME} открывается сразу, без браузера.`)}
-            </p>
-          )}
         </SheetHeader>
         {oneTap ? (
           <Button size="cta" onClick={() => void onInstall()}>

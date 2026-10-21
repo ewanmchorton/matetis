@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { saveMyBirthDate } from "@/entities/birth-reading/server";
 import { saveMyTypeTest } from "@/entities/type-test-attempt/server";
+import { db, typeTestAttempt } from "@/shared/db";
 
 import { clearDatabase, createPerson } from "../../../../tests/people";
 import { getStudentForAdmin, listStudentsForAdmin } from "./student.server";
@@ -25,7 +26,7 @@ describe("Ученики в админке", () => {
 
   it("в списке виден текущий тип и указана ли дата рождения", async () => {
     await saveMyTypeTest(anna, { group1: "А", group2: "2" });
-    await saveMyTypeTest(anna, { group1: "С", group2: "4" });
+    await db.insert(typeTestAttempt).values({ userId: anna, group1Code: "С", group2Code: "4" });
     await saveMyBirthDate(anna, "1988-03-15");
     const students = await listStudentsForAdmin(admin);
     expect(students.find((student) => student.id === anna)).toMatchObject({
