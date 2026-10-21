@@ -7,6 +7,7 @@ import { request } from "@/shared/api/request";
 import { authClient } from "@/shared/auth/client";
 import { isStaticPrototype } from "@/shared/config/env";
 import { routes } from "@/shared/config/routes";
+import { typograph } from "@/shared/lib/typograph";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { Checkbox } from "@/shared/ui/checkbox";
@@ -145,7 +146,7 @@ export function AuthPage() {
               onCheckedChange={(value) => setAgree(value === true)}
             />
             <span className="type-caption font-normal text-muted-foreground">
-              Даю согласие на обработку персональных данных и принимаю условия использования
+              {typograph("Даю согласие на обработку персональных данных и принимаю условия использования")}
             </span>
           </label>
         </form>
@@ -164,7 +165,7 @@ export function AuthPage() {
 
       {error && (
         <p role="alert" className="type-secondary -mt-3 text-destructive">
-          {error}
+          {typograph(error)}
         </p>
       )}
     </ScreenLayout>

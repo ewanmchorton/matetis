@@ -11,6 +11,7 @@ import { authClient } from "@/shared/auth/client";
 import { isStaticPrototype } from "@/shared/config/env";
 import { routes } from "@/shared/config/routes";
 import { getWeekDays, getWeekStartKey, toDateKey } from "@/shared/lib/date";
+import { typograph } from "@/shared/lib/typograph";
 import { useIsClient } from "@/shared/lib/use-is-client";
 import { Button } from "@/shared/ui/button";
 import { Checkbox } from "@/shared/ui/checkbox";
@@ -40,7 +41,7 @@ export function ProfilePage() {
       {state.status === "error" && (
         <GlassCard>
           <p role="alert" className="type-secondary text-destructive">
-            {state.message}
+            {typograph(state.message)}
           </p>
         </GlassCard>
       )}
@@ -49,10 +50,10 @@ export function ProfilePage() {
         <GlassCard aria-label="Вы и друзья" className="space-y-4">
           <h2 className="type-section">{state.data.me.name}</h2>
           {state.demo && !isStaticPrototype && (
-            <p className="type-caption text-muted-foreground">Вы не вошли — показаны демо-данные.</p>
+            <p className="type-caption text-muted-foreground">{typograph("Вы не вошли — показаны демо-данные.")}</p>
           )}
           <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3">
-            <span className="type-secondary text-muted-foreground">Делиться прогрессом с друзьями</span>
+            <span className="type-secondary text-muted-foreground">{typograph("Делиться прогрессом с друзьями")}</span>
             <Checkbox
               className={checkboxClass}
               aria-label="Делиться прогрессом с друзьями"
@@ -67,7 +68,7 @@ export function ProfilePage() {
           />
           {actionError && (
             <p role="alert" className="type-caption text-destructive">
-              {actionError}
+              {typograph(actionError)}
             </p>
           )}
         </GlassCard>
@@ -131,7 +132,7 @@ function ProgressSections() {
           <ul className="flex flex-wrap gap-2">
             {type.traits.map((trait) => (
               <li key={trait} className="rounded-full bg-secondary/70 px-3 py-1.5 type-secondary text-foreground">
-                {trait}
+                {typograph(trait)}
               </li>
             ))}
           </ul>
@@ -159,11 +160,11 @@ function ProfileStats({ completedPractices }: { completedPractices: string[] }) 
       <div className="grid grid-cols-2 gap-3">
         <CardInset>
           <p className="type-section tabular-nums">{completedPractices.length}</p>
-          <p className="type-caption text-muted-foreground">практик дня всего</p>
+          <p className="type-caption text-muted-foreground">{typograph("практик дня всего")}</p>
         </CardInset>
         <CardInset>
           <p className="type-section tabular-nums">{lastWeek}</p>
-          <p className="type-caption text-muted-foreground">за последние 7 дней</p>
+          <p className="type-caption text-muted-foreground">{typograph("за последние 7 дней")}</p>
         </CardInset>
       </div>
     </GlassCard>
@@ -226,8 +227,8 @@ function ProfileRituals({ ritualMarks }: { ritualMarks: Record<string, string[]>
                 : "ещё не отмечено";
           return (
             <li key={ritual.id} className="flex justify-between gap-3 py-2.5 type-secondary">
-              <span className="text-muted-foreground">{ritual.title}</span>
-              <span className="shrink-0 text-right text-foreground">{label}</span>
+              <span className="text-muted-foreground">{typograph(ritual.title)}</span>
+              <span className="shrink-0 text-right text-foreground">{typograph(label)}</span>
             </li>
           );
         })}
@@ -247,11 +248,11 @@ function Reminders() {
       </h2>
       <label className="flex min-h-11 cursor-pointer items-center gap-3">
         <Checkbox className={checkboxClass} aria-label="Утреннее напоминание" checked={morning} onCheckedChange={(v) => setMorning(v === true)} />
-        <span className="type-secondary text-foreground">Утром — напоминание о практике дня</span>
+        <span className="type-secondary text-foreground">{typograph("Утром — напоминание о практике дня")}</span>
       </label>
       <label className="flex min-h-11 cursor-pointer items-center gap-3">
         <Checkbox className={checkboxClass} aria-label="Вечернее напоминание" checked={evening} onCheckedChange={(v) => setEvening(v === true)} />
-        <span className="type-secondary text-foreground">Вечером — размышление или медитация</span>
+        <span className="type-secondary text-foreground">{typograph("Вечером — размышление или медитация")}</span>
       </label>
     </GlassCard>
   );
