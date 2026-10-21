@@ -42,6 +42,15 @@ const pageImageY: Partial<Record<ScreenBackground, string>> = {
   "02_3_onboard": "60%",
 };
 
+/**
+ * Для экранов-вкладок: на сколько поднять картинку (в ширинах экрана), чтобы важная деталь
+ * не уходила под кнопку и панель браузера. Низ картинки растворяется в Ivory.
+ * 03_result: шар должен быть виден целиком над кнопкой «Перейти к программе».
+ */
+const pageImageLift: Partial<Record<ScreenBackground, number>> = {
+  "03_result": 0.2,
+};
+
 /** Высота фоновых картинок в ширинах экрана: 1690 / 780. */
 const BACKGROUND_RATIO = 1690 / 780;
 
@@ -105,6 +114,33 @@ function topFade(height: number, from = 1) {
 export const backgroundSrc = (background: ScreenBackground) => `${basePath}/backgrounds/${background}.jpg`;
 const imageUrl = (background: ScreenBackground) => `url(${backgroundSrc(background)})`;
 
+function pageBackgroundStyle(background: ScreenBackground) {
+  const lift = pageImageLift[background];
+  if (lift) {
+    const liftLength = `calc(${screenWidth} * ${lift})`;
+    return {
+      backgroundSize: "100% 100%, 100% 100%, 100% auto",
+      backgroundPosition: `0 0, 0 0, center calc(-1 * ${liftLength})`,
+      backgroundImage: [
+        topFade(110),
+        // Картинка поднята — её низ растворяется в Ivory до того, как она закончится.
+        `linear-gradient(to bottom, ${ivory(0)} calc(100% - ${liftLength} - 120px), ${ivory(1)} calc(100% - ${liftLength}))`,
+        imageUrl(background),
+      ].join(", "),
+    };
+  }
+  return {
+    backgroundPosition: pageImageY[background] && `center, center, center ${pageImageY[background]}`,
+    backgroundImage: [
+      // Мягкий переход из полосы под часами (Ivory) в картинку.
+      topFade(110),
+      // Низ уходит в сплошной Ivory: обрыва картинки над панелью браузера не видно.
+      `linear-gradient(to bottom, ${ivory(0)} 85%, ${ivory(1)} 100%)`,
+      imageUrl(background),
+    ].join(", "),
+  };
+}
+
 /**
  * Общий каркас экрана. Положение логотипа, заголовка, индикатора шагов и кнопок
  * задаётся только здесь — цифры в docs/design-guide.md, раздел «Расположение».
@@ -145,16 +181,7 @@ export function ScreenLayout({
         <div
           aria-hidden
           className="pointer-events-none fixed inset-y-0 left-1/2 -z-10 w-full max-w-[440px] -translate-x-1/2 bg-background bg-cover bg-top"
-          style={{
-            backgroundPosition: pageImageY[background] && `center, center, center ${pageImageY[background]}`,
-            backgroundImage: [
-              // Мягкий переход из полосы под часами (Ivory) в картинку.
-              topFade(110),
-              // Низ уходит в сплошной Ivory: обрыва картинки над панелью браузера не видно.
-              `linear-gradient(to bottom, ${ivory(0)} 85%, ${ivory(1)} 100%)`,
-              imageUrl(background),
-            ].join(", "),
-          }}
+          style={pageBackgroundStyle(background)}
         />
       )}
 
