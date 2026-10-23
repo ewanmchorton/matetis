@@ -1,8 +1,8 @@
 // Таблицы входа Better Auth и карточка человека.
 // Карточка человека — это таблица `user`: имя, роль и время согласия.
-// Почта и пароль хранятся только здесь и в `account` (пароль — в виде хэша).
-import { sql } from "drizzle-orm";
-import { boolean, check, index, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+// Имя пустое, пока человек не дошёл до шага «Как вас зовут?» в тесте: вход по коду создаёт запись без имени.
+// Почта хранится только здесь. Паролей нет: вход по коду из письма, коды — в `verification` в виде хэша.
+import { boolean, index, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
 export const personRole = pgEnum("person_role", ["user", "content_manager", "admin"]);
 
@@ -14,20 +14,16 @@ const timestamps = {
     .$onUpdate(() => new Date()),
 };
 
-export const user = pgTable(
-  "user",
-  {
-    id: text("id").primaryKey(),
-    name: text("name").notNull(),
-    email: text("email").notNull().unique(),
-    emailVerified: boolean("email_verified").notNull().default(false),
-    image: text("image"),
-    role: personRole("role").notNull().default("user"),
-    consentedAt: timestamp("consented_at", { withTimezone: true }).notNull(),
-    ...timestamps,
-  },
-  (table) => [check("user_name_not_blank", sql`btrim(${table.name}) <> ''`)],
-);
+export const user = pgTable("user", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  emailVerified: boolean("email_verified").notNull().default(false),
+  image: text("image"),
+  role: personRole("role").notNull().default("user"),
+  consentedAt: timestamp("consented_at", { withTimezone: true }).notNull(),
+  ...timestamps,
+});
 
 export const session = pgTable(
   "session",

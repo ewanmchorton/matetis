@@ -34,6 +34,8 @@ export type AccessPeriod = PeriodDates & {
 
 export type AccessSettings = {
   adminPhone: string;
+  /** Ник в Telegram без @. Пустой — Telegram открывается по телефону. */
+  adminTelegram: string;
   firstMonthCents: number;
   monthCents: number;
   threeMonthsCents: number;
@@ -123,6 +125,7 @@ async function readSettings(): Promise<AccessSettings> {
   const [row] = await db
     .select({
       adminPhone: accessSettings.adminPhone,
+      adminTelegram: accessSettings.adminTelegram,
       firstMonthCents: accessSettings.firstMonthCents,
       monthCents: accessSettings.monthCents,
       threeMonthsCents: accessSettings.threeMonthsCents,
@@ -148,10 +151,15 @@ export async function hasAccess(viewer: Viewer, now = new Date()): Promise<boole
   return status.kind === "staff" || status.kind === "active";
 }
 
-/** Свой статус и телефон администратора — для экранов без доступа. */
+/** Свой статус, почта и контакт администратора — для экранов без доступа и готового сообщения. */
 export async function getMyAccess(viewer: Viewer, now = new Date()) {
   const [status, settings] = await Promise.all([statusOf(viewer, now), readSettings()]);
-  return { status, adminPhone: settings.adminPhone };
+  return {
+    status,
+    email: normalizeEmail(viewer.email),
+    adminPhone: settings.adminPhone,
+    adminTelegram: settings.adminTelegram,
+  };
 }
 
 export type AccessListItem = {
@@ -326,7 +334,7 @@ function priceOf(value: unknown, fallback: number): number {
   return value;
 }
 
-/** Изменить телефон администратора и цены. Не переданные поля остаются прежними. */
+/** Изменить контакт администратора и цены. Не переданные поля остаются прежними. */
 export async function updateAccessSettings(adminId: string, changes: Partial<Record<keyof AccessSettings, unknown>>) {
   await assertAdmin(adminId);
   const current = await readSettings();
@@ -335,8 +343,16 @@ export async function updateAccessSettings(adminId: string, changes: Partial<Rec
     adminPhone = typeof changes.adminPhone === "string" ? changes.adminPhone.replace(/[^\d+]/g, "") : "";
     if (!/^\+\d{7,15}$/.test(adminPhone)) throw new AppError("invalid_phone", "Телефон — в формате +375291234567");
   }
+  let adminTelegram = current.adminTelegram;
+  if (changes.adminTelegram !== undefined) {
+    adminTelegram = typeof changes.adminTelegram === "string" ? changes.adminTelegram.trim().replace(/^@/, "") : "";
+    if (adminTelegram && !/^[A-Za-z0-9_]{5,32}$/.test(adminTelegram)) {
+      throw new AppError("invalid_telegram", "Ник в Telegram — латинские буквы, цифры и _, от 5 символов");
+    }
+  }
   const next: AccessSettings = {
     adminPhone,
+    adminTelegram,
     firstMonthCents: priceOf(changes.firstMonthCents, current.firstMonthCents),
     monthCents: priceOf(changes.monthCents, current.monthCents),
     threeMonthsCents: priceOf(changes.threeMonthsCents, current.threeMonthsCents),

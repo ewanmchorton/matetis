@@ -11,6 +11,7 @@ export const routes = {
   elementResult: "/element-result",
   admin: "/admin",
   adminLogin: "/admin/login",
+  adminAccess: "/admin/access",
   adminMaterials: "/admin/materials",
   adminProgram: "/admin/program",
   adminSupport: "/admin/support",

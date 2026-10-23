@@ -5,7 +5,6 @@
 // Повторный запуск ничего не дублирует. Только для локальной базы.
 import { randomUUID } from "node:crypto";
 
-import { hashPassword } from "better-auth/crypto";
 import pg from "pg";
 
 try {
@@ -24,8 +23,6 @@ if (process.env.NODE_ENV === "production") {
   process.exit(1);
 }
 
-// Тот же тестовый пароль, что в scripts/seed-friends.mts. Подходит для входа в локальную админку.
-const TEST_PASSWORD = "matetis-test-123";
 const ADMIN = { name: "Админ Тестовый", email: "admin.test@matetis.local" };
 const STUDENT = { name: "Анна Тестовая", email: "anna.test@matetis.local" };
 
@@ -49,11 +46,6 @@ async function ensurePerson(name: string, email: string, role: "user" | "admin")
     `insert into "user" (id, name, email, email_verified, role, consented_at) values ($1, $2, $3, true, $4, now())`,
     [id, name, email, role],
   );
-  // Так же, как при обычной регистрации Better Auth: пароль хранится только в виде хэша.
-  await client.query(
-    `insert into account (id, account_id, provider_id, user_id, password) values ($1, $2, 'credential', $2, $3)`,
-    [randomUUID(), id, await hashPassword(TEST_PASSWORD)],
-  );
   return id;
 }
 
@@ -76,7 +68,7 @@ try {
     [studentId, BIRTH_DATE, ...DIGIT_COUNTS],
   );
   await client.query("commit");
-  console.log(`Готово. Вход в админку: ${ADMIN.email}, пароль записан в scripts/seed-admin.mts.`);
+  console.log(`Готово. Вход в админку: ${ADMIN.email}, вход по коду, письмо — в http://localhost:8025.`);
   console.log(`У ученицы ${STUDENT.name} есть тест и дата рождения — откройте её в разделе «Ученики».`);
 } catch (error) {
   await client.query("rollback");

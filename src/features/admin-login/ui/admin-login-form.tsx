@@ -11,25 +11,33 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 
-/** signedInEmail — человек уже вошёл, но он не администратор. */
+/** Вход в админку по коду из письма. signedInEmail — человек уже вошёл, но он не сотрудник. */
 export function AdminLoginForm({ signedInEmail }: { signedInEmail: string | null }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
+  const [codeSent, setCodeSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSendCode(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setPending(true);
     setError(null);
-    const { error: signInError } = await authClient.signIn.email({ email, password });
+    const { error: sendError } = await authClient.emailOtp.sendVerificationOtp({ email, type: "sign-in" });
     setPending(false);
-    if (signInError) {
-      setError(signInError.status === 401 ? "Неверная почта или пароль" : "Не удалось войти. Попробуйте позже");
-      return;
-    }
-    // Роль проверяет сервер: не администратора вернёт на эту страницу.
+    if (sendError) return setError("Не удалось отправить код. Проверьте почту и попробуйте ещё раз");
+    setCodeSent(true);
+  }
+
+  async function handleSignIn(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setPending(true);
+    setError(null);
+    const { error: signInError } = await authClient.signIn.emailOtp({ email, otp: code });
+    setPending(false);
+    if (signInError) return setError("Неверный или устаревший код");
+    // Роль проверяет сервер: не сотрудника вернёт на эту страницу.
     router.replace(routes.admin);
     router.refresh();
   }
@@ -45,7 +53,7 @@ export function AdminLoginForm({ signedInEmail }: { signedInEmail: string | null
     <Card className="w-full max-w-sm">
       <CardHeader>
         <CardTitle>{APP_NAME} — админка</CardTitle>
-        <CardDescription>Вход только для администраторов</CardDescription>
+        <CardDescription>Вход для администратора и контент-менеджера</CardDescription>
       </CardHeader>
       <CardContent>
         {signedInEmail ? (
@@ -58,7 +66,7 @@ export function AdminLoginForm({ signedInEmail }: { signedInEmail: string | null
             </Button>
           </div>
         ) : (
-          <form className="space-y-4" onSubmit={handleSubmit}>
+          <form className="space-y-4" onSubmit={codeSent ? handleSignIn : handleSendCode}>
             <div className="space-y-2">
               <Label htmlFor="admin-email">Почта</Label>
               <Input
@@ -66,29 +74,49 @@ export function AdminLoginForm({ signedInEmail }: { signedInEmail: string | null
                 type="email"
                 autoComplete="email"
                 required
+                disabled={codeSent}
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="admin-password">Пароль</Label>
-              <Input
-                id="admin-password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-              />
-            </div>
+            {codeSent && (
+              <div className="space-y-2">
+                <Label htmlFor="admin-code">Код из письма</Label>
+                <Input
+                  id="admin-code"
+                  autoComplete="one-time-code"
+                  inputMode="numeric"
+                  maxLength={6}
+                  required
+                  autoFocus
+                  value={code}
+                  onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))}
+                />
+              </div>
+            )}
             {error && (
               <p role="alert" className="text-sm text-destructive">
                 {error}
               </p>
             )}
             <Button className="w-full" type="submit" disabled={pending}>
-              {pending ? "Входим…" : "Войти"}
+              {codeSent ? (pending ? "Входим…" : "Войти") : pending ? "Отправляем…" : "Получить код"}
             </Button>
+            {codeSent && (
+              <Button
+                className="w-full"
+                type="button"
+                variant="ghost"
+                disabled={pending}
+                onClick={() => {
+                  setCodeSent(false);
+                  setCode("");
+                  setError(null);
+                }}
+              >
+                Другая почта
+              </Button>
+            )}
           </form>
         )}
       </CardContent>

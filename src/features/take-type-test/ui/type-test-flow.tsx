@@ -13,9 +13,11 @@ import { BackButton } from "@/shared/ui/back-button";
 import { Button } from "@/shared/ui/button";
 import { GlassCard } from "@/shared/ui/glass-card";
 import { Input } from "@/shared/ui/input";
+import { TextField } from "@/shared/ui/text-field";
 import { ScreenLayout } from "@/widgets/screen-layout";
 
 import { saveTestResult } from "../api/save-test-result";
+import { useMyName } from "../api/use-my-name";
 import { useTestTaken } from "../api/use-test-taken";
 import { calculateType, type TestAnswers } from "../model/calculate-type";
 import { SectionChoice } from "./section-choice";
@@ -48,19 +50,22 @@ function FullInstruction({ test }: { test: TypeTest }) {
   );
 }
 
-/** Инструкция → по одной группе → дата рождения → сохранение и экран результата. */
+/** Инструкция → по одной группе → имя → дата рождения → сохранение и экран результата. */
 export function TypeTestFlow({ test }: { test: TypeTest }) {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<TestAnswers>({});
+  const [name, setName] = useMyName();
   const [birthDate, setBirthDate] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const testTaken = useTestTaken();
 
-  const totalSteps = test.groups.length + 2;
+  // Инструкция, группы, имя, дата рождения.
+  const totalSteps = test.groups.length + 3;
   const group = step >= 1 && step <= test.groups.length ? test.groups[step - 1] : undefined;
+  const nameStep = test.groups.length + 1;
   const today = toDateKey(new Date());
 
   function goTo(next: number) {
@@ -79,7 +84,7 @@ export function TypeTestFlow({ test }: { test: TypeTest }) {
     setPending(true);
     setError(null);
     try {
-      await saveTestResult({ group1, group2 }, birthDate, type);
+      await saveTestResult({ group1, group2 }, name.trim(), birthDate, type);
       router.push(routes.typeResult);
     } catch (saveError) {
       if ((saveError as RequestError).status === 401) return router.replace(routes.auth);
@@ -164,6 +169,36 @@ export function TypeTestFlow({ test }: { test: TypeTest }) {
           markers={step === 1 ? groupOneMarkers : undefined}
           value={answers[group.id]}
           onChange={(id) => setAnswers({ ...answers, [group.id]: id })}
+        />
+      </ScreenLayout>
+    );
+  }
+
+  if (step === nameStep) {
+    return (
+      <ScreenLayout
+        variant="hero"
+        background="03_4_test"
+        beforeTitle={<StepProgress current={step + 1} total={totalSteps} />}
+        title="Как вас зовут?"
+        actions={
+          <>
+            <BackButton onClick={() => goTo(step - 1)} />
+            <Button size="cta" className="flex-1" disabled={!name.trim()} onClick={() => goTo(step + 1)}>
+              Дальше
+            </Button>
+          </>
+        }
+      >
+        <TextField
+          id="name"
+          label="Имя"
+          autoComplete="given-name"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && name.trim()) goTo(step + 1);
+          }}
         />
       </ScreenLayout>
     );

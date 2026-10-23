@@ -1,10 +1,10 @@
 // Создаёт тестовых людей: Анна и Борис дружат, Ольга прислала Анне запрос в друзья.
 // Чтобы посмотреть данные в pnpm db:studio или войти Анной и открыть профиль.
+// Всем троим открыт доступ на месяц от запуска. Вход — по коду, письмо приходит в Mailpit: http://localhost:8025.
 // Запуск: pnpm db:seed-friends
 // Повторный запуск ничего не дублирует. Только для локальной базы.
 import { randomUUID } from "node:crypto";
 
-import { hashPassword } from "better-auth/crypto";
 import pg from "pg";
 
 try {
@@ -22,9 +22,6 @@ if (process.env.NODE_ENV === "production") {
   console.error("Тестовых людей нельзя создавать в рабочей базе.");
   process.exit(1);
 }
-
-// Тестовый пароль обоих людей. Подходит для входа в локальное приложение.
-const TEST_PASSWORD = "matetis-test-123";
 
 const people = [
   { name: "Анна Тестовая", email: "anna.test@matetis.local" },
@@ -45,11 +42,6 @@ async function ensurePerson(name: string, email: string): Promise<string> {
   await client.query(
     `insert into "user" (id, name, email, email_verified, consented_at) values ($1, $2, $3, true, now())`,
     [id, name, email],
-  );
-  // Так же, как при обычной регистрации Better Auth: пароль хранится только в виде хэша.
-  await client.query(
-    `insert into account (id, account_id, provider_id, user_id, password) values ($1, $2, 'credential', $2, $3)`,
-    [randomUUID(), id, await hashPassword(TEST_PASSWORD)],
   );
   return id;
 }
@@ -74,9 +66,18 @@ try {
      on conflict (least(from_user_id, to_user_id), greatest(from_user_id, to_user_id)) do nothing`,
     [olgaId, annaId],
   );
+  // Доступ на месяц, чтобы открывались профиль и друзья. Повторный запуск не продлевает уже идущий.
+  for (const person of people) {
+    await client.query(
+      `insert into access_period (email, starts_at, ends_at, amount_cents)
+       select $1::text, now(), now() + interval '1 month', 0
+       where not exists (select 1 from access_period where email = $1::text and ends_at > now())`,
+      [person.email],
+    );
+  }
   await client.query("commit");
   console.log("Готово: Анна Тестовая и Борис Тестовый дружат, Ольга Тестовая прислала Анне запрос.");
-  console.log(`Почты: ${people.map((p) => p.email).join(", ")}. Пароль записан в scripts/seed-friends.mts.`);
+  console.log(`Почты: ${people.map((p) => p.email).join(", ")}. Вход по коду, письма — в http://localhost:8025.`);
 } catch (error) {
   await client.query("rollback");
   throw error;

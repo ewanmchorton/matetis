@@ -4,9 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { hasAccessNow, useMyAccess } from "@/entities/access";
 import { getCurrentElement } from "@/entities/element";
 import { getPersonType, type PersonType } from "@/entities/person-type";
 import { useProgress } from "@/entities/progress";
+import { ContactAdminButtons, ContactAdminText } from "@/features/contact-admin";
 import { request, type RequestError } from "@/shared/api/request";
 import { isDevelopment, isStaticPrototype } from "@/shared/config/env";
 import { routes } from "@/shared/config/routes";
@@ -51,7 +53,11 @@ function useMyType(): ResultState {
 
 export function TypeResultPage() {
   const state = useMyType();
+  const accessState = useMyAccess();
   const element = getCurrentElement();
+  const access = accessState.status === "ready" ? accessState.access : null;
+  // Без доступа вместо кнопки — контакт администратора в карточке программы.
+  const withAccess = access ? hasAccessNow(access.status) : null;
 
   return (
     <ScreenLayout
@@ -59,9 +65,11 @@ export function TypeResultPage() {
       background="03_result"
       title={<span className="sr-only">Результат теста</span>}
       actions={
-        <Link href={routes.program} className={buttonVariants({ size: "cta" })}>
-          Перейти к программе
-        </Link>
+        withAccess ? (
+          <Link href={routes.program} className={buttonVariants({ size: "cta" })}>
+            Перейти к программе
+          </Link>
+        ) : undefined
       }
     >
       {state.status === "error" && (
@@ -90,9 +98,18 @@ export function TypeResultPage() {
               Ваша программа готова
             </h2>
             <p className="type-secondary text-muted-foreground">
-              Мы подобрали практики для типа «{state.type.name}» на стихию {element.genitive}. Когда стихия сменится,
-              программа обновится сама.
+              Мы подобрали практики для типа «{state.type.name}» на стихию {element.genitive}.{" "}
+              {access && !withAccess ? (
+                <ContactAdminText access={access} purpose="get" />
+              ) : (
+                "Когда стихия сменится, программа обновится сама."
+              )}
             </p>
+            {access && !withAccess && (
+              <div className="pt-2">
+                <ContactAdminButtons access={access} purpose="get" />
+              </div>
+            )}
           </GlassCard>
         </>
       )}

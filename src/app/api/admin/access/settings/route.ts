@@ -1,4 +1,4 @@
-// Настройки доступа: телефон администратора и цены в евроцентах. Только администратор.
+// Настройки доступа: телефон и ник Telegram администратора, цены в евроцентах. Только администратор.
 import { getAccessSettingsForAdmin, updateAccessSettings } from "@/entities/access/server";
 import { readJsonObject, withUser } from "@/shared/api/route-helpers";
 
@@ -7,6 +7,8 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
-  const { adminPhone, firstMonthCents, monthCents, threeMonthsCents } = await readJsonObject(request);
-  return withUser((user) => updateAccessSettings(user.id, { adminPhone, firstMonthCents, monthCents, threeMonthsCents }));
+  const { adminPhone, adminTelegram, firstMonthCents, monthCents, threeMonthsCents } = await readJsonObject(request);
+  return withUser((user) =>
+    updateAccessSettings(user.id, { adminPhone, adminTelegram, firstMonthCents, monthCents, threeMonthsCents }),
+  );
 }

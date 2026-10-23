@@ -29,7 +29,7 @@ beforeEach(async () => {
   await clearDatabase();
   await db
     .update(accessSettings)
-    .set({ adminPhone: "+375293344101", firstMonthCents: 2000, monthCents: 500, threeMonthsCents: 1000 });
+    .set({ adminPhone: "+375293344101", adminTelegram: "vernojit", firstMonthCents: 2000, monthCents: 500, threeMonthsCents: 1000 });
   admin = await createPerson("Татьяна Валерьевна", "admin");
   manager = await createPerson("Контент", "content_manager");
 });
@@ -71,9 +71,13 @@ describe("Доступ по почте", () => {
     expect(await hasAccess({ id: manager, email: "m@test.local", role: "content_manager" })).toBe(true);
   });
 
-  it("свой статус приходит вместе с телефоном администратора", async () => {
+  it("свой статус приходит вместе с почтой и контактом администратора", async () => {
     const person = await registerAnna();
-    expect((await getMyAccess(person)).adminPhone).toBe("+375293344101");
+    expect(await getMyAccess(person)).toMatchObject({
+      email: "anna@example.ru",
+      adminPhone: "+375293344101",
+      adminTelegram: "vernojit",
+    });
   });
 });
 
@@ -140,6 +144,11 @@ describe("Суммы", () => {
     const settings = await updateAccessSettings(admin, { adminPhone: "+375 29 111-22-33" });
     expect(settings.adminPhone).toBe("+375291112233");
     await expect(updateAccessSettings(admin, { adminPhone: "позвонить" })).rejects.toThrow("Телефон");
+  });
+
+  it("ник в Telegram сохраняется без @", async () => {
+    expect((await updateAccessSettings(admin, { adminTelegram: "@vernojit" })).adminTelegram).toBe("vernojit");
+    await expect(updateAccessSettings(admin, { adminTelegram: "Татьяна" })).rejects.toThrow("Ник в Telegram");
   });
 });
 

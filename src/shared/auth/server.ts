@@ -3,10 +3,16 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
+import { emailOTP } from "better-auth/plugins";
 
 import { personRoles } from "@/shared/auth/roles";
 import { db } from "@/shared/db";
 import * as schema from "@/shared/db/schema";
+import { APP_NAME } from "@/shared/config/brand";
+import { sendEmail } from "@/shared/email/send-email";
+
+/** Сколько минут действует код из письма. */
+export const SIGN_IN_CODE_MINUTES = 10;
 
 function isBlank(value: unknown): boolean {
   return typeof value !== "string" || value.trim() === "";
@@ -22,29 +28,20 @@ const localNetworkOrigins =
 export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: "pg", schema }),
   trustedOrigins: localNetworkOrigins,
-  emailAndPassword: { enabled: true },
+  // Вход без пароля: код из письма. Первый вход по коду создаёт учётную запись.
+  emailAndPassword: { enabled: false },
   user: {
     additionalFields: {
       // input: false — поле нельзя передать ни при регистрации, ни при изменении профиля.
       // Админа назначают только командой на сервере или запросом в базу.
       role: { type: [...personRoles], required: true, defaultValue: "user", input: false },
-      // Ставится сервером в момент регистрации, см. databaseHooks ниже.
+      // Ставится сервером при создании учётной записи, см. databaseHooks ниже.
       // required: false — иначе Better Auth требует его ещё до хука. В базе поле обязательное.
       consentedAt: { type: "date", required: false, input: false },
     },
   },
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
-      if (ctx.path === "/sign-up/email") {
-        if (isBlank(ctx.body?.name)) {
-          throw new APIError("BAD_REQUEST", { message: "Укажите имя" });
-        }
-        if (ctx.body?.consent !== true) {
-          throw new APIError("BAD_REQUEST", {
-            message: "Нужно согласие на обработку персональных данных",
-          });
-        }
-      }
       if (ctx.path === "/update-user" && ctx.body && "name" in ctx.body && isBlank(ctx.body.name)) {
         throw new APIError("BAD_REQUEST", { message: "Имя не может быть пустым" });
       }
@@ -54,11 +51,29 @@ export const auth = betterAuth({
     user: {
       create: {
         // Роль и время согласия задаёт только сервер, что бы ни пришло в запросе.
+        // Согласие человек даёт кнопкой «Получить код»: под ней написано, с чем он соглашается.
+        // Имя при первом входе пустое — его спрашивает тест (шаг «Как вас зовут?»).
         before: async (user) => ({
           data: { ...user, name: user.name.trim(), role: "user", consentedAt: new Date() },
         }),
       },
     },
   },
-  plugins: [nextCookies()],
+  plugins: [
+    emailOTP({
+      otpLength: 6,
+      expiresIn: SIGN_IN_CODE_MINUTES * 60,
+      storeOTP: "hashed",
+      async sendVerificationOTP({ email, otp, type }) {
+        if (type !== "sign-in") return;
+        await sendEmail({
+          to: email,
+          subject: `Код для входа в ${APP_NAME}: ${otp}`,
+          text: `Ваш код для входа: ${otp}\n\nКод действует ${SIGN_IN_CODE_MINUTES} минут. Если вы не входили в ${APP_NAME}, просто удалите это письмо.`,
+        });
+      },
+    }),
+    // nextCookies — последним: сохраняет вход в cookie для серверных действий Next.js.
+    nextCookies(),
+  ],
 });

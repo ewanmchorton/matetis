@@ -37,8 +37,10 @@ export const accessSettings = pgTable(
   "access_settings",
   {
     id: boolean("id").primaryKey().default(true),
-    /** Телефон администратора для Telegram и Viber. */
+    /** Телефон администратора: виден на экране, по нему открывается чат в Viber. */
     adminPhone: text("admin_phone").notNull(),
+    /** Ник администратора в Telegram без @: по нему чат открывается с готовым сообщением. На экране не виден. */
+    adminTelegram: text("admin_telegram").notNull().default(""),
     firstMonthCents: integer("first_month_cents").notNull(),
     monthCents: integer("month_cents").notNull(),
     threeMonthsCents: integer("three_months_cents").notNull(),

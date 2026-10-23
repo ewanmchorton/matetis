@@ -8,88 +8,139 @@ import { authClient } from "@/shared/auth/client";
 import { isStaticPrototype } from "@/shared/config/env";
 import { routes } from "@/shared/config/routes";
 import { typograph } from "@/shared/lib/typograph";
-import { cn } from "@/shared/lib/utils";
+import { BackButton } from "@/shared/ui/back-button";
 import { Button } from "@/shared/ui/button";
-import { Checkbox } from "@/shared/ui/checkbox";
-import { SegmentedList, SegmentedTrigger } from "@/shared/ui/segmented";
-import { Tabs } from "@/shared/ui/tabs";
 import { TextField } from "@/shared/ui/text-field";
 import { ScreenLayout } from "@/widgets/screen-layout";
 
-type Mode = "register" | "login";
+const CODE_LENGTH = 6;
+/** Совпадает с SIGN_IN_CODE_MINUTES в shared/auth/server.ts. */
+const CODE_MINUTES = 10;
 
-const MIN_PASSWORD_LENGTH = 8;
-
-/** Тексты ошибок Better Auth по коду. Остальные ошибки сервера уже на русском (см. shared/auth/server.ts). */
+/** Тексты ошибок Better Auth по коду. */
 const authErrorText: Record<string, string> = {
-  USER_ALREADY_EXISTS: "Аккаунт с таким e-mail уже есть. Войдите",
-  USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL: "Аккаунт с таким e-mail уже есть. Войдите",
   INVALID_EMAIL: "Проверьте e-mail",
-  INVALID_EMAIL_OR_PASSWORD: "Неверный e-mail или пароль",
-  PASSWORD_TOO_SHORT: `Пароль — не короче ${MIN_PASSWORD_LENGTH} символов`,
-  PASSWORD_TOO_LONG: "Слишком длинный пароль",
+  INVALID_OTP: "Неверный код. Проверьте письмо",
+  OTP_EXPIRED: "Код устарел. Отправьте новый",
+  TOO_MANY_ATTEMPTS: "Слишком много попыток. Отправьте новый код",
 };
 
 function errorText(error: { code?: string; message?: string; status?: number }): string {
   if (error.code && authErrorText[error.code]) return authErrorText[error.code];
+  if (error.status === 429) return "Слишком часто. Подождите минуту и попробуйте ещё раз";
   if (error.status === 400 && error.message && /[а-яё]/i.test(error.message)) return error.message;
   return "Не получилось. Проверьте интернет и попробуйте ещё раз";
 }
 
+/**
+ * Вход по коду из письма. Первый вход создаёт учётную запись и ведёт на онбординг,
+ * дальше — в тест, если он не пройден, иначе в программу.
+ */
 export function AuthPage() {
   const router = useRouter();
-  const [mode, setMode] = useState<Mode>("register");
-  const [agree, setAgree] = useState(false);
+  const [email, setEmail] = useState("");
+  const [codeSent, setCodeSent] = useState(false);
+  const [code, setCode] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resent, setResent] = useState(false);
 
-  function switchMode(next: Mode) {
-    setMode(next);
+  async function sendCode() {
+    setPending(true);
     setError(null);
+    const { error: sendError } = await authClient.emailOtp.sendVerificationOtp({ email, type: "sign-in" });
+    setPending(false);
+    if (sendError) {
+      setError(errorText(sendError));
+      return false;
+    }
+    return true;
   }
 
-  async function register(event: FormEvent<HTMLFormElement>) {
+  async function submitEmail(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const name = String(form.get("name") ?? "").trim();
-    const email = String(form.get("email") ?? "").trim();
-    const password = String(form.get("password") ?? "");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return setError(authErrorText.INVALID_EMAIL);
+    // На GitHub Pages сервера нет: просто показываем следующий шаг.
+    if (isStaticPrototype || (await sendCode())) {
+      setCodeSent(true);
+      setResent(false);
+    }
+  }
 
-    if (!name) return setError("Укажите имя");
-    if (!agree) return setError("Нужно согласие на обработку персональных данных");
-    if (password.length < MIN_PASSWORD_LENGTH) return setError(authErrorText.PASSWORD_TOO_SHORT);
+  async function resend() {
+    setCode("");
+    if (await sendCode()) setResent(true);
+  }
 
-    // На GitHub Pages сервера нет: просто показываем следующий экран.
+  async function submitCode(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (code.length !== CODE_LENGTH) return setError(`Введите ${CODE_LENGTH} цифр из письма`);
     if (isStaticPrototype) return router.push(routes.onboarding);
 
     setPending(true);
     setError(null);
-    // consent проверяет сервер (shared/auth/server.ts). В типах клиента такого поля нет,
-    // поэтому передаём его через отдельный объект, а не прямо в вызове.
-    const body = { name, email, password, consent: true };
-    const { error: signUpError } = await authClient.signUp.email(body);
-    setPending(false);
-    if (signUpError) return setError(errorText(signUpError));
-    router.push(routes.onboarding);
-  }
-
-  async function login(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const email = String(form.get("email") ?? "").trim();
-    const password = String(form.get("password") ?? "");
-
-    if (isStaticPrototype) return router.push(routes.program);
-
-    setPending(true);
-    setError(null);
-    const { error: signInError } = await authClient.signIn.email({ email, password });
-    setPending(false);
-    if (signInError) return setError(errorText(signInError));
-    // Онбординг уже был после регистрации: после входа — сразу тест, а если он пройден — программа.
-    // Не удалось узнать — открываем программу, как раньше.
+    const { data, error: signInError } = await authClient.signIn.emailOtp({ email: email.trim(), otp: code });
+    if (signInError || !data) {
+      setPending(false);
+      return setError(errorText(signInError ?? {}));
+    }
+    // Имя спрашивает тест, поэтому пустое имя — первый вход: сначала знакомство с приложением.
+    if (!data.user.name) return router.push(routes.onboarding);
+    // Не удалось узнать, пройден ли тест, — открываем программу.
     const current = await request<{ type: unknown }>("/api/type-test").catch(() => null);
     router.push(current && !current.type ? routes.typeTest : routes.program);
+  }
+
+  if (codeSent) {
+    return (
+      <ScreenLayout
+        variant="hero"
+        background="01_reg"
+        compact
+        title="Введите код"
+        subtitle={`Отправили ${CODE_LENGTH} цифр на ${email.trim()}. Код действует ${CODE_MINUTES} минут.`}
+        actions={
+          <>
+            <BackButton
+              onClick={() => {
+                setCodeSent(false);
+                setCode("");
+                setError(null);
+              }}
+            />
+            <Button type="submit" form="code-form" size="cta" className="flex-1" disabled={pending}>
+              Войти
+            </Button>
+          </>
+        }
+      >
+        <form id="code-form" className="grid gap-1.5" onSubmit={submitCode} noValidate>
+          <TextField
+            id="code"
+            name="code"
+            label="Код из письма"
+            autoComplete="one-time-code"
+            inputMode="numeric"
+            maxLength={CODE_LENGTH}
+            value={code}
+            onChange={(event) => {
+              setError(null);
+              setCode(event.target.value.replace(/\D/g, "").slice(0, CODE_LENGTH));
+            }}
+            className="text-center text-[22px]! tracking-[0.5em]"
+            autoFocus
+          />
+          <Button type="button" variant="link" className="min-h-11 type-secondary" disabled={pending} onClick={() => void resend()}>
+            {resent ? "Код отправлен ещё раз" : "Отправить код ещё раз"}
+          </Button>
+        </form>
+        {error && (
+          <p role="alert" className="type-secondary -mt-3 text-destructive">
+            {typograph(error)}
+          </p>
+        )}
+      </ScreenLayout>
+    );
   }
 
   return (
@@ -97,72 +148,37 @@ export function AuthPage() {
       variant="hero"
       background="01_reg"
       compact
-      title="Добро пожаловать"
-      subtitle={
-        mode === "register"
-          ? "Создайте аккаунт, чтобы получить свою программу практик."
-          : "Войдите, чтобы продолжить свою программу практик."
-      }
+      title="Добро пожаловать, Матэтис!"
+      subtitle="Введите почту для входа"
       actions={
-        <Button type="submit" form={`${mode}-form`} size="cta" disabled={pending}>
-          {mode === "register" ? "Создать аккаунт" : "Войти"}
-        </Button>
+        <div className="grid w-full gap-3">
+          <Button type="submit" form="email-form" size="cta" disabled={pending}>
+            Получить код
+          </Button>
+          <p className="type-caption text-center font-normal text-muted-foreground">
+            {typograph(
+              "Нажимая «Получить код», вы соглашаетесь с обработкой персональных данных и условиями использования",
+            )}
+          </p>
+        </div>
       }
     >
-      <Tabs value={mode} onValueChange={(value) => switchMode(value as Mode)}>
-        <SegmentedList className="h-10! rounded-[14px] [&_[data-slot=tabs-trigger]]:rounded-[11px]">
-          <SegmentedTrigger value="register">Регистрация</SegmentedTrigger>
-          <SegmentedTrigger value="login">Вход</SegmentedTrigger>
-        </SegmentedList>
-      </Tabs>
-
-      {/* Обе формы лежат друг на друге, видна одна. Место занимает более длинная (регистрация),
-          поэтому при переключении заголовок и кнопка не прыгают. */}
-      <div className="-mt-1 grid">
-        <form
-          id="register-form"
-          className={cn("col-start-1 row-start-1 grid content-start gap-1.5", mode !== "register" && "invisible")}
-          inert={mode !== "register"}
-          onSubmit={register}
-          noValidate
-        >
-          <TextField compact id="r-name" name="name" label="Имя" autoComplete="given-name" required />
-          <TextField compact id="r-email" name="email" type="email" label="E-mail" autoComplete="email" inputMode="email" required />
-          <TextField
-            compact
-            id="r-password"
-            name="password"
-            type="password"
-            label="Пароль"
-            autoComplete="new-password"
-            minLength={MIN_PASSWORD_LENGTH}
-            required
-          />
-          <label className="flex min-h-10 cursor-pointer items-center gap-3 pt-1">
-            <Checkbox
-              className="size-6 shrink-0 rounded-md border-primary/40 bg-background/70 [&_svg]:size-4!"
-              aria-label="Согласие на обработку персональных данных"
-              checked={agree}
-              onCheckedChange={(value) => setAgree(value === true)}
-            />
-            <span className="type-caption font-normal text-muted-foreground">
-              {typograph("Даю согласие на обработку персональных данных и принимаю условия использования")}
-            </span>
-          </label>
-        </form>
-
-        <form
-          id="login-form"
-          className={cn("col-start-1 row-start-1 grid content-start gap-1.5", mode !== "login" && "invisible")}
-          inert={mode !== "login"}
-          onSubmit={login}
-          noValidate
-        >
-          <TextField compact id="l-email" name="email" type="email" label="E-mail" autoComplete="email" inputMode="email" required />
-          <TextField compact id="l-password" name="password" type="password" label="Пароль" autoComplete="current-password" required />
-        </form>
-      </div>
-
+      <form id="email-form" className="grid gap-1.5" onSubmit={submitEmail} noValidate>
+        <TextField
+          id="email"
+          name="email"
+          type="email"
+          label="E-mail"
+          autoComplete="email"
+          inputMode="email"
+          required
+          value={email}
+          onChange={(event) => {
+            setError(null);
+            setEmail(event.target.value);
+          }}
+        />
+      </form>
       {error && (
         <p role="alert" className="type-secondary -mt-3 text-destructive">
           {typograph(error)}

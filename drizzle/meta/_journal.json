@@ -43,6 +43,20 @@
       "when": 1792767294373,
       "tag": "0005_access",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792767684866,
+      "tag": "0006_sign_in_by_code",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792767848845,
+      "tag": "0007_admin_telegram",
+      "breakpoints": true
     }
   ]
 }
