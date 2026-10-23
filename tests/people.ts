@@ -3,20 +3,21 @@ import { randomUUID } from "node:crypto";
 
 import { sql } from "drizzle-orm";
 
+import type { PersonRole } from "@/shared/auth/roles";
 import { db, user } from "@/shared/db";
 
-/** Удаляет всех людей и всё, что к ним привязано. */
+/** Удаляет всех людей, всё, что к ним привязано, и периоды доступа. */
 export async function clearDatabase() {
-  await db.execute(sql`truncate table "user" cascade`);
+  await db.execute(sql`truncate table "user", access_period cascade`);
 }
 
 /** Создаёт человека напрямую в базе, минуя регистрацию. */
-export async function createPerson(name: string, role: "user" | "admin" = "user") {
+export async function createPerson(name: string, role: PersonRole = "user", email?: string) {
   const id = randomUUID();
   await db.insert(user).values({
     id,
     name,
-    email: `${id}@test.local`,
+    email: email ?? `${id}@test.local`,
     role,
     consentedAt: new Date(),
   });

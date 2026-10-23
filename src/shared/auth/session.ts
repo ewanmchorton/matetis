@@ -7,6 +7,8 @@ import { cache } from "react";
 import { isStaticPrototype } from "@/shared/config/env";
 import { routes } from "@/shared/config/routes";
 
+import { isStaff } from "./roles";
+
 export { isStaticPrototype };
 
 export const getCurrentUser = cache(async () => {
@@ -17,14 +19,14 @@ export const getCurrentUser = cache(async () => {
   return session?.user ?? null;
 });
 
-/** Администратор или null. Для обработчиков запросов: при null отвечать 403. */
-export async function getAdminUser() {
-  const user = await getCurrentUser();
-  return user?.role === "admin" ? user : null;
-}
-
-/** Для страниц админки: всех, кроме администраторов, отправляет на вход в админку. */
-export async function requireAdminPage() {
+/**
+ * Для страниц админки: всех, кроме сотрудников, отправляет на вход в админку.
+ * only: "admin" — раздел только для администратора (ученики, доступы):
+ * контент-менеджера возвращает на главную админки.
+ */
+export async function requireAdminPage(only?: "admin") {
   if (isStaticPrototype) return;
-  if (!(await getAdminUser())) redirect(routes.adminLogin);
+  const user = await getCurrentUser();
+  if (!isStaff(user?.role)) redirect(routes.adminLogin);
+  if (only === "admin" && user?.role !== "admin") redirect(routes.admin);
 }

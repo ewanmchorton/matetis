@@ -4,7 +4,7 @@
 import { sql } from "drizzle-orm";
 import { boolean, check, index, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
-export const personRole = pgEnum("person_role", ["user", "admin"]);
+export const personRole = pgEnum("person_role", ["user", "content_manager", "admin"]);
 
 const timestamps = {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

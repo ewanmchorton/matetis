@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 
 import { acceptFriendRequest, declineFriendRequest } from "@/entities/friendship/server";
-import { readJsonObject, withUser } from "@/shared/api/route-helpers";
+import { readJsonObject, withPaidUser } from "@/shared/api/route-helpers";
 
 export async function POST(request: Request, ctx: RouteContext<"/api/friend-requests/[personId]">) {
   const { personId } = await ctx.params;
@@ -10,7 +10,7 @@ export async function POST(request: Request, ctx: RouteContext<"/api/friend-requ
   if (action !== "accept" && action !== "decline") {
     return NextResponse.json({ code: "bad_action", message: "Неизвестное действие" }, { status: 400 });
   }
-  return withUser(async (user) => {
+  return withPaidUser(async (user) => {
     if (action === "accept") await acceptFriendRequest(user.id, personId);
     else await declineFriendRequest(user.id, personId);
     return { ok: true };

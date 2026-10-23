@@ -4,6 +4,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 
+import { personRoles } from "@/shared/auth/roles";
 import { db } from "@/shared/db";
 import * as schema from "@/shared/db/schema";
 
@@ -26,7 +27,7 @@ export const auth = betterAuth({
     additionalFields: {
       // input: false — поле нельзя передать ни при регистрации, ни при изменении профиля.
       // Админа назначают только командой на сервере или запросом в базу.
-      role: { type: ["user", "admin"], required: true, defaultValue: "user", input: false },
+      role: { type: [...personRoles], required: true, defaultValue: "user", input: false },
       // Ставится сервером в момент регистрации, см. databaseHooks ниже.
       // required: false — иначе Better Auth требует его ещё до хука. В базе поле обязательное.
       consentedAt: { type: "date", required: false, input: false },

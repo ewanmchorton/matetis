@@ -9,18 +9,26 @@ import { libraryActions } from "@/entities/library";
 import { practiceActions } from "@/entities/practice";
 import { progressActions } from "@/entities/progress";
 import { socialActions } from "@/entities/social";
+import type { PersonRole } from "@/shared/auth/roles";
 import { APP_NAME } from "@/shared/config/brand";
 import { routes } from "@/shared/config/routes";
 import { cn } from "@/shared/lib/utils";
 import { Button, buttonVariants } from "@/shared/ui/button";
 
-const nav = [
+// adminOnly — раздел не виден контент-менеджеру.
+const allNav = [
   { href: routes.admin, label: "Обзор", icon: LayoutDashboard },
   { href: routes.adminMaterials, label: "Материалы", icon: Library },
   { href: routes.adminProgram, label: "Практики и ритуалы", icon: ListChecks },
   { href: routes.adminSupport, label: "Доп. практики", icon: Sprout },
-  { href: routes.adminStudents, label: "Ученики", icon: Users },
+  { href: routes.adminStudents, label: "Ученики", icon: Users, adminOnly: true },
 ];
+
+const roleLabels: Record<PersonRole, string> = {
+  admin: "Администратор",
+  content_manager: "Контент-менеджер",
+  user: "Ученик",
+};
 
 function resetDemo() {
   if (!window.confirm("Вернуть демо-данные приложения и админки?")) return;
@@ -30,8 +38,9 @@ function resetDemo() {
   socialActions.reset();
 }
 
-export function AdminShell({ children }: { children: ReactNode }) {
+export function AdminShell({ children, role }: { children: ReactNode; role: PersonRole }) {
   const pathname = usePathname();
+  const nav = allNav.filter((item) => role === "admin" || !item.adminOnly);
 
   return (
     <div className="flex min-h-dvh bg-muted/40">
@@ -106,9 +115,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
           </p>
           <div className="flex shrink-0 items-center gap-2 text-sm">
             <span className="grid size-8 place-items-center rounded-full bg-primary/10 font-medium text-primary">
-              А
+              {roleLabels[role].charAt(0)}
             </span>
-            <span className="hidden sm:inline">Администратор</span>
+            <span className="hidden sm:inline">{roleLabels[role]}</span>
           </div>
         </header>
         <main className="mx-auto w-full max-w-6xl flex-1 space-y-6 p-6 lg:p-8">{children}</main>

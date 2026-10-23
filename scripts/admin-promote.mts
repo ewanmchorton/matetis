@@ -1,5 +1,6 @@
-// Назначает роль admin существующему человеку.
-// Запуск: pnpm admin:promote <email>
+// Назначает роль сотрудника существующему человеку.
+// Запуск: pnpm admin:promote <email> — администратор,
+//         pnpm admin:promote <email> content_manager — контент-менеджер.
 // Работает только там, где есть доступ к базе (переменная DATABASE_URL).
 import pg from "pg";
 
@@ -10,8 +11,9 @@ try {
 }
 
 const email = process.argv[2]?.trim().toLowerCase();
-if (!email) {
-  console.error("Укажите почту: pnpm admin:promote <email>");
+const role = process.argv[3] ?? "admin";
+if (!email || (role !== "admin" && role !== "content_manager")) {
+  console.error("Укажите почту и, по желанию, роль: pnpm admin:promote <email> [content_manager]");
   process.exit(1);
 }
 
@@ -31,14 +33,11 @@ try {
   if (found.rowCount === 0) {
     console.error(`Человек с почтой ${email} не найден. Сначала он должен зарегистрироваться.`);
     process.exitCode = 1;
-  } else if (found.rows[0].role === "admin") {
-    console.log(`${email} уже администратор.`);
+  } else if (found.rows[0].role === role) {
+    console.log(`${email} уже ${role}.`);
   } else {
-    await client.query(
-      `update "user" set role = 'admin', updated_at = now() where email = $1`,
-      [email],
-    );
-    console.log(`${email} теперь администратор.`);
+    await client.query(`update "user" set role = $2, updated_at = now() where email = $1`, [email, role]);
+    console.log(`${email} теперь ${role}.`);
   }
 } finally {
   await client.end();
