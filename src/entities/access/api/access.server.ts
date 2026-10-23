@@ -189,6 +189,11 @@ function statusTime(status: AccessStatus): number {
  */
 export async function listAccessForAdmin(adminId: string, search = "", now = new Date()): Promise<AccessListItem[]> {
   await assertAdmin(adminId);
+  return listAccessItems(search, now);
+}
+
+/** То же без проверки роли — для серверных задач (ежедневная сводка). */
+export async function listAccessItems(search = "", now = new Date()): Promise<AccessListItem[]> {
   const [people, testTakers, periods] = await Promise.all([
     db.select({ id: user.id, name: user.name, email: user.email }).from(user).where(eq(user.role, "user")),
     db.selectDistinct({ userId: typeTestAttempt.userId }).from(typeTestAttempt),

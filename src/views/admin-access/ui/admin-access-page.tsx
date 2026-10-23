@@ -4,6 +4,7 @@ import { ChevronRight } from "lucide-react";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 
 import type { AccessListItemDto } from "@/entities/access";
+import { PushToggle } from "@/features/admin-notifications";
 import { request } from "@/shared/api/request";
 import { isStaticPrototype } from "@/shared/config/env";
 import { cn } from "@/shared/lib/utils";
@@ -43,6 +44,13 @@ export function AdminAccessPage() {
 
   useEffect(load, [load]);
 
+  // Из уведомления: ?filter=request — заявки, ?filter=expiring — скоро закончится.
+  useEffect(() => {
+    const fromLink = new URLSearchParams(window.location.search).get("filter");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (filters.some((item) => item.id === fromLink)) setFilter(fromLink as Filter);
+  }, []);
+
   function add(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const email = newEmail.trim().toLowerCase();
@@ -74,6 +82,8 @@ export function AdminAccessPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-5">
       <h1 className="text-2xl font-semibold">Доступы</h1>
+
+      <PushToggle />
 
       <form className="flex gap-2" onSubmit={add} noValidate>
         <Input
