@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { ArrowRight, Library, ListChecks, Users } from "lucide-react";
 
-import { ElementBadge, getCurrentElement } from "@/entities/element";
+import { getCurrentElement } from "@/entities/element";
 import { useLibraryItems } from "@/entities/library";
 import { filterRituals, usePracticeCatalog } from "@/entities/practice";
 import { getStudents } from "@/entities/student";
+import { CurrentElementCard } from "@/features/metal-switch";
 import { routes } from "@/shared/config/routes";
 
 export function AdminOverviewPage() {
@@ -51,11 +52,7 @@ export function AdminOverviewPage() {
         </p>
       </div>
 
-      <section className="flex flex-wrap items-center gap-3 rounded-2xl border bg-background p-5">
-        <span className="text-sm text-muted-foreground">Текущая стихия</span>
-        <ElementBadge element={element} className="text-sm" />
-        <span className="text-sm">с 1 декабря · {element.season.toLowerCase()}</span>
-      </section>
+      <CurrentElementCard />
 
       <section className="grid gap-4 md:grid-cols-3">
         {cards.map((card) => (
