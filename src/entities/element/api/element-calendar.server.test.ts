@@ -16,8 +16,9 @@ beforeEach(async () => {
 });
 
 describe("День перехода с Земли на Металл", () => {
-  it("пока день не задан, вся осень — Земля", async () => {
+  it("пока день не задан, Земля до 31 октября, с 1 ноября Металл", async () => {
     expect((await getCurrentSeason(lateOctober)).elementId).toBe("earth");
+    expect((await getCurrentSeason(new Date("2026-11-02T12:00:00+03:00"))).elementId).toBe("metal");
   });
 
   it("контент-менеджер задаёт день заранее — с него идёт Металл", async () => {
@@ -36,7 +37,7 @@ describe("День перехода с Земли на Металл", () => {
     });
   });
 
-  it("день можно перенести или убрать", async () => {
+  it("день можно перенести или вернуть 1 ноября", async () => {
     await setMetalStart(manager, "2026-10-14", august);
     await setMetalStart(manager, "2026-10-21", august);
     expect((await getElementCalendarForStaff(manager, august)).metalStartsOn).toBe("2026-10-21");

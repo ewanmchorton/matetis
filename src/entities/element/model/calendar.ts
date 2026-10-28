@@ -1,8 +1,8 @@
 import type { ElementId } from "./types";
 
 // Календарь стихий по временам года, по Минску. Без обращений к базе.
-// Зима — Вода, весна — Дерево, лето — Огонь. Осень начинается Землёй,
-// а день перехода на Металл каждый год разный: его заранее задаёт в админке контент-менеджер.
+// Зима — Вода, весна — Дерево, лето — Огонь. Осень начинается Землёй, с 1 ноября — Металл.
+// День перехода на Металл каждый год разный: контент-менеджер может задать другой в админке.
 // На границе стихий 5 дней до и 5 дней после смены — переход: для него свои фоны.
 
 /** В Беларуси нет перехода на летнее время: всегда UTC+3. */
@@ -14,6 +14,11 @@ export const TRANSITION_DAYS = 5;
 
 /** Фон, который подходит этому дню: стихии или перехода между двумя стихиями. */
 export type SeasonBackground = { kind: "element"; elementId: ElementId } | { kind: "transition"; from: ElementId; to: ElementId };
+
+/** День Металла, если в админке другой не задан: 1 ноября. */
+export function defaultMetalStart(year: number): Date {
+  return minskMidnight(year, 11, 1);
+}
 
 /** Для какого года задаётся дата Металла: в декабре — уже для следующей осени. */
 export function metalYearFor(now: Date): number {
@@ -32,36 +37,34 @@ export function minskMidnight(year: number, month: number, day: number): Date {
   return new Date(Date.UTC(year, month - 1, day) - MINSK_OFFSET_MS);
 }
 
-/** Стихия в этот момент. metalFrom — с какого момента в этом году Металл; null — дату ещё не задали. */
-export function elementAt(now: Date, metalFrom: Date | null): ElementId {
+/** Стихия в этот момент. metalFrom — с какого момента в этом году Металл. */
+export function elementAt(now: Date, metalFrom: Date): ElementId {
   const { month } = minskYearMonth(now);
   if (month === 12 || month <= 2) return "water";
   if (month <= 5) return "wood";
   if (month <= 8) return "fire";
-  return metalFrom && now >= metalFrom ? "metal" : "earth";
+  return now >= metalFrom ? "metal" : "earth";
 }
 
 /** Смены стихий вокруг этого момента: прошлый, этот и следующий год. */
-function boundaries(now: Date, metalFrom: (year: number) => Date | null) {
+function boundaries(now: Date, metalFrom: (year: number) => Date) {
   const { year } = minskYearMonth(now);
   return [year - 1, year, year + 1].flatMap((y) => {
-    const metal = metalFrom(y);
     return [
       { at: minskMidnight(y, 3, 1), from: "water", to: "wood" },
       { at: minskMidnight(y, 6, 1), from: "wood", to: "fire" },
       { at: minskMidnight(y, 9, 1), from: "fire", to: "earth" },
-      ...(metal ? [{ at: metal, from: "earth", to: "metal" }] : []),
-      // Если дату Металла не задали, зима всё равно наступает — переход с Земли.
-      { at: minskMidnight(y, 12, 1), from: metal ? "metal" : "earth", to: "water" },
+      { at: metalFrom(y), from: "earth", to: "metal" },
+      { at: minskMidnight(y, 12, 1), from: "metal", to: "water" },
     ] as { at: Date; from: ElementId; to: ElementId }[];
   });
 }
 
 /**
  * Какой фон показывать в этот момент. Ближе 5 дней к смене стихии — фон перехода,
- * иначе — фон текущей стихии. metalFrom(year) — дата Металла в этом году или null.
+ * иначе — фон текущей стихии. metalFrom(year) — день Металла в этом году.
  */
-export function backgroundAt(now: Date, metalFrom: (year: number) => Date | null): SeasonBackground {
+export function backgroundAt(now: Date, metalFrom: (year: number) => Date): SeasonBackground {
   const nearest = boundaries(now, metalFrom)
     .map((boundary) => ({ ...boundary, distance: Math.abs(now.getTime() - boundary.at.getTime()) }))
     .sort((a, b) => a.distance - b.distance)[0];

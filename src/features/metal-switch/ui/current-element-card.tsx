@@ -28,7 +28,7 @@ export function CurrentElementCard() {
 
   const apply = useCallback((next: CalendarState) => {
     setState(next);
-    setDay(next.metalStartsOn ?? "");
+    setDay(next.metalStartsOn ?? `${next.metalYear}-11-01`);
   }, []);
 
   useEffect(() => {
@@ -73,17 +73,18 @@ export function CurrentElementCard() {
               value={day}
               onChange={(event) => setDay(event.target.value)}
             />
-            <Button className="h-11" disabled={pending || !day || day === state.metalStartsOn} onClick={() => void save(day)}>
+            <Button className="h-11" disabled={pending || !day || day === (state.metalStartsOn ?? `${state.metalYear}-11-01`)} onClick={() => void save(day)}>
               Сохранить
             </Button>
             {state.metalStartsOn && (
               <Button variant="ghost" className="h-11" disabled={pending} onClick={() => void save(null)}>
-                Убрать дату
+                Вернуть 1 ноября
               </Button>
             )}
           </div>
           <p className="text-xs text-muted-foreground">
-            Остальные стихии меняются сами по временам года. За 5 дней до смены стихии и 5 дней после — фон перехода.
+            Если дату не менять, Металл начинается 1 ноября. Остальные стихии меняются сами по временам года. За 5
+            дней до смены стихии и 5 дней после — фон перехода.
           </p>
         </div>
       )}

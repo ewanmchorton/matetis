@@ -1,25 +1,27 @@
 import { describe, expect, it } from "vitest";
 
-import { backgroundAt, elementAt, isMetalDateAllowed, minskMidnight } from "./calendar";
+import { backgroundAt, defaultMetalStart, elementAt, isMetalDateAllowed, minskMidnight } from "./calendar";
 
 const at = (iso: string) => new Date(iso);
 const metal2026 = minskMidnight(2026, 10, 14);
-const withMetal = (year: number) => (year === 2026 ? metal2026 : null);
-const noMetal = () => null;
+const withMetal = (year: number) => (year === 2026 ? metal2026 : defaultMetalStart(year));
+const noMetal = defaultMetalStart;
+const nov1 = defaultMetalStart(2026);
 
 describe("Календарь стихий", () => {
   it("зима — Вода, весна — Дерево, лето — Огонь", () => {
-    expect(elementAt(at("2026-12-01T00:00:00+03:00"), null)).toBe("water");
-    expect(elementAt(at("2027-02-28T23:59:00+03:00"), null)).toBe("water");
-    expect(elementAt(at("2027-03-01T00:00:00+03:00"), null)).toBe("wood");
-    expect(elementAt(at("2027-05-31T12:00:00+03:00"), null)).toBe("wood");
-    expect(elementAt(at("2027-06-01T00:00:00+03:00"), null)).toBe("fire");
-    expect(elementAt(at("2027-08-31T23:00:00+03:00"), null)).toBe("fire");
+    expect(elementAt(at("2026-12-01T00:00:00+03:00"), nov1)).toBe("water");
+    expect(elementAt(at("2027-02-28T23:59:00+03:00"), nov1)).toBe("water");
+    expect(elementAt(at("2027-03-01T00:00:00+03:00"), nov1)).toBe("wood");
+    expect(elementAt(at("2027-05-31T12:00:00+03:00"), nov1)).toBe("wood");
+    expect(elementAt(at("2027-06-01T00:00:00+03:00"), nov1)).toBe("fire");
+    expect(elementAt(at("2027-08-31T23:00:00+03:00"), nov1)).toBe("fire");
   });
 
-  it("осень начинается Землёй и остаётся ей, пока не задана дата Металла", () => {
-    expect(elementAt(at("2026-09-01T00:00:00+03:00"), null)).toBe("earth");
-    expect(elementAt(at("2026-11-30T23:00:00+03:00"), null)).toBe("earth");
+  it("если день Металла не задан — Земля до 31 октября, с 1 ноября Металл", () => {
+    expect(elementAt(at("2026-09-01T00:00:00+03:00"), nov1)).toBe("earth");
+    expect(elementAt(at("2026-10-31T23:59:00+03:00"), nov1)).toBe("earth");
+    expect(elementAt(at("2026-11-01T00:00:00+03:00"), nov1)).toBe("metal");
   });
 
   it("с заданной даты — Металл до конца ноября, с декабря — Вода", () => {
@@ -30,7 +32,7 @@ describe("Календарь стихий", () => {
   });
 
   it("смена сезона считается по Минску: 31 мая 22:00 UTC — уже лето", () => {
-    expect(elementAt(at("2027-05-31T22:00:00Z"), null)).toBe("fire");
+    expect(elementAt(at("2027-05-31T22:00:00Z"), nov1)).toBe("fire");
   });
 
   it("дату Металла можно задать только осенью, после 1 сентября", () => {
@@ -59,14 +61,13 @@ describe("Фоны стихий и переходов", () => {
     expect(backgroundAt(at("2026-10-25T12:00:00+03:00"), withMetal)).toEqual({ kind: "element", elementId: "metal" });
   });
 
-  it("пока дата Металла не задана, перехода Земля → Металл нет", () => {
+  it("без заданного дня переход Земля → Металл — вокруг 1 ноября", () => {
     expect(backgroundAt(at("2026-10-14T12:00:00+03:00"), noMetal)).toEqual({ kind: "element", elementId: "earth" });
+    expect(backgroundAt(at("2026-10-28T12:00:00+03:00"), noMetal)).toEqual({ kind: "transition", from: "earth", to: "metal" });
   });
 
-  it("переход в зиму — с Металла, а если дату Металла не задали — с Земли", () => {
-    const lateNovember = at("2026-11-28T12:00:00+03:00");
-    expect(backgroundAt(lateNovember, withMetal)).toEqual({ kind: "transition", from: "metal", to: "water" });
-    expect(backgroundAt(lateNovember, noMetal)).toEqual({ kind: "transition", from: "earth", to: "water" });
+  it("в конце ноября — переход Металл → Вода", () => {
+    expect(backgroundAt(at("2026-11-28T12:00:00+03:00"), withMetal)).toEqual({ kind: "transition", from: "metal", to: "water" });
   });
 
   it("в начале декабря ещё переход Металл → Вода", () => {

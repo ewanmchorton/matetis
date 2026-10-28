@@ -5,7 +5,7 @@ import { assertStaff } from "@/shared/auth/assert-admin";
 import { db, metalStart } from "@/shared/db";
 import { AppError } from "@/shared/lib/app-error";
 
-import { backgroundAt, elementAt, isMetalDateAllowed, metalYearFor, minskMidnight, minskYearMonth, type SeasonBackground } from "../model/calendar";
+import { backgroundAt, defaultMetalStart, elementAt, isMetalDateAllowed, metalYearFor, minskMidnight, minskYearMonth, type SeasonBackground } from "../model/calendar";
 import type { ElementId } from "../model/types";
 
 /** Даты Металла за эти годы: «2026-10-14» → полночь по Минску. */
@@ -29,16 +29,14 @@ export type Season = {
 export async function getCurrentSeason(now = new Date()): Promise<Season> {
   const { year } = minskYearMonth(now);
   const metal = await metalDates([year - 1, year, year + 1]);
-  return {
-    elementId: elementAt(now, metal.get(year) ?? null),
-    background: backgroundAt(now, (y) => metal.get(y) ?? null),
-  };
+  const metalFrom = (y: number) => metal.get(y) ?? defaultMetalStart(y);
+  return { elementId: elementAt(now, metalFrom(year)), background: backgroundAt(now, metalFrom) };
 }
 
 export type ElementCalendarState = Season & {
   /** Для какой осени задаётся дата Металла. */
   metalYear: number;
-  /** День Металла этой осенью, «2026-10-14». null — ещё не задан. */
+  /** День Металла этой осенью, «2026-10-14». null — не задан, Металл с 1 ноября. */
   metalStartsOn: string | null;
 };
 
@@ -54,7 +52,7 @@ export async function getElementCalendarForStaff(viewerId: string, now = new Dat
 }
 
 /**
- * Задать день, с которого этой осенью идёт Металл («2026-10-14»), или убрать его (null).
+ * Задать день, с которого этой осенью идёт Металл («2026-10-14»), или вернуть 1 ноября (null).
  * Дату обычно знают примерно за неделю. Можно поправить, если переход сдвинулся.
  */
 export async function setMetalStart(viewerId: string, day: unknown, now = new Date()) {
