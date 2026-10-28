@@ -9,7 +9,7 @@ import type { ProfileData } from "../model/types";
 /** Демо-данные: на GitHub Pages (там нет сервера) и при локальной разработке без входа. */
 const demoProfile: ProfileData = {
   me: { name: "Анна", email: "anna@example.ru" },
-  settings: { publishEvents: true, autoMatchConsent: true },
+  settings: { publishEvents: true, autoMatchConsent: true, phraseNotifications: true, phraseFromHour: 9, phraseToHour: 21 },
   friends: [
     { id: "marina", name: "Марина", avatar: null },
     { id: "igor", name: "Игорь", avatar: null },
@@ -91,6 +91,25 @@ export function useProfile() {
     }
   }
 
+  /** Фраза дня: согласие и промежуток. Вместе с ними сохраняется часовой пояс телефона. */
+  async function setPhraseSettings(changes: Partial<ProfileData["settings"]>) {
+    setActionError(null);
+    const before = state.status === "ready" ? state.data.settings : null;
+    update((data) => ({ ...data, settings: { ...data.settings, ...changes } }));
+    if (demo) return;
+    try {
+      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const settings = await request<ProfileData["settings"]>("/api/profile/settings", {
+        method: "PATCH",
+        body: JSON.stringify({ ...changes, timeZone }),
+      });
+      update((data) => ({ ...data, settings }));
+    } catch (error) {
+      if (before) update((data) => ({ ...data, settings: before }));
+      setActionError((error as Error).message);
+    }
+  }
+
   async function answerRequest(personId: string, action: "accept" | "decline") {
     setActionError(null);
     if (demo) {
@@ -114,5 +133,5 @@ export function useProfile() {
     }
   }
 
-  return { state, actionError, setPublishEvents, answerRequest };
+  return { state, actionError, setPublishEvents, setPhraseSettings, answerRequest };
 }

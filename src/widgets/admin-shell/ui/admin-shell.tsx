@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ExternalLink, KeyRound, LayoutDashboard, Library, ListChecks, RotateCcw, Sprout, Users } from "lucide-react";
+import { ExternalLink, KeyRound, LayoutDashboard, Library, ListChecks, MessageSquareQuote, RotateCcw, Sprout, Users } from "lucide-react";
 
 import { libraryActions } from "@/entities/library";
 import { practiceActions } from "@/entities/practice";
@@ -21,6 +21,7 @@ const allNav = [
   { href: routes.adminMaterials, label: "Материалы", icon: Library },
   { href: routes.adminProgram, label: "Практики и ритуалы", icon: ListChecks },
   { href: routes.adminSupport, label: "Доп. практики", icon: Sprout },
+  { href: routes.adminPhrases, label: "Фразы дня", icon: MessageSquareQuote },
   { href: routes.adminStudents, label: "Ученики", icon: Users, adminOnly: true },
   { href: routes.adminAccess, label: "Доступы", icon: KeyRound, adminOnly: true },
 ];

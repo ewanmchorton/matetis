@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { ElementBadge, getCurrentElement } from "@/entities/element";
 import { filterRituals, usePracticeCatalog } from "@/entities/practice";
 import { getPersonType } from "@/entities/person-type";
+import { PhraseSettings } from "@/features/phrase-notifications";
 import { countInLastDays, getElementBadgeProgress, pluralRu, progressActions, useProgress } from "@/entities/progress";
 import { authClient } from "@/shared/auth/client";
 import { isStaticPrototype } from "@/shared/config/env";
@@ -25,7 +26,7 @@ const checkboxClass = "size-6 rounded-md border-primary/40 bg-background/70 [&_s
 
 export function ProfilePage() {
   const router = useRouter();
-  const { state, actionError, setPublishEvents, answerRequest } = useProfile();
+  const { state, actionError, setPublishEvents, setPhraseSettings, answerRequest } = useProfile();
 
   useEffect(() => {
     if (state.status === "signed-out") router.replace(routes.auth);
@@ -77,6 +78,10 @@ export function ProfilePage() {
       )}
 
       <ProgressSections />
+
+      {state.status === "ready" && (
+        <PhraseSettings value={state.data.settings} demo={state.demo} onChange={setPhraseSettings} />
+      )}
 
       {state.status === "ready" && (
         <GlassCard aria-labelledby="profile-settings-title" className="space-y-4">

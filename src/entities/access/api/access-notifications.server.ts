@@ -1,14 +1,14 @@
 // Уведомления администратору о доступах. Только серверный код.
 // Заявка — сразу, на каждую. Доступ скоро закончится — одна сводка в день в 10:00 по Минску,
 // если есть кого упомянуть; каждый человек попадает в сводку один раз за срок доступа.
-import { and, eq, gte, inArray } from "drizzle-orm";
+import { eq, gte, inArray } from "drizzle-orm";
 
 import { assertAdmin } from "@/shared/auth/assert-admin";
 import { APP_NAME } from "@/shared/config/brand";
 import { routes } from "@/shared/config/routes";
 import { accessExpiryReminder, db, pushSubscription, user } from "@/shared/db";
-import { AppError } from "@/shared/lib/app-error";
 import { sendPush, type PushMessage } from "@/shared/push/send-push";
+import { removePushSubscription, savePushSubscription, type SubscriptionInput } from "@/shared/push/subscriptions.server";
 
 import { EXPIRING_DAYS, hasAccess, listAccessItems } from "./access.server";
 
@@ -17,34 +17,15 @@ export const DIGEST_HOUR = 10;
 /** В Беларуси нет перехода на летнее время: всегда UTC+3. */
 const MINSK_OFFSET_MS = 3 * 60 * 60 * 1000;
 
-type SubscriptionInput = { endpoint?: unknown; keys?: unknown };
-
 /** Сохранить устройство, на которое администратор разрешил уведомления. */
 export async function saveMyPushSubscription(adminId: string, input: SubscriptionInput) {
   await assertAdmin(adminId);
-  const keys = (input.keys && typeof input.keys === "object" ? input.keys : {}) as Record<string, unknown>;
-  const { endpoint } = input;
-  if (typeof endpoint !== "string" || !endpoint.startsWith("https://")) {
-    throw new AppError("invalid_subscription", "Не удалось включить уведомления");
-  }
-  if (typeof keys.p256dh !== "string" || typeof keys.auth !== "string") {
-    throw new AppError("invalid_subscription", "Не удалось включить уведомления");
-  }
-  const row = { userId: adminId, endpoint, p256dh: keys.p256dh, auth: keys.auth };
-  await db
-    .insert(pushSubscription)
-    .values(row)
-    .onConflictDoUpdate({ target: pushSubscription.endpoint, set: row });
-  return { ok: true };
+  return savePushSubscription(adminId, input);
 }
 
 /** Выключить уведомления на этом устройстве. */
 export async function removeMyPushSubscription(adminId: string, endpoint: unknown) {
-  if (typeof endpoint !== "string") return { ok: true };
-  await db
-    .delete(pushSubscription)
-    .where(and(eq(pushSubscription.userId, adminId), eq(pushSubscription.endpoint, endpoint)));
-  return { ok: true };
+  return removePushSubscription(adminId, endpoint);
 }
 
 /** Отправить всем устройствам администраторов. Ошибка одного устройства не мешает остальным. */

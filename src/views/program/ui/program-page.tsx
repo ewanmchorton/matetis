@@ -6,6 +6,7 @@ import { weakElementIdFor } from "@/entities/birth";
 import { filterRituals, filterSupport, pickDailyPractice, usePracticeCatalog } from "@/entities/practice";
 import { getProgramStats, useProgress } from "@/entities/progress";
 import { InstallReminder } from "@/features/install-app";
+import { PhrasePrompt } from "@/features/phrase-notifications";
 import { routes } from "@/shared/config/routes";
 import { getWeekDays, getWeekStartKey, toDateKey } from "@/shared/lib/date";
 import { useIsClient } from "@/shared/lib/use-is-client";
@@ -55,6 +56,8 @@ export function ProgramPage() {
           </div>
         </div>
       </header>
+
+      <PhrasePrompt />
 
       {isClient ? (
         <ProgramContent

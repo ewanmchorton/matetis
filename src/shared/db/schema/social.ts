@@ -6,6 +6,7 @@ import {
   index,
   pgEnum,
   pgTable,
+  smallint,
   text,
   timestamp,
   uniqueIndex,
@@ -49,14 +50,30 @@ export const friendRequest = pgTable(
 
 // Личные настройки. Видит и меняет только сам человек.
 // Строка создаётся при первом изменении, до этого действуют значения по умолчанию.
-export const personSettings = pgTable("person_settings", {
-  userId: text("user_id")
-    .primaryKey()
-    .references(() => user.id, { onDelete: "cascade" }),
-  publishEvents: boolean("publish_events").notNull().default(true),
-  autoMatchConsent: boolean("auto_match_consent").notNull().default(true),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow()
-    .$onUpdate(() => new Date()),
-});
+export const personSettings = pgTable(
+  "person_settings",
+  {
+    userId: text("user_id")
+      .primaryKey()
+      .references(() => user.id, { onDelete: "cascade" }),
+    publishEvents: boolean("publish_events").notNull().default(true),
+    autoMatchConsent: boolean("auto_match_consent").notNull().default(true),
+    /** Согласие получать фразу дня уведомлением. */
+    phraseNotifications: boolean("phrase_notifications").notNull().default(true),
+    /** Промежуток, когда может прийти фраза: с какого часа (включительно) и до какого (не включительно). */
+    phraseFromHour: smallint("phrase_from_hour").notNull().default(9),
+    phraseToHour: smallint("phrase_to_hour").notNull().default(21),
+    /** Часовой пояс телефона, например «Europe/Minsk». Пусто — считаем по Минску. */
+    timeZone: text("time_zone"),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    check(
+      "person_settings_phrase_hours",
+      sql`${table.phraseFromHour} >= 0 and ${table.phraseToHour} <= 24 and ${table.phraseFromHour} < ${table.phraseToHour}`,
+    ),
+  ],
+);
