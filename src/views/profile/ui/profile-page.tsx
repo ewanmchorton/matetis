@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import { ElementBadge, getCurrentElement } from "@/entities/element";
 import { filterRituals, usePracticeCatalog } from "@/entities/practice";
@@ -79,9 +79,11 @@ export function ProfilePage() {
 
       <ProgressSections />
 
-      {state.status === "ready" && (
-        <PhraseSettings value={state.data.settings} demo={state.demo} onChange={setPhraseSettings} />
-      )}
+      <Reminders>
+        {state.status === "ready" && (
+          <PhraseSettings value={state.data.settings} demo={state.demo} onChange={setPhraseSettings} />
+        )}
+      </Reminders>
 
       {state.status === "ready" && (
         <GlassCard aria-labelledby="profile-settings-title" className="space-y-4">
@@ -149,7 +151,6 @@ function ProgressSections() {
       )}
 
       <ProfileRituals ritualMarks={ritualMarks} />
-      <Reminders />
     </>
   );
 }
@@ -242,7 +243,8 @@ function ProfileRituals({ ritualMarks }: { ritualMarks: Record<string, string[]>
   );
 }
 
-function Reminders() {
+/** children — пункты, которые хранятся на сервере (фраза дня). */
+function Reminders({ children }: { children?: ReactNode }) {
   const [morning, setMorning] = useState(true);
   const [evening, setEvening] = useState(false);
 
@@ -259,6 +261,7 @@ function Reminders() {
         <Checkbox className={checkboxClass} aria-label="Вечернее напоминание" checked={evening} onCheckedChange={(v) => setEvening(v === true)} />
         <span className="type-secondary text-foreground">{typograph("Вечером — размышление или медитация")}</span>
       </label>
+      {children}
     </GlassCard>
   );
 }

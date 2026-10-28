@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { typograph } from "@/shared/lib/typograph";
 import { Button } from "@/shared/ui/button";
 import { Checkbox } from "@/shared/ui/checkbox";
-import { GlassCard } from "@/shared/ui/glass-card";
 import { NativeSelect } from "@/shared/ui/native-select";
 
 import { enableOnDevice, readDeviceState, type DeviceState } from "../model/device";
@@ -17,7 +16,7 @@ const selectClass = "h-11 w-auto rounded-xl bg-background/70 px-3 type-secondary
 const fromHours = Array.from({ length: 24 }, (_, hour) => hour);
 const toHours = Array.from({ length: 24 }, (_, hour) => hour + 1);
 
-/** Фраза дня в профиле: согласие, промежуток времени и разрешение на этом телефоне. */
+/** Пункт «Фраза дня» в напоминаниях профиля: согласие, промежуток времени и разрешение на этом телефоне. */
 export function PhraseSettings({
   value,
   demo,
@@ -52,24 +51,20 @@ export function PhraseSettings({
   }
 
   return (
-    <GlassCard aria-labelledby="phrase-settings-title" className="space-y-4">
-      <h2 id="phrase-settings-title" className="type-section">
-        Фраза дня
-      </h2>
-      <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3">
-        <span className="type-secondary text-muted-foreground">{typograph("Присылать фразу дня в уведомлении")}</span>
+    <div className="space-y-2">
+      <label className="flex min-h-11 cursor-pointer items-center gap-3">
         <Checkbox
           className={checkboxClass}
-          aria-label="Присылать фразу дня в уведомлении"
+          aria-label="Фраза дня"
           checked={value.phraseNotifications}
           onCheckedChange={(checked) => void toggle(checked === true)}
         />
+        <span className="type-secondary text-foreground">Фраза дня</span>
       </label>
 
       {value.phraseNotifications && (
-        <>
+        <div className="space-y-2 pl-9">
           <div className="flex flex-wrap items-center gap-2 type-secondary text-muted-foreground">
-            <span>{typograph("Приходит один раз в день в случайное время")}</span>
             <span className="flex items-center gap-2">
               с
               <NativeSelect
@@ -115,7 +110,7 @@ export function PhraseSettings({
               Разрешить уведомления на этом телефоне
             </Button>
           )}
-        </>
+        </div>
       )}
 
       {error && (
@@ -123,6 +118,6 @@ export function PhraseSettings({
           {typograph(error)}
         </p>
       )}
-    </GlassCard>
+    </div>
   );
 }
