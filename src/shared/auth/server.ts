@@ -13,6 +13,10 @@ import { sendEmail } from "@/shared/email/send-email";
 
 import { telegramLogin } from "./telegram-plugin";
 
+const DAY_SECONDS = 24 * 60 * 60;
+/** Сколько дней без открытия приложения человек остаётся вошедшим. */
+export const SESSION_DAYS = 30;
+
 /** Сколько минут действует код из письма. */
 export const SIGN_IN_CODE_MINUTES = 10;
 
@@ -32,6 +36,9 @@ export const auth = betterAuth({
   trustedOrigins: localNetworkOrigins,
   // Вход без пароля: код из письма или бот в Telegram. Первый вход создаёт учётную запись.
   emailAndPassword: { enabled: false },
+  // Вход сохраняется 30 дней с последнего открытия приложения: кто заходит хотя бы раз в месяц,
+  // больше не вводит код. Срок продлевается не чаще раза в сутки.
+  session: { expiresIn: SESSION_DAYS * DAY_SECONDS, updateAge: DAY_SECONDS },
   user: {
     additionalFields: {
       // input: false — поле нельзя передать ни при регистрации, ни при изменении профиля.
