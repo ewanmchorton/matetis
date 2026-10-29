@@ -10,8 +10,6 @@ const telegramLoginClient = () =>
   ({
     id: "telegram-login",
     $InferServerPlugin: {} as ReturnType<typeof telegramLogin>,
-    // Без тела запроса клиент Better Auth шлёт GET, а эти адреса принимают только POST.
-    pathMethods: { "/telegram/start": "POST", "/telegram/complete": "POST" },
     // После входа обновляем данные о вошедшем человеке.
     atomListeners: [{ matcher: (path) => path === "/telegram/complete", signal: "$sessionSignal" }],
   }) satisfies BetterAuthClientPlugin;

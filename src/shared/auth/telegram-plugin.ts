@@ -2,46 +2,67 @@
 // Как устроен вход — в telegram-login.ts.
 import { randomBytes } from "node:crypto";
 
-import type { BetterAuthPlugin } from "better-auth";
+import type { BetterAuthPlugin, StandardSchemaV1 } from "better-auth";
 import { APIError, createAuthEndpoint } from "better-auth/api";
 import { setSessionCookie } from "better-auth/cookies";
 
 import { db, user } from "@/shared/db";
 
-import { createLoginRequest, findTelegramPerson, takeLoginRequest, TELEGRAM_LOGIN_MINUTES } from "./telegram-login";
+import { createLoginRequest, findTelegramPerson, takeLoginRequest } from "./telegram-login";
 
-/** Cookie с токеном входа: войти по подтверждённому запросу может только браузер, который его начал. */
-const LOGIN_COOKIE = "matetis_telegram_login";
+/** Строковое поле тела запроса длиной от min до 64 символов. */
+const isText = (value: unknown, min: number): value is string =>
+  typeof value === "string" && value.length >= min && value.length <= 64;
+
+/**
+ * secret — метка браузера, её придумывает экран входа и не показывает никому.
+ * Войти по подтверждённой ссылке может только тот, кто знает и ссылку, и метку.
+ */
+const startBody: StandardSchemaV1<{ secret: string }> = {
+  "~standard": {
+    version: 1,
+    vendor: "matetis",
+    validate: (value) => {
+      const { secret } = (value ?? {}) as { secret?: unknown };
+      return isText(secret, 16) ? { value: { secret } } : { issues: [{ message: "Нет метки браузера" }] };
+    },
+  },
+};
+
+/** token — из ссылки на бота, которую нажал человек. */
+const completeBody: StandardSchemaV1<{ secret: string; token: string }> = {
+  "~standard": {
+    version: 1,
+    vendor: "matetis",
+    validate: (value) => {
+      const { secret, token } = (value ?? {}) as { secret?: unknown; token?: unknown };
+      return isText(secret, 16) && isText(token, 1)
+        ? { value: { secret, token } }
+        : { issues: [{ message: "Нет ссылки для входа" }] };
+    },
+  },
+};
 
 export function telegramLogin() {
   return {
     id: "telegram-login",
     endpoints: {
-      /** Начать вход: ссылка на бота. */
-      telegramStart: createAuthEndpoint("/telegram/start", { method: "POST" }, async (ctx) => {
+      /** Ссылка на бота. Экран входа просит её заранее и обновляет, пока человек не нажал кнопку. */
+      telegramStart: createAuthEndpoint("/telegram/start", { method: "POST", body: startBody }, async (ctx) => {
         const botUsername = process.env.TELEGRAM_BOT_USERNAME;
         if (!botUsername) {
           throw new APIError("SERVICE_UNAVAILABLE", { message: "Вход через Telegram пока не настроен" });
         }
-        const token = await createLoginRequest();
-        ctx.setCookie(LOGIN_COOKIE, token, {
-          httpOnly: true,
-          sameSite: "lax",
-          secure: process.env.NODE_ENV === "production",
-          path: "/",
-          maxAge: TELEGRAM_LOGIN_MINUTES * 60,
-        });
-        return ctx.json({ url: `https://t.me/${botUsername.replace(/^@/, "")}?start=${token}` });
+        const token = await createLoginRequest(ctx.body.secret);
+        return ctx.json({ token, url: `https://t.me/${botUsername.replace(/^@/, "")}?start=${token}` });
       }),
 
       /**
        * Проверить, подтвердил ли человек вход в боте. Подтвердил — входит:
        * первый вход создаёт учётную запись без почты и без имени (имя спросит тест).
        */
-      telegramComplete: createAuthEndpoint("/telegram/complete", { method: "POST" }, async (ctx) => {
-        const token = ctx.getCookie(LOGIN_COOKIE);
-        if (!token) return ctx.json({ status: "expired" as const });
-        const state = await takeLoginRequest(token);
+      telegramComplete: createAuthEndpoint("/telegram/complete", { method: "POST", body: completeBody }, async (ctx) => {
+        const state = await takeLoginRequest(ctx.body.token, ctx.body.secret);
         if (state.status !== "confirmed") return ctx.json({ status: state.status });
 
         let userId = await findTelegramPerson(state);
@@ -62,7 +83,6 @@ export function telegramLogin() {
 
         const session = await ctx.context.internalAdapter.createSession(signedIn.id);
         await setSessionCookie(ctx, { session, user: signedIn });
-        ctx.setCookie(LOGIN_COOKIE, "", { path: "/", maxAge: 0 });
         return ctx.json({ status: "signed-in" as const, user: { name: signedIn.name } });
       }),
     },

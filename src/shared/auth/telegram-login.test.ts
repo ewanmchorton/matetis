@@ -13,6 +13,8 @@ import {
 } from "./telegram-login";
 
 const now = new Date("2026-10-29T12:00:00Z");
+/** Метка браузера, в котором человек нажал «Войти через Telegram». */
+const browser = "browser-1";
 const minutesLater = (minutes: number) => new Date(now.getTime() + minutes * 60 * 1000);
 
 /** Сообщение боту в личной переписке, как его присылает Telegram. */
@@ -24,17 +26,17 @@ beforeEach(clearDatabase);
 
 describe("Вход через бота", () => {
   it("пока человек не нажал «Начать» — вход ждёт", async () => {
-    const token = await createLoginRequest(now);
-    expect(await takeLoginRequest(token, now)).toEqual({ status: "pending" });
+    const token = await createLoginRequest(browser, now);
+    expect(await takeLoginRequest(token, browser, now)).toEqual({ status: "pending" });
   });
 
   it("«Начать» в боте подтверждает вход: приходит номер и ник строчными", async () => {
-    const token = await createLoginRequest(now);
+    const token = await createLoginRequest(browser, now);
     expect(await handleTelegramUpdate(startMessage(`/start ${token}`), now)).toEqual({
       chatId: 111,
       text: botReplies.confirmed,
     });
-    expect(await takeLoginRequest(token, now)).toEqual({
+    expect(await takeLoginRequest(token, browser, now)).toEqual({
       status: "confirmed",
       telegramId: "111",
       telegramUsername: "oleg_tg",
@@ -42,25 +44,41 @@ describe("Вход через бота", () => {
   });
 
   it("по подтверждённой ссылке войти можно только один раз", async () => {
-    const token = await createLoginRequest(now);
+    const token = await createLoginRequest(browser, now);
     await handleTelegramUpdate(startMessage(`/start ${token}`), now);
-    await takeLoginRequest(token, now);
-    expect(await takeLoginRequest(token, now)).toEqual({ status: "expired" });
+    await takeLoginRequest(token, browser, now);
+    expect(await takeLoginRequest(token, browser, now)).toEqual({ status: "expired" });
   });
 
   it("ссылку нельзя подтвердить второй раз другим человеком", async () => {
-    const token = await createLoginRequest(now);
+    const token = await createLoginRequest(browser, now);
     await handleTelegramUpdate(startMessage(`/start ${token}`), now);
     const reply = await handleTelegramUpdate(startMessage(`/start ${token}`, { id: 999, username: "other_user" }), now);
     expect(reply?.text).toBe(botReplies.expired);
-    expect(await takeLoginRequest(token, now)).toMatchObject({ telegramId: "111" });
+    expect(await takeLoginRequest(token, browser, now)).toMatchObject({ telegramId: "111" });
+  });
+
+  it("подтверждённый вход не достаётся другому браузеру", async () => {
+    const token = await createLoginRequest(browser, now);
+    expect(await takeLoginRequest(token, "browser-2", now)).toEqual({ status: "expired" });
+    await handleTelegramUpdate(startMessage(`/start ${token}`), now);
+    expect(await takeLoginRequest(token, "browser-2", now)).toEqual({ status: "expired" });
+    expect(await takeLoginRequest(token, browser, now)).toMatchObject({ status: "confirmed", telegramId: "111" });
+  });
+
+  it("у браузера может быть несколько ссылок: входит по той, что нажали", async () => {
+    const first = await createLoginRequest(browser, now);
+    const second = await createLoginRequest(browser, now);
+    await handleTelegramUpdate(startMessage(`/start ${first}`), now);
+    expect(await takeLoginRequest(second, browser, now)).toEqual({ status: "pending" });
+    expect(await takeLoginRequest(first, browser, now)).toMatchObject({ status: "confirmed" });
   });
 
   it(`через ${TELEGRAM_LOGIN_MINUTES} минут ссылка устаревает`, async () => {
-    const token = await createLoginRequest(now);
+    const token = await createLoginRequest(browser, now);
     const later = minutesLater(TELEGRAM_LOGIN_MINUTES);
     expect((await handleTelegramUpdate(startMessage(`/start ${token}`), later))?.text).toBe(botReplies.expired);
-    expect(await takeLoginRequest(token, later)).toEqual({ status: "expired" });
+    expect(await takeLoginRequest(token, browser, later)).toEqual({ status: "expired" });
   });
 
   it("выдуманный токен не подтверждает ничего", async () => {

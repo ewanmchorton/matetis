@@ -18,6 +18,28 @@ const CODE_LENGTH = 6;
 const CODE_MINUTES = 10;
 /** Как часто спрашивать сервер, подтвердил ли человек вход в боте. */
 const TELEGRAM_POLL_MS = 2000;
+/** Ссылка на бота действует 10 минут (TELEGRAM_LOGIN_MINUTES на сервере): обновляем её чуть раньше. */
+const TELEGRAM_LINK_REFRESH_MS = 9 * 60 * 1000;
+const secondaryButtonClass = "border-white/60 bg-background/80";
+const TELEGRAM_SECRET_KEY = "matetis-telegram-login-secret";
+let fallbackSecret: string | undefined;
+
+/**
+ * Метка этого браузера для входа через Telegram: войти по нажатой ссылке сможет только он.
+ * Хранится в браузере, чтобы пережить перезапуск приложения, пока человек в Telegram.
+ */
+function browserSecret(): string {
+  try {
+    const saved = localStorage.getItem(TELEGRAM_SECRET_KEY);
+    if (saved) return saved;
+    const secret = crypto.randomUUID();
+    localStorage.setItem(TELEGRAM_SECRET_KEY, secret);
+    return secret;
+  } catch {
+    // Хранилище недоступно (например, частный режим) — метка живёт, пока открыт экран.
+    return (fallbackSecret ??= crypto.randomUUID());
+  }
+}
 const consentText =
   "Нажимая «Получить код» или «Войти через Telegram», вы соглашаетесь с обработкой персональных данных и условиями использования";
 
@@ -42,8 +64,15 @@ function errorText(error: { code?: string; message?: string; status?: number }):
  */
 export function AuthPage() {
   const router = useRouter();
-  /** Ссылка на бота: человек ушёл подтверждать вход в Telegram. */
-  const [telegramUrl, setTelegramUrl] = useState<string | null>(null);
+  /**
+   * Ссылка на бота готовится заранее, как только открылся экран: тогда кнопка сразу открывает Telegram.
+   * Если ждать ответа сервера после нажатия, приложение на iPhone может не открыть Telegram.
+   */
+  const [telegramLink, setTelegramLink] = useState<{ url: string; token: string } | { error: string } | null>(null);
+  /** Смена значения просит новую ссылку: прежняя устарела. */
+  const [telegramLinkVersion, setTelegramLinkVersion] = useState(0);
+  /** Человек нажал «Войти через Telegram» и подтверждает вход в боте: токен нажатой ссылки. */
+  const [telegramWaiting, setTelegramWaiting] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [codeSent, setCodeSent] = useState(false);
   const [code, setCode] = useState("");
@@ -101,26 +130,32 @@ export function AuthPage() {
     router.push(current && !current.type ? routes.typeTest : routes.program);
   }
 
-  async function startTelegram() {
-    if (isStaticPrototype) return router.push(routes.onboarding);
-    setPending(true);
-    setError(null);
-    const { data, error: startError } = await authClient.telegram.start();
-    setPending(false);
-    if (startError || !data) return setError(errorText(startError ?? {}));
-    setTelegramUrl(data.url);
-  }
+  // Готовим ссылку на бота и обновляем её, пока человек не нажал кнопку.
+  useEffect(() => {
+    if (isStaticPrototype || telegramWaiting) return;
+    let cancelled = false;
+    void authClient.telegram.start({ secret: browserSecret() }).then(({ data, error: startError }) => {
+      if (cancelled) return;
+      setTelegramLink(data ? { url: data.url, token: data.token } : { error: errorText(startError ?? {}) });
+    });
+    const timer = window.setTimeout(() => setTelegramLinkVersion((version) => version + 1), TELEGRAM_LINK_REFRESH_MS);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [telegramLinkVersion, telegramWaiting]);
 
   // Пока человек в Telegram, спрашиваем сервер, подтвердил ли он вход.
   // Вернулся в приложение — спрашиваем сразу, не дожидаясь следующего раза.
   useEffect(() => {
-    if (!telegramUrl) return;
+    if (!telegramWaiting) return;
+    const waitingToken = telegramWaiting;
     let stopped = false;
     let checking = false;
     async function check() {
       if (stopped || checking) return;
       checking = true;
-      const { data } = await authClient.telegram.complete();
+      const { data } = await authClient.telegram.complete({ secret: browserSecret(), token: waitingToken });
       checking = false;
       if (stopped || !data) return;
       if (data.status === "signed-in") {
@@ -128,7 +163,7 @@ export function AuthPage() {
         await goAfterSignIn(data.user.name);
       } else if (data.status === "expired") {
         stopped = true;
-        setTelegramUrl(null);
+        setTelegramWaiting(null);
         setError("Ссылка для входа устарела. Нажмите «Войти через Telegram» ещё раз");
       }
     }
@@ -140,32 +175,48 @@ export function AuthPage() {
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", onVisible);
     };
-    // goAfterSignIn меняется на каждой отрисовке, а проверку нужно запускать только при новой ссылке.
+    // goAfterSignIn меняется на каждой отрисовке, а проверку нужно запускать только при нажатии кнопки.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [telegramUrl]);
+  }, [telegramWaiting]);
 
-  if (telegramUrl) {
+  function telegramButton() {
+    const label = "Войти через Telegram";
+    // На GitHub Pages сервера нет: просто показываем следующий шаг.
+    if (isStaticPrototype) {
+      return (
+        <Button variant="outline" size="cta" className={secondaryButtonClass} onClick={() => router.push(routes.onboarding)}>
+          {label}
+        </Button>
+      );
+    }
+    if (telegramLink && "url" in telegramLink) {
+      const { url, token } = telegramLink;
+      return (
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={buttonVariants({ variant: "outline", size: "cta", className: secondaryButtonClass })}
+          onClick={() => {
+            setError(null);
+            setTelegramWaiting(token);
+          }}
+        >
+          {label}
+        </a>
+      );
+    }
+    // Ссылка ещё готовится или сервер не смог её дать — скажем об этом по нажатию.
     return (
-      <ScreenLayout
-        variant="hero"
-        background="01_reg"
-        compact
-        title="Вход через Telegram"
-        subtitle="Откройте бота МАТЭТИС, нажмите «Начать» и вернитесь сюда — вход выполнится сам."
-        actions={
-          <>
-            <BackButton onClick={() => setTelegramUrl(null)} />
-            <a
-              href={telegramUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={buttonVariants({ size: "cta", className: "flex-1" })}
-            >
-              Открыть Telegram
-            </a>
-          </>
-        }
-      />
+      <Button
+        variant="outline"
+        size="cta"
+        className={secondaryButtonClass}
+        disabled={!telegramLink}
+        onClick={() => telegramLink && "error" in telegramLink && setError(telegramLink.error)}
+      >
+        {label}
+      </Button>
     );
   }
 
@@ -233,15 +284,7 @@ export function AuthPage() {
           <Button type="submit" form="email-form" size="cta" disabled={pending}>
             Получить код
           </Button>
-          <Button
-            variant="outline"
-            size="cta"
-            className="border-white/60 bg-background/80"
-            disabled={pending}
-            onClick={() => void startTelegram()}
-          >
-            Войти через Telegram
-          </Button>
+          {telegramButton()}
           <p className="type-caption text-center font-normal text-muted-foreground">{typograph(consentText)}</p>
         </div>
       }

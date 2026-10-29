@@ -1,11 +1,12 @@
 // Вход через бота в Telegram. Только серверный код.
 //
-// 1. Приложение просит ссылку: сервер создаёт запрос входа и запоминает его в cookie этого браузера.
+// 1. Экран входа заранее просит ссылку: сервер создаёт запрос входа и привязывает его к метке браузера —
+//    случайной строке, которую экран придумал сам и никому не показывает. Войти сможет только этот браузер.
 // 2. Человек открывает ссылку t.me/<бот>?start=<токен> и нажимает «Начать».
 // 3. Бот получает /start <токен> и отмечает запрос подтверждённым: записывает номер и ник человека в Telegram.
 // 4. Приложение раз в пару секунд спрашивает сервер; когда запрос подтверждён — человек входит.
 //
-// Запросы хранятся в таблице verification Better Auth. В базе — не сам токен, а его хэш.
+// Запросы хранятся в таблице verification Better Auth. В базе — не токен и не метка браузера, а их хэши.
 import { createHash, randomBytes } from "node:crypto";
 
 import { and, eq, gt } from "drizzle-orm";
@@ -16,58 +17,73 @@ import { contactOf, normalizeTelegramUsername } from "./contact";
 
 /** Сколько минут действует ссылка для входа. */
 export const TELEGRAM_LOGIN_MINUTES = 10;
-const PENDING = "pending";
+/** Запрос ждёт «Начать» в боте: "pending:<хэш метки браузера>". Подтверждённый — JSON с номером и ником. */
+const PENDING_PREFIX = "pending:";
 
 export type TelegramPerson = { telegramId: string; telegramUsername: string | null };
+type ConfirmedValue = TelegramPerson & { browser: string };
 
-function identifierOf(token: string) {
-  return `telegram-login:${createHash("sha256").update(token).digest("hex")}`;
-}
+const sha256 = (value: string) => createHash("sha256").update(value).digest("hex");
+const identifierOf = (token: string) => `telegram-login:${sha256(token)}`;
 
-/** Новый запрос входа. Возвращает токен для ссылки на бота: латиница, цифры, - и _, до 64 символов. */
-export async function createLoginRequest(now = new Date()): Promise<string> {
+/** Новый запрос входа для этого браузера. Возвращает токен для ссылки на бота. */
+export async function createLoginRequest(browserId: string, now = new Date()): Promise<string> {
+  // Латиница, цифры, - и _: Telegram принимает в ссылке только такие символы.
   const token = randomBytes(24).toString("base64url");
   await db.insert(verification).values({
     id: randomBytes(16).toString("hex"),
     identifier: identifierOf(token),
-    value: PENDING,
+    value: PENDING_PREFIX + sha256(browserId),
     expiresAt: new Date(now.getTime() + TELEGRAM_LOGIN_MINUTES * 60 * 1000),
   });
   return token;
 }
 
+async function readRequest(token: string, now: Date) {
+  const [row] = await db
+    .select({ value: verification.value, expiresAt: verification.expiresAt })
+    .from(verification)
+    .where(eq(verification.identifier, identifierOf(token)))
+    .limit(1);
+  return row && row.expiresAt > now ? row.value : null;
+}
+
 /** Бот получил /start с токеном. false — ссылка устарела или уже использована. */
 export async function confirmLoginRequest(token: string, person: TelegramPerson, now = new Date()) {
+  const value = await readRequest(token, now);
+  if (!value?.startsWith(PENDING_PREFIX)) return false;
+  const confirmed: ConfirmedValue = { browser: value.slice(PENDING_PREFIX.length), ...person };
+  // Условие на прежнее значение: если ссылку одновременно подтверждают двое, засчитается один.
   const updated = await db
     .update(verification)
-    .set({ value: JSON.stringify(person) })
-    .where(
-      and(
-        eq(verification.identifier, identifierOf(token)),
-        eq(verification.value, PENDING),
-        gt(verification.expiresAt, now),
-      ),
-    )
+    .set({ value: JSON.stringify(confirmed) })
+    .where(and(eq(verification.identifier, identifierOf(token)), eq(verification.value, value), gt(verification.expiresAt, now)))
     .returning({ id: verification.id });
   return updated.length > 0;
 }
 
 export type LoginRequestState = { status: "pending" } | { status: "expired" } | ({ status: "confirmed" } & TelegramPerson);
 
-/** Состояние запроса для приложения. Подтверждённый запрос удаляется: войти по нему можно один раз. */
-export async function takeLoginRequest(token: string, now = new Date()): Promise<LoginRequestState> {
-  const identifier = identifierOf(token);
-  const [row] = await db
-    .select({ value: verification.value, expiresAt: verification.expiresAt })
-    .from(verification)
-    .where(eq(verification.identifier, identifier))
-    .limit(1);
-  if (!row || row.expiresAt <= now) return { status: "expired" };
-  if (row.value === PENDING) return { status: "pending" };
-  const deleted = await db.delete(verification).where(eq(verification.identifier, identifier)).returning({ id: verification.id });
+/**
+ * Состояние запроса для приложения. Чужой браузер не отличит запрос от устаревшего.
+ * Подтверждённый запрос удаляется: войти по нему можно один раз.
+ */
+export async function takeLoginRequest(token: string, browserId: string, now = new Date()): Promise<LoginRequestState> {
+  const value = await readRequest(token, now);
+  if (!value) return { status: "expired" };
+  const browser = sha256(browserId);
+  if (value.startsWith(PENDING_PREFIX)) {
+    return value === PENDING_PREFIX + browser ? { status: "pending" } : { status: "expired" };
+  }
+  const confirmed = JSON.parse(value) as ConfirmedValue;
+  if (confirmed.browser !== browser) return { status: "expired" };
+  const deleted = await db
+    .delete(verification)
+    .where(and(eq(verification.identifier, identifierOf(token)), eq(verification.value, value)))
+    .returning({ id: verification.id });
   // Два одновременных запроса из приложения: войдёт только первый.
   if (deleted.length === 0) return { status: "expired" };
-  return { status: "confirmed", ...(JSON.parse(row.value) as TelegramPerson) };
+  return { status: "confirmed", telegramId: confirmed.telegramId, telegramUsername: confirmed.telegramUsername };
 }
 
 /**
