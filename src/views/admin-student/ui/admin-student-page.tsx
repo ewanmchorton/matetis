@@ -11,7 +11,7 @@ import { isStaticPrototype } from "@/shared/config/env";
 import { routes } from "@/shared/config/routes";
 
 type StudentDetails = {
-  person: { id: string; name: string; email: string; registeredAt: string };
+  person: { id: string; name: string; contact: string | null; registeredAt: string };
   birthReading: { birthDate: string; digitCounts: DigitCounts; elements: ElementScore[] } | null;
   typeHistory: { takenAt: string; type: PersonType }[];
 };
@@ -70,7 +70,7 @@ function StudentDetailsView({ data: { person, birthReading, typeHistory } }: { d
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold">{person.name}</h1>
         <p className="text-sm text-muted-foreground">
-          {person.email} · зарегистрирован(а) {formatDate(person.registeredAt)}
+          {person.contact} · зарегистрирован(а) {formatDate(person.registeredAt)}
         </p>
       </div>
 

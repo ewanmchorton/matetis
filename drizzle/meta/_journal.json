@@ -78,6 +78,20 @@
       "when": 1793176563753,
       "tag": "0010_metal_start",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1793285387736,
+      "tag": "0011_telegram_login_add_contact",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1793285404585,
+      "tag": "0012_telegram_login_contact_required",
+      "breakpoints": true
     }
   ]
 }

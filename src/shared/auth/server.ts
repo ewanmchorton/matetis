@@ -11,6 +11,8 @@ import * as schema from "@/shared/db/schema";
 import { APP_NAME } from "@/shared/config/brand";
 import { sendEmail } from "@/shared/email/send-email";
 
+import { telegramLogin } from "./telegram-plugin";
+
 /** Сколько минут действует код из письма. */
 export const SIGN_IN_CODE_MINUTES = 10;
 
@@ -28,7 +30,7 @@ const localNetworkOrigins =
 export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: "pg", schema }),
   trustedOrigins: localNetworkOrigins,
-  // Вход без пароля: код из письма. Первый вход по коду создаёт учётную запись.
+  // Вход без пароля: код из письма или бот в Telegram. Первый вход создаёт учётную запись.
   emailAndPassword: { enabled: false },
   user: {
     additionalFields: {
@@ -38,6 +40,9 @@ export const auth = betterAuth({
       // Ставится сервером при создании учётной записи, см. databaseHooks ниже.
       // required: false — иначе Better Auth требует его ещё до хука. В базе поле обязательное.
       consentedAt: { type: "date", required: false, input: false },
+      // Заполняются только при входе через Telegram, см. telegram-plugin.ts.
+      telegramId: { type: "string", required: false, input: false },
+      telegramUsername: { type: "string", required: false, input: false },
     },
   },
   hooks: {
@@ -73,6 +78,7 @@ export const auth = betterAuth({
         });
       },
     }),
+    telegramLogin(),
     // nextCookies — последним: сохраняет вход в cookie для серверных действий Next.js.
     nextCookies(),
   ],

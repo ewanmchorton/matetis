@@ -1,5 +1,19 @@
 // Вход и выход из браузера. Запросы идут на /api/auth этого же сайта.
+import type { BetterAuthClientPlugin } from "better-auth/client";
 import { emailOTPClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 
-export const authClient = createAuthClient({ plugins: [emailOTPClient()] });
+import type { telegramLogin } from "./telegram-plugin";
+
+/** Вход через Telegram: authClient.telegram.start() и authClient.telegram.complete(). */
+const telegramLoginClient = () =>
+  ({
+    id: "telegram-login",
+    $InferServerPlugin: {} as ReturnType<typeof telegramLogin>,
+    // Без тела запроса клиент Better Auth шлёт GET, а эти адреса принимают только POST.
+    pathMethods: { "/telegram/start": "POST", "/telegram/complete": "POST" },
+    // После входа обновляем данные о вошедшем человеке.
+    atomListeners: [{ matcher: (path) => path === "/telegram/complete", signal: "$sessionSignal" }],
+  }) satisfies BetterAuthClientPlugin;
+
+export const authClient = createAuthClient({ plugins: [emailOTPClient(), telegramLoginClient()] });

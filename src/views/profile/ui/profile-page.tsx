@@ -9,6 +9,7 @@ import { getPersonType } from "@/entities/person-type";
 import { PhraseSettings } from "@/features/phrase-notifications";
 import { countInLastDays, getElementBadgeProgress, pluralRu, progressActions, useProgress } from "@/entities/progress";
 import { authClient } from "@/shared/auth/client";
+import { isTelegramContact } from "@/shared/auth/contact";
 import { isStaticPrototype } from "@/shared/config/env";
 import { routes } from "@/shared/config/routes";
 import { getWeekDays, getWeekStartKey, toDateKey } from "@/shared/lib/date";
@@ -92,7 +93,10 @@ export function ProfilePage() {
           </h2>
           <dl className="divide-y divide-border/70">
             <SettingRow label="Имя" value={state.data.me.name} />
-            <SettingRow label="E-mail" value={state.data.me.email} />
+            <SettingRow
+              label={state.data.me.contact && isTelegramContact(state.data.me.contact) ? "Telegram" : "E-mail"}
+              value={state.data.me.contact ?? ""}
+            />
             <SettingRow label="Пароль" value="••••••••" />
           </dl>
           <BirthDateField />

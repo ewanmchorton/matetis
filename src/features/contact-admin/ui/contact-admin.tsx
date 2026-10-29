@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { formatPhone, type MyAccess } from "@/entities/access";
+import { isTelegramContact } from "@/shared/auth/contact";
 import { APP_NAME } from "@/shared/config/brand";
 import { typograph } from "@/shared/lib/typograph";
 
@@ -15,9 +16,12 @@ const lead: Record<Purpose, string> = {
   renew: "Для продления доступа напишите администратору в Telegram или Viber",
 };
 
-function messageFor(purpose: Purpose, email: string) {
+function messageFor(purpose: Purpose, contact: string | null) {
   const wish = purpose === "get" ? "получить доступ к программе" : "продлить доступ к программе";
-  return `Здравствуйте! Хочу ${wish} ${APP_NAME}. Моя почта: ${email}`;
+  const text = `Здравствуйте! Хочу ${wish} ${APP_NAME}.`;
+  if (!contact) return text;
+  // По этому контакту администратор находит человека в разделе «Доступы».
+  return `${text} ${isTelegramContact(contact) ? "Мой Telegram" : "Моя почта"}: ${contact}`;
 }
 
 /** Текст «свяжитесь с администратором» с телефоном и знаки мессенджеров, которые открывают чат. */
@@ -27,7 +31,7 @@ export function ContactAdminText({ access, purpose }: { access: MyAccess; purpos
 
 export function ContactAdminButtons({ access, purpose }: { access: MyAccess; purpose: Purpose }) {
   const [copied, setCopied] = useState(false);
-  const message = messageFor(purpose, access.email);
+  const message = messageFor(purpose, access.contact);
   // Telegram подставляет готовый текст только в чат по нику. По телефону — просто открывает чат.
   const telegramHref = access.adminTelegram
     ? `https://t.me/${access.adminTelegram}?text=${encodeURIComponent(message)}`

@@ -27,10 +27,11 @@ export const pushSubscription = pgTable(
 export const accessExpiryReminder = pgTable(
   "access_expiry_reminder",
   {
-    email: text("email").notNull(),
+    /** Почта или ник в Telegram, как в access_period.contact. */
+    contact: text("contact").notNull(),
     /** До какого момента был доступ, когда о нём напомнили. */
     accessUntil: timestamp("access_until", { withTimezone: true }).notNull(),
     sentAt: timestamp("sent_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [primaryKey({ columns: [table.email, table.accessUntil] }), index("access_expiry_reminder_sent_idx").on(table.sentAt)],
+  (table) => [primaryKey({ columns: [table.contact, table.accessUntil] }), index("access_expiry_reminder_sent_idx").on(table.sentAt)],
 );

@@ -3,26 +3,37 @@ import { asc, desc, eq } from "drizzle-orm";
 
 import { getPersonTypeByCode } from "@/entities/person-type";
 import { assertAdmin } from "@/shared/auth/assert-admin";
+import { contactOf } from "@/shared/auth/contact";
 import { birthReading, db, typeTestAttempt, user } from "@/shared/db";
 
 export type StudentSummary = {
   id: string;
   name: string;
-  email: string;
+  /** Почта или ник в Telegram. */
+  contact: string | null;
   registeredAt: Date;
   /** Название текущего типа или null, если тест не пройден. */
   typeName: string | null;
   hasBirthDate: boolean;
 };
 
-export type StudentCard = { id: string; name: string; email: string; registeredAt: Date };
+export type StudentCard = { id: string; name: string; contact: string | null; registeredAt: Date };
+
+const personColumns = {
+  id: user.id,
+  name: user.name,
+  email: user.email,
+  telegramId: user.telegramId,
+  telegramUsername: user.telegramUsername,
+  registeredAt: user.createdAt,
+};
 
 /** Все зарегистрированные люди, кроме администраторов, новые сверху. */
 export async function listStudentsForAdmin(adminId: string): Promise<StudentSummary[]> {
   await assertAdmin(adminId);
   const [people, latestTests, readings] = await Promise.all([
     db
-      .select({ id: user.id, name: user.name, email: user.email, registeredAt: user.createdAt })
+      .select(personColumns)
       .from(user)
       .where(eq(user.role, "user"))
       .orderBy(desc(user.createdAt)),
@@ -42,19 +53,23 @@ export async function listStudentsForAdmin(adminId: string): Promise<StudentSumm
   );
   const withBirthDate = new Set(readings.map((reading) => reading.userId));
   return people.map((person) => ({
-    ...person,
+    id: person.id,
+    name: person.name,
+    contact: contactOf(person),
+    registeredAt: person.registeredAt,
     typeName: typeByPerson.get(person.id) ?? null,
     hasBirthDate: withBirthDate.has(person.id),
   }));
 }
 
-/** Имя, почта и дата регистрации человека. null, если такого нет. */
+/** Имя, почта или ник в Telegram и дата регистрации человека. null, если такого нет. */
 export async function getStudentForAdmin(adminId: string, personId: string): Promise<StudentCard | null> {
   await assertAdmin(adminId);
   const [person] = await db
-    .select({ id: user.id, name: user.name, email: user.email, registeredAt: user.createdAt })
+    .select(personColumns)
     .from(user)
     .where(eq(user.id, personId))
     .limit(1);
-  return person ?? null;
+  if (!person) return null;
+  return { id: person.id, name: person.name, contact: contactOf(person), registeredAt: person.registeredAt };
 }

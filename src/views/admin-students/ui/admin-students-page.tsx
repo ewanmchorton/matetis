@@ -14,7 +14,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 type StudentRow = {
   id: string;
   name: string;
-  email: string;
+  /** Почта или ник в Telegram. */
+  contact: string | null;
   registeredAt: string;
   typeName: string | null;
   hasBirthDate: boolean;
@@ -27,7 +28,7 @@ function demoRows(): StudentRow[] {
   return getStudents().map((student) => ({
     id: student.id,
     name: student.name,
-    email: student.email,
+    contact: student.email,
     registeredAt: student.registeredAt,
     typeName: getPersonType(student.typeId)?.name ?? null,
     hasBirthDate: false,
@@ -80,7 +81,7 @@ export function AdminStudentsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Имя</TableHead>
-                <TableHead>E-mail</TableHead>
+                <TableHead>Почта / Telegram</TableHead>
                 <TableHead>Тип</TableHead>
                 <TableHead>Дата рождения</TableHead>
                 <TableHead>Регистрация</TableHead>
@@ -107,7 +108,7 @@ export function AdminStudentsPage() {
                       </Link>
                     )}
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{row.email}</TableCell>
+                  <TableCell className="text-muted-foreground">{row.contact}</TableCell>
                   <TableCell>{row.typeName ?? "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{row.hasBirthDate ? "указана" : "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{formatDate(row.registeredAt)}</TableCell>

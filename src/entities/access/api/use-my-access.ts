@@ -10,7 +10,7 @@ import type { MyAccess } from "../model/types";
 /** Демо для GitHub Pages и разработки без входа: доступ открыт, экраны проходятся целиком. */
 const demoAccess: MyAccess = {
   status: { kind: "active", until: "2099-01-01T00:00:00Z", daysLeft: 999, expiring: false },
-  email: "anna@example.ru",
+  contact: "anna@example.ru",
   adminPhone: "+375293344101",
   adminTelegram: "vernojit",
 };

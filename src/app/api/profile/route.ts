@@ -1,7 +1,8 @@
-// Данные экрана «Профиль»: имя, почта, настройки, друзья и входящие запросы.
+// Данные экрана «Профиль»: имя, почта или ник в Telegram, настройки, друзья и входящие запросы.
 import { listFriends, listIncomingRequests } from "@/entities/friendship/server";
 import { getMySettings } from "@/entities/person-settings/server";
 import { withPaidUser } from "@/shared/api/route-helpers";
+import { contactOf } from "@/shared/auth/contact";
 
 export function GET() {
   return withPaidUser(async (user) => {
@@ -10,6 +11,6 @@ export function GET() {
       listFriends(user.id),
       listIncomingRequests(user.id),
     ]);
-    return { me: { name: user.name, email: user.email }, settings, friends, incoming };
+    return { me: { name: user.name, contact: contactOf(user) }, settings, friends, incoming };
   });
 }

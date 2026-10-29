@@ -1,9 +1,10 @@
 // Доступ по подписке: статус человека, продление, закрытие и настройки. Только серверный код.
 // Периоды и настройки видит и меняет только администратор. Сам человек видит свой статус.
 // Проверку входа делает вызывающий код.
-import { and, desc, eq, gt, sql } from "drizzle-orm";
+import { and, desc, eq, gt, sql, type SQL } from "drizzle-orm";
 
 import { assertAdmin } from "@/shared/auth/assert-admin";
+import { contactOf, normalizeContact, type ContactPerson } from "@/shared/auth/contact";
 import { isStaff } from "@/shared/auth/roles";
 import { accessPeriod, accessSettings, db, typeTestAttempt, user } from "@/shared/db";
 import { AppError } from "@/shared/lib/app-error";
@@ -48,15 +49,6 @@ export type AccessTerm = (typeof ACCESS_TERMS)[number];
 /** Подставленная сумма для каждого срока. null — цены нет, сумму вводит админ. */
 export type SuggestedAmounts = Record<AccessTerm, number | null>;
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-/** Почта строчными буквами и без пробелов по краям. Иначе — ошибка с понятным текстом. */
-export function normalizeEmail(raw: unknown): string {
-  const email = typeof raw === "string" ? raw.trim().toLowerCase() : "";
-  if (!EMAIL_PATTERN.test(email)) throw new AppError("invalid_email", "Проверьте почту");
-  return email;
-}
-
 /** Статус по периодам одного человека. Без теста и роли: их учитывает вызывающий код. */
 export function statusFromPeriods(periods: PeriodDates[], now: Date): AccessStatus {
   const current = periods.find((period) => period.startsAt <= now && now < period.endsAt);
@@ -97,7 +89,8 @@ function suggestAmounts(settings: AccessSettings, isFirst: boolean): SuggestedAm
   return { 1: settings.monthCents, 3: settings.threeMonthsCents, 12: null };
 }
 
-async function periodsOf(email: string): Promise<AccessPeriod[]> {
+async function periodsOf(contact: string | null): Promise<AccessPeriod[]> {
+  if (!contact) return [];
   return db
     .select({
       startsAt: accessPeriod.startsAt,
@@ -108,7 +101,7 @@ async function periodsOf(email: string): Promise<AccessPeriod[]> {
       createdAt: accessPeriod.createdAt,
     })
     .from(accessPeriod)
-    .where(eq(accessPeriod.email, email))
+    .where(eq(accessPeriod.contact, contact))
     .orderBy(desc(accessPeriod.startsAt), desc(accessPeriod.createdAt));
 }
 
@@ -136,11 +129,11 @@ async function readSettings(): Promise<AccessSettings> {
   return row;
 }
 
-type Viewer = { id: string; email: string; role?: string | null };
+type Viewer = ContactPerson & { id: string; role?: string | null };
 
 async function statusOf(viewer: Viewer, now: Date): Promise<AccessStatus> {
   if (isStaff(viewer.role)) return { kind: "staff" };
-  const status = statusFromPeriods(await periodsOf(normalizeEmail(viewer.email)), now);
+  const status = statusFromPeriods(await periodsOf(contactOf(viewer)), now);
   if (status.kind === "none" && (await hasTakenTest(viewer.id))) return { kind: "request" };
   return status;
 }
@@ -151,20 +144,21 @@ export async function hasAccess(viewer: Viewer, now = new Date()): Promise<boole
   return status.kind === "staff" || status.kind === "active";
 }
 
-/** Свой статус, почта и контакт администратора — для экранов без доступа и готового сообщения. */
+/** Свой статус, свой контакт (почта или ник в Telegram) и контакт администратора — для экранов без доступа и готового сообщения. */
 export async function getMyAccess(viewer: Viewer, now = new Date()) {
   const [status, settings] = await Promise.all([statusOf(viewer, now), readSettings()]);
   return {
     status,
-    email: normalizeEmail(viewer.email),
+    contact: contactOf(viewer),
     adminPhone: settings.adminPhone,
     adminTelegram: settings.adminTelegram,
   };
 }
 
 export type AccessListItem = {
-  email: string;
-  /** null — почту добавили заранее, человек ещё не зарегистрировался. */
+  /** Почта, @ник или tg:номер в Telegram. */
+  contact: string;
+  /** null — контакт добавили заранее, человек ещё не зарегистрировался. */
   name: string | null;
   status: AccessStatus;
 };
@@ -184,8 +178,8 @@ function statusTime(status: AccessStatus): number {
 }
 
 /**
- * Все люди для раздела «Доступы»: зарегистрированные (кроме сотрудников) и почты, добавленные заранее.
- * search — часть почты или имени.
+ * Все люди для раздела «Доступы»: зарегистрированные (кроме сотрудников) и контакты, добавленные заранее.
+ * search — часть почты, ника или имени.
  */
 export async function listAccessForAdmin(adminId: string, search = "", now = new Date()): Promise<AccessListItem[]> {
   await assertAdmin(adminId);
@@ -195,36 +189,40 @@ export async function listAccessForAdmin(adminId: string, search = "", now = new
 /** То же без проверки роли — для серверных задач (ежедневная сводка). */
 export async function listAccessItems(search = "", now = new Date()): Promise<AccessListItem[]> {
   const [people, testTakers, periods] = await Promise.all([
-    db.select({ id: user.id, name: user.name, email: user.email }).from(user).where(eq(user.role, "user")),
+    db
+      .select({ id: user.id, name: user.name, email: user.email, telegramId: user.telegramId, telegramUsername: user.telegramUsername })
+      .from(user)
+      .where(eq(user.role, "user")),
     db.selectDistinct({ userId: typeTestAttempt.userId }).from(typeTestAttempt),
-    db.select({ email: accessPeriod.email, startsAt: accessPeriod.startsAt, endsAt: accessPeriod.endsAt }).from(accessPeriod),
+    db.select({ contact: accessPeriod.contact, startsAt: accessPeriod.startsAt, endsAt: accessPeriod.endsAt }).from(accessPeriod),
   ]);
 
   const tested = new Set(testTakers.map((row) => row.userId));
-  const periodsByEmail = new Map<string, PeriodDates[]>();
+  const periodsByContact = new Map<string, PeriodDates[]>();
   for (const period of periods) {
-    periodsByEmail.set(period.email, [...(periodsByEmail.get(period.email) ?? []), period]);
+    periodsByContact.set(period.contact, [...(periodsByContact.get(period.contact) ?? []), period]);
   }
 
   const items = new Map<string, AccessListItem>();
   for (const person of people) {
-    const email = person.email.trim().toLowerCase();
-    let status = statusFromPeriods(periodsByEmail.get(email) ?? [], now);
+    const contact = contactOf(person);
+    if (!contact) continue;
+    let status = statusFromPeriods(periodsByContact.get(contact) ?? [], now);
     if (status.kind === "none" && tested.has(person.id)) status = { kind: "request" };
-    items.set(email, { email, name: person.name, status });
+    items.set(contact, { contact, name: person.name, status });
   }
-  for (const [email, emailPeriods] of periodsByEmail) {
-    if (!items.has(email)) items.set(email, { email, name: null, status: statusFromPeriods(emailPeriods, now) });
+  for (const [contact, contactPeriods] of periodsByContact) {
+    if (!items.has(contact)) items.set(contact, { contact, name: null, status: statusFromPeriods(contactPeriods, now) });
   }
 
   const query = search.trim().toLowerCase();
   return [...items.values()]
-    .filter((item) => !query || item.email.includes(query) || item.name?.toLowerCase().includes(query))
+    .filter((item) => !query || item.contact.includes(query) || item.name?.toLowerCase().includes(query))
     .sort(
       (a, b) =>
         attentionOrder(a.status) - attentionOrder(b.status) ||
         statusTime(a.status) - statusTime(b.status) ||
-        a.email.localeCompare(b.email),
+        a.contact.localeCompare(b.contact),
     );
 }
 
@@ -234,20 +232,27 @@ export type AccessCard = AccessListItem & {
   suggestedAmounts: SuggestedAmounts;
 };
 
-async function cardOf(email: string, now: Date): Promise<AccessCard> {
+/** Условие поиска человека по контакту: почта, ник или номер в Telegram. */
+function personByContact(contact: string): SQL {
+  if (contact.startsWith("tg:")) return eq(user.telegramId, contact.slice(3));
+  if (contact.startsWith("@")) return eq(user.telegramUsername, contact.slice(1));
+  return sql`lower(${user.email}) = ${contact}`;
+}
+
+async function cardOf(contact: string, now: Date): Promise<AccessCard> {
   const [periods, [person], settings] = await Promise.all([
-    periodsOf(email),
+    periodsOf(contact),
     db
       .select({ id: user.id, name: user.name, role: user.role })
       .from(user)
-      .where(sql`lower(${user.email}) = ${email}`)
+      .where(personByContact(contact))
       .limit(1),
     readSettings(),
   ]);
   let status = isStaff(person?.role) ? ({ kind: "staff" } as const) : statusFromPeriods(periods, now);
   if (person && status.kind === "none" && (await hasTakenTest(person.id))) status = { kind: "request" };
   return {
-    email,
+    contact,
     name: person?.name ?? null,
     status,
     periods,
@@ -256,9 +261,9 @@ async function cardOf(email: string, now: Date): Promise<AccessCard> {
 }
 
 /** Карточка человека: статус, история оплат и суммы для кнопок продления. */
-export async function getAccessCardForAdmin(adminId: string, rawEmail: unknown, now = new Date()) {
+export async function getAccessCardForAdmin(adminId: string, rawContact: unknown, now = new Date()) {
   await assertAdmin(adminId);
-  return cardOf(normalizeEmail(rawEmail), now);
+  return cardOf(normalizeContact(rawContact), now);
 }
 
 export type ExtendAccessInput = {
@@ -278,12 +283,12 @@ function parseDate(value: unknown): Date | null {
 
 /**
  * Открыть или продлить доступ. Идущий доступ продлевается с даты окончания,
- * закончившийся или новый — с текущего момента. Почту можно добавить до регистрации.
+ * закончившийся или новый — с текущего момента. Почту или ник можно добавить до регистрации.
  */
-export async function extendAccess(adminId: string, rawEmail: unknown, input: ExtendAccessInput, now = new Date()) {
+export async function extendAccess(adminId: string, rawContact: unknown, input: ExtendAccessInput, now = new Date()) {
   await assertAdmin(adminId);
-  const email = normalizeEmail(rawEmail);
-  const card = await cardOf(email, now);
+  const contact = normalizeContact(rawContact);
+  const card = await cardOf(contact, now);
   const startsAt = card.status.kind === "active" ? card.status.until : now;
 
   let endsAt: Date;
@@ -310,20 +315,20 @@ export async function extendAccess(adminId: string, rawEmail: unknown, input: Ex
   }
   if (amountCents === null) throw new AppError("amount_required", "Укажите сумму");
 
-  await db.insert(accessPeriod).values({ email, startsAt, endsAt, amountCents, createdBy: adminId });
-  return cardOf(email, now);
+  await db.insert(accessPeriod).values({ contact, startsAt, endsAt, amountCents, createdBy: adminId });
+  return cardOf(contact, now);
 }
 
 /** Закрыть доступ сейчас. Периоды не удаляются: история оплат остаётся. */
-export async function closeAccess(adminId: string, rawEmail: unknown, now = new Date()) {
+export async function closeAccess(adminId: string, rawContact: unknown, now = new Date()) {
   await assertAdmin(adminId);
-  const email = normalizeEmail(rawEmail);
+  const contact = normalizeContact(rawContact);
   // Будущие периоды (продление поверх идущего) тоже прекращаются: становятся нулевой длины.
   await db
     .update(accessPeriod)
     .set({ endsAt: sql`greatest(${accessPeriod.startsAt}, ${now})` })
-    .where(and(eq(accessPeriod.email, email), gt(accessPeriod.endsAt, now)));
-  return cardOf(email, now);
+    .where(and(eq(accessPeriod.contact, contact), gt(accessPeriod.endsAt, now)));
+  return cardOf(contact, now);
 }
 
 export async function getAccessSettingsForAdmin(adminId: string): Promise<AccessSettings> {

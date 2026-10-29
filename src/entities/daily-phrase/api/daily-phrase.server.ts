@@ -6,6 +6,7 @@ import { hasAccess } from "@/entities/access/server";
 import { getPersonTypes } from "@/entities/person-type";
 import { getMyCurrentType } from "@/entities/type-test-attempt/server";
 import { assertStaff } from "@/shared/auth/assert-admin";
+import type { ContactPerson } from "@/shared/auth/contact";
 import { APP_NAME } from "@/shared/config/brand";
 import { routes } from "@/shared/config/routes";
 import { dailyPhrase, dailyPhraseDelivery, dailyPhraseType, db, personSettings, pushSubscription, user } from "@/shared/db";
@@ -93,6 +94,8 @@ export async function sendDailyPhrases(now = new Date(), random: () => number = 
     .selectDistinct({
       id: user.id,
       email: user.email,
+      telegramId: user.telegramId,
+      telegramUsername: user.telegramUsername,
       role: user.role,
       phraseNotifications: personSettings.phraseNotifications,
       fromHour: personSettings.phraseFromHour,
@@ -116,9 +119,8 @@ export async function sendDailyPhrases(now = new Date(), random: () => number = 
   return sentCount;
 }
 
-type Recipient = {
+type Recipient = ContactPerson & {
   id: string;
-  email: string;
   role: string | null;
   fromHour: number | null;
   toHour: number | null;

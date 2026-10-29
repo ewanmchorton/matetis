@@ -1,10 +1,13 @@
 // Доступ к приложению по подписке. Раздел «Доступ» в docs/data-model.md.
-// Каждое открытие и продление — отдельный период. Связь с человеком — по почте:
+// Каждое открытие и продление — отдельный период. Связь с человеком — по контакту (почта или @ник в Telegram):
 // админ может открыть доступ до того, как человек зарегистрировался.
 import { sql } from "drizzle-orm";
 import { boolean, check, index, integer, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 import { user } from "./auth";
+
+/** Формат контакта для проверки в базе. Совпадает с правилами в src/shared/auth/contact.ts. */
+const CONTACT_PATTERN_SQL = sql.raw(`'^(@[a-z0-9_]{5,32}|tg:[0-9]+|[^@\\s]+@[^@\\s]+\\.[^@\\s]+)$'`);
 
 /** Как оплачен период. Платёжный сервис добавит сюда своё значение. */
 export const accessPaymentMethod = pgEnum("access_payment_method", ["manual"]);
@@ -13,8 +16,8 @@ export const accessPeriod = pgTable(
   "access_period",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    /** Строчными буквами, без пробелов по краям. */
-    email: text("email").notNull(),
+    /** Почта, @ник или tg:номер в Telegram — строчными, см. src/shared/auth/contact.ts. */
+    contact: text("contact").notNull(),
     startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
     endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
     /** Сумма в евроцентах: 20 € = 2000. */
@@ -25,10 +28,10 @@ export const accessPeriod = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    check("access_period_email_normalized", sql`${table.email} = lower(btrim(${table.email})) and ${table.email} <> ''`),
+    check("access_period_contact_format", sql`${table.contact} ~ ${CONTACT_PATTERN_SQL}`),
     check("access_period_dates", sql`${table.endsAt} >= ${table.startsAt}`),
     check("access_period_amount", sql`${table.amountCents} >= 0`),
-    index("access_period_email_ends_idx").on(table.email, table.endsAt),
+    index("access_period_contact_ends_idx").on(table.contact, table.endsAt),
   ],
 );
 

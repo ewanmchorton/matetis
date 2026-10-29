@@ -8,7 +8,7 @@ import type { ProfileData } from "../model/types";
 
 /** Демо-данные: на GitHub Pages (там нет сервера) и при локальной разработке без входа. */
 const demoProfile: ProfileData = {
-  me: { name: "Анна", email: "anna@example.ru" },
+  me: { name: "Анна", contact: "anna@example.ru" },
   settings: { publishEvents: true, autoMatchConsent: true, phraseNotifications: true, phraseFromHour: 9, phraseToHour: 21 },
   friends: [
     { id: "marina", name: "Марина", avatar: null },

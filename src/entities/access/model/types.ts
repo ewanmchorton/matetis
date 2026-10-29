@@ -11,7 +11,8 @@ export type AccessStatusDto =
 /** Ответ GET /api/access. */
 export type MyAccess = {
   status: AccessStatusDto;
-  email: string;
+  /** Почта, @ник или tg:номер в Telegram — для готового сообщения администратору. */
+  contact: string | null;
   adminPhone: string;
   adminTelegram: string;
 };
@@ -25,7 +26,8 @@ export type AccessPeriodDto = {
   createdAt: string;
 };
 
-export type AccessListItemDto = { email: string; name: string | null; status: AccessStatusDto };
+/** contact — почта, @ник или tg:номер в Telegram. */
+export type AccessListItemDto = { contact: string; name: string | null; status: AccessStatusDto };
 
 export type AccessCardDto = AccessListItemDto & {
   periods: AccessPeriodDto[];

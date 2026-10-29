@@ -4,6 +4,7 @@
 import { eq, gte, inArray } from "drizzle-orm";
 
 import { assertAdmin } from "@/shared/auth/assert-admin";
+import { contactOf, type ContactPerson } from "@/shared/auth/contact";
 import { APP_NAME } from "@/shared/config/brand";
 import { routes } from "@/shared/config/routes";
 import { accessExpiryReminder, db, pushSubscription, user } from "@/shared/db";
@@ -49,11 +50,11 @@ async function notifyAdmins(message: PushMessage) {
 }
 
 /** Человек прошёл тест: если доступа нет — это заявка, сразу сообщаем администратору. */
-export async function notifyNewRequest(person: { id: string; email: string; name: string; role?: string | null }) {
+export async function notifyNewRequest(person: ContactPerson & { id: string; name: string; role?: string | null }) {
   if (await hasAccess(person)) return;
   await notifyAdmins({
     title: APP_NAME,
-    body: `Новая заявка: ${person.name || person.email}`,
+    body: `Новая заявка: ${person.name || contactOf(person)}`,
     url: `${routes.adminAccess}?filter=request`,
   });
 }
@@ -81,7 +82,7 @@ export async function sendExpiringDigest(now = new Date()): Promise<number> {
   const { hour, dayStart } = minskClock(now);
   if (hour < DIGEST_HOUR) return 0;
   const [sentToday] = await db
-    .select({ email: accessExpiryReminder.email })
+    .select({ contact: accessExpiryReminder.contact })
     .from(accessExpiryReminder)
     .where(gte(accessExpiryReminder.sentAt, dayStart))
     .limit(1);
@@ -89,14 +90,14 @@ export async function sendExpiringDigest(now = new Date()): Promise<number> {
 
   const [items, reminded] = await Promise.all([
     listAccessItems("", now),
-    db.select({ email: accessExpiryReminder.email, accessUntil: accessExpiryReminder.accessUntil }).from(accessExpiryReminder),
+    db.select({ contact: accessExpiryReminder.contact, accessUntil: accessExpiryReminder.accessUntil }).from(accessExpiryReminder),
   ]);
-  const alreadyReminded = new Set(reminded.map((row) => `${row.email}|${row.accessUntil.getTime()}`));
+  const alreadyReminded = new Set(reminded.map((row) => `${row.contact}|${row.accessUntil.getTime()}`));
   const expiring = items.flatMap((item) =>
     item.status.kind === "active" &&
     item.status.expiring &&
-    !alreadyReminded.has(`${item.email}|${item.status.until.getTime()}`)
-      ? [{ email: item.email, accessUntil: item.status.until }]
+    !alreadyReminded.has(`${item.contact}|${item.status.until.getTime()}`)
+      ? [{ contact: item.contact, accessUntil: item.status.until }]
       : [],
   );
   if (expiring.length === 0) return 0;

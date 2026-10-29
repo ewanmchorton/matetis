@@ -31,9 +31,9 @@ export function AdminAccessPage() {
   const [state, setState] = useState<ListState>({ status: "loading" });
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
-  const [newEmail, setNewEmail] = useState("");
+  const [newContact, setNewContact] = useState("");
   const [addError, setAddError] = useState<string | null>(null);
-  const [openEmail, setOpenEmail] = useState<string | null>(null);
+  const [openContact, setOpenContact] = useState<string | null>(null);
 
   const load = useCallback(() => {
     if (isStaticPrototype) return;
@@ -53,11 +53,14 @@ export function AdminAccessPage() {
 
   function add(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const email = newEmail.trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setAddError("Проверьте почту");
+    const contact = newContact.trim().toLowerCase();
+    // Окончательно почту и ник проверяет сервер, когда открывает карточку.
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact);
+    const isTelegram = /^@?[a-z0-9_]{5,32}$/.test(contact);
+    if (!isEmail && !isTelegram) return setAddError("Введите почту или ник в Telegram");
     setAddError(null);
-    setNewEmail("");
-    setOpenEmail(email);
+    setNewContact("");
+    setOpenContact(contact);
   }
 
   if (isStaticPrototype) {
@@ -69,15 +72,15 @@ export function AdminAccessPage() {
     );
   }
 
-  if (openEmail) {
-    return <AccessCard email={openEmail} onBack={() => setOpenEmail(null)} onChanged={load} />;
+  if (openContact) {
+    return <AccessCard contact={openContact} onBack={() => setOpenContact(null)} onChanged={load} />;
   }
 
   const items = state.status === "ready" ? state.items : [];
   const query = search.trim().toLowerCase();
   const visible = items
     .filter(filters.find((item) => item.id === filter)!.match)
-    .filter((item) => !query || item.email.includes(query) || item.name?.toLowerCase().includes(query));
+    .filter((item) => !query || item.contact.includes(query) || item.name?.toLowerCase().includes(query));
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
@@ -87,13 +90,15 @@ export function AdminAccessPage() {
 
       <form className="flex gap-2" onSubmit={add} noValidate>
         <Input
-          type="email"
+          type="text"
           inputMode="email"
-          aria-label="Почта нового участника"
-          placeholder="почта@mail.ru"
+          autoCapitalize="none"
+          autoCorrect="off"
+          aria-label="Почта или ник в Telegram нового участника"
+          placeholder="почта или @ник в Telegram"
           className="h-11 flex-1"
-          value={newEmail}
-          onChange={(event) => setNewEmail(event.target.value)}
+          value={newContact}
+          onChange={(event) => setNewContact(event.target.value)}
         />
         <Button type="submit" className="h-11 px-4">
           Добавить
@@ -147,15 +152,15 @@ export function AdminAccessPage() {
         )}
         <ul className="divide-y">
           {visible.map((item) => (
-            <li key={item.email}>
+            <li key={item.contact}>
               <button
                 type="button"
-                onClick={() => setOpenEmail(item.email)}
+                onClick={() => setOpenContact(item.contact)}
                 className="flex min-h-14 w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-muted/50"
               >
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate font-medium">{item.name || item.email}</span>
-                  {item.name && <span className="block truncate text-xs text-muted-foreground">{item.email}</span>}
+                  <span className="block truncate font-medium">{item.name || item.contact}</span>
+                  {item.name && <span className="block truncate text-xs text-muted-foreground">{item.contact}</span>}
                 </span>
                 <StatusBadge status={item.status} />
                 <ChevronRight className="size-4 shrink-0 text-muted-foreground" />

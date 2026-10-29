@@ -32,7 +32,8 @@ function centsToInput(cents: number | null | undefined) {
 }
 
 /** Карточка человека: статус, «+1 месяц» крупно, другие сроки мелко, история оплат, «Закрыть доступ». */
-export function AccessCard({ email, onBack, onChanged }: { email: string; onBack: () => void; onChanged: () => void }) {
+/** contact — почта или ник в Telegram, как ввёл администратор или как пришло в списке. */
+export function AccessCard({ contact, onBack, onChanged }: { contact: string; onBack: () => void; onChanged: () => void }) {
   const [card, setCard] = useState<AccessCardDto | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -41,13 +42,13 @@ export function AccessCard({ email, onBack, onChanged }: { email: string; onBack
   const [until, setUntil] = useState("");
 
   useEffect(() => {
-    request<AccessCardDto>("/api/admin/access/person", { method: "POST", body: JSON.stringify({ email }) })
+    request<AccessCardDto>("/api/admin/access/person", { method: "POST", body: JSON.stringify({ contact }) })
       .then((loaded) => {
         setCard(loaded);
         setAmount(centsToInput(loaded.suggestedAmounts["1"]));
       })
       .catch((loadError: Error) => setError(loadError.message));
-  }, [email]);
+  }, [contact]);
 
   function chooseTerm(next: Term) {
     setTerm(next);
@@ -59,7 +60,7 @@ export function AccessCard({ email, onBack, onChanged }: { email: string; onBack
     setPending(true);
     setError(null);
     try {
-      const updated = await request<AccessCardDto>(path, { method: "POST", body: JSON.stringify({ email, ...body }) });
+      const updated = await request<AccessCardDto>(path, { method: "POST", body: JSON.stringify({ contact, ...body }) });
       setCard(updated);
       setTerm("1");
       setUntil("");
@@ -84,7 +85,7 @@ export function AccessCard({ email, onBack, onChanged }: { email: string; onBack
   }
 
   function close() {
-    if (!window.confirm(`Закрыть доступ для ${email}? История оплат останется.`)) return;
+    if (!window.confirm(`Закрыть доступ для ${card?.contact ?? contact}? История оплат останется.`)) return;
     void act("/api/admin/access/close", {});
   }
 
@@ -99,8 +100,8 @@ export function AccessCard({ email, onBack, onChanged }: { email: string; onBack
       </button>
 
       <div>
-        <h1 className="text-xl font-semibold">{card?.name || email}</h1>
-        {card?.name && <p className="text-sm text-muted-foreground">{email}</p>}
+        <h1 className="text-xl font-semibold">{card?.name || card?.contact || contact}</h1>
+        {card?.name && <p className="text-sm text-muted-foreground">{card.contact}</p>}
         {card && !card.name && <p className="text-sm text-muted-foreground">Ещё не зарегистрировался</p>}
       </div>
 

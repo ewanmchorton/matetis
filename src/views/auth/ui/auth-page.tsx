@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 
 import { request } from "@/shared/api/request";
 import { authClient } from "@/shared/auth/client";
@@ -9,13 +9,17 @@ import { isStaticPrototype } from "@/shared/config/env";
 import { routes } from "@/shared/config/routes";
 import { typograph } from "@/shared/lib/typograph";
 import { BackButton } from "@/shared/ui/back-button";
-import { Button } from "@/shared/ui/button";
+import { Button, buttonVariants } from "@/shared/ui/button";
 import { TextField } from "@/shared/ui/text-field";
 import { ScreenLayout } from "@/widgets/screen-layout";
 
 const CODE_LENGTH = 6;
 /** Совпадает с SIGN_IN_CODE_MINUTES в shared/auth/server.ts. */
 const CODE_MINUTES = 10;
+/** Как часто спрашивать сервер, подтвердил ли человек вход в боте. */
+const TELEGRAM_POLL_MS = 2000;
+const consentText =
+  "Нажимая «Получить код» или «Войти через Telegram», вы соглашаетесь с обработкой персональных данных и условиями использования";
 
 /** Тексты ошибок Better Auth по коду. */
 const authErrorText: Record<string, string> = {
@@ -33,11 +37,13 @@ function errorText(error: { code?: string; message?: string; status?: number }):
 }
 
 /**
- * Вход по коду из письма. Первый вход создаёт учётную запись и ведёт на онбординг,
+ * Вход по коду из письма или через бота в Telegram. Первый вход создаёт учётную запись и ведёт на онбординг,
  * дальше — в тест, если он не пройден, иначе в программу.
  */
 export function AuthPage() {
   const router = useRouter();
+  /** Ссылка на бота: человек ушёл подтверждать вход в Telegram. */
+  const [telegramUrl, setTelegramUrl] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [codeSent, setCodeSent] = useState(false);
   const [code, setCode] = useState("");
@@ -84,11 +90,83 @@ export function AuthPage() {
       setPending(false);
       return setError(errorText(signInError ?? {}));
     }
+    await goAfterSignIn(data.user.name);
+  }
+
+  async function goAfterSignIn(name: string) {
     // Имя спрашивает тест, поэтому пустое имя — первый вход: сначала знакомство с приложением.
-    if (!data.user.name) return router.push(routes.onboarding);
+    if (!name) return router.push(routes.onboarding);
     // Не удалось узнать, пройден ли тест, — открываем программу.
     const current = await request<{ type: unknown }>("/api/type-test").catch(() => null);
     router.push(current && !current.type ? routes.typeTest : routes.program);
+  }
+
+  async function startTelegram() {
+    if (isStaticPrototype) return router.push(routes.onboarding);
+    setPending(true);
+    setError(null);
+    const { data, error: startError } = await authClient.telegram.start();
+    setPending(false);
+    if (startError || !data) return setError(errorText(startError ?? {}));
+    setTelegramUrl(data.url);
+  }
+
+  // Пока человек в Telegram, спрашиваем сервер, подтвердил ли он вход.
+  // Вернулся в приложение — спрашиваем сразу, не дожидаясь следующего раза.
+  useEffect(() => {
+    if (!telegramUrl) return;
+    let stopped = false;
+    let checking = false;
+    async function check() {
+      if (stopped || checking) return;
+      checking = true;
+      const { data } = await authClient.telegram.complete();
+      checking = false;
+      if (stopped || !data) return;
+      if (data.status === "signed-in") {
+        stopped = true;
+        await goAfterSignIn(data.user.name);
+      } else if (data.status === "expired") {
+        stopped = true;
+        setTelegramUrl(null);
+        setError("Ссылка для входа устарела. Нажмите «Войти через Telegram» ещё раз");
+      }
+    }
+    const timer = window.setInterval(() => void check(), TELEGRAM_POLL_MS);
+    const onVisible = () => document.visibilityState === "visible" && void check();
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      stopped = true;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+    // goAfterSignIn меняется на каждой отрисовке, а проверку нужно запускать только при новой ссылке.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [telegramUrl]);
+
+  if (telegramUrl) {
+    return (
+      <ScreenLayout
+        variant="hero"
+        background="01_reg"
+        compact
+        title="Вход через Telegram"
+        subtitle="Откройте бота МАТЭТИС, нажмите «Начать» и вернитесь сюда — вход выполнится сам."
+        actions={
+          <>
+            <BackButton onClick={() => setTelegramUrl(null)} />
+            <a
+              href={telegramUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={buttonVariants({ size: "cta", className: "flex-1" })}
+            >
+              Открыть Telegram
+            </a>
+          </>
+        }
+      />
+    );
   }
 
   if (codeSent) {
@@ -155,11 +233,16 @@ export function AuthPage() {
           <Button type="submit" form="email-form" size="cta" disabled={pending}>
             Получить код
           </Button>
-          <p className="type-caption text-center font-normal text-muted-foreground">
-            {typograph(
-              "Нажимая «Получить код», вы соглашаетесь с обработкой персональных данных и условиями использования",
-            )}
-          </p>
+          <Button
+            variant="outline"
+            size="cta"
+            className="border-white/60 bg-background/80"
+            disabled={pending}
+            onClick={() => void startTelegram()}
+          >
+            Войти через Telegram
+          </Button>
+          <p className="type-caption text-center font-normal text-muted-foreground">{typograph(consentText)}</p>
         </div>
       }
     >

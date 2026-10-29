@@ -1,8 +1,10 @@
 // Таблицы входа Better Auth и карточка человека.
 // Карточка человека — это таблица `user`: имя, роль и время согласия.
-// Имя пустое, пока человек не дошёл до шага «Как вас зовут?» в тесте: вход по коду создаёт запись без имени.
-// Почта хранится только здесь. Паролей нет: вход по коду из письма, коды — в `verification` в виде хэша.
-import { boolean, index, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+// Имя пустое, пока человек не дошёл до шага «Как вас зовут?» в тесте: первый вход создаёт запись без имени.
+// Вход — по коду из письма или через бота в Telegram. У человека есть почта или Telegram (или оба).
+// Почта хранится только здесь. Паролей нет: коды и запросы входа — в `verification`.
+import { sql } from "drizzle-orm";
+import { boolean, check, index, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
 export const personRole = pgEnum("person_role", ["user", "content_manager", "admin"]);
 
@@ -14,16 +16,25 @@ const timestamps = {
     .$onUpdate(() => new Date()),
 };
 
-export const user = pgTable("user", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
-  email: text("email").notNull().unique(),
-  emailVerified: boolean("email_verified").notNull().default(false),
-  image: text("image"),
-  role: personRole("role").notNull().default("user"),
-  consentedAt: timestamp("consented_at", { withTimezone: true }).notNull(),
-  ...timestamps,
-});
+export const user = pgTable(
+  "user",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    /** Нет у того, кто входит только через Telegram. */
+    email: text("email").unique(),
+    emailVerified: boolean("email_verified").notNull().default(false),
+    image: text("image"),
+    role: personRole("role").notNull().default("user"),
+    consentedAt: timestamp("consented_at", { withTimezone: true }).notNull(),
+    /** Постоянный номер человека в Telegram. По нему находим учётную запись при входе через бота. */
+    telegramId: text("telegram_id").unique(),
+    /** Ник в Telegram без @, строчными. Обновляется при каждом входе: человек может его сменить или не иметь. */
+    telegramUsername: text("telegram_username"),
+    ...timestamps,
+  },
+  (table) => [check("user_has_login", sql`${table.email} is not null or ${table.telegramId} is not null`)],
+);
 
 export const session = pgTable(
   "session",

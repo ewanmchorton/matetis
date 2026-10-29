@@ -4,7 +4,7 @@ import { getStudentForAdmin } from "@/entities/student/server";
 import { saveMyTypeTest } from "@/entities/type-test-attempt/server";
 import { accessSettings, db } from "@/shared/db";
 
-import { clearDatabase, createPerson } from "../../../../tests/people";
+import { clearDatabase, createPerson, createTelegramPerson } from "../../../../tests/people";
 import {
   addMonths,
   closeAccess,
@@ -59,11 +59,11 @@ describe("Доступ по почте", () => {
     await extendAccess(admin, "  Anna@Example.RU ", { months: 1 }, jan10);
     const card = await getAccessCardForAdmin(admin, "anna@example.ru", jan10);
     expect(card.periods).toHaveLength(1);
-    expect(card.email).toBe("anna@example.ru");
+    expect(card.contact).toBe("anna@example.ru");
   });
 
   it("неверная почта не сохраняется", async () => {
-    await expect(extendAccess(admin, "anna@", { months: 1 })).rejects.toThrow("Проверьте почту");
+    await expect(extendAccess(admin, "anna@", { months: 1 })).rejects.toThrow("Введите почту или ник в Telegram");
   });
 
   it("администратор и контент-менеджер пользуются приложением без подписки", async () => {
@@ -74,10 +74,45 @@ describe("Доступ по почте", () => {
   it("свой статус приходит вместе с почтой и контактом администратора", async () => {
     const person = await registerAnna();
     expect(await getMyAccess(person)).toMatchObject({
-      email: "anna@example.ru",
+      contact: "anna@example.ru",
       adminPhone: "+375293344101",
       adminTelegram: "vernojit",
     });
+  });
+});
+
+describe("Доступ по нику в Telegram", () => {
+  async function registerByTelegram(telegramId: string, telegramUsername: string | null) {
+    const id = await createTelegramPerson("Олег", telegramId, telegramUsername);
+    return { id, telegramId, telegramUsername, role: "user" };
+  }
+
+  it("ник, добавленный заранее с @ и заглавными буквами, после входа через Telegram даёт доступ", async () => {
+    const card = await extendAccess(admin, " @Oleg_Tg ", { months: 1 }, jan10);
+    expect(card.contact).toBe("@oleg_tg");
+    expect(card.name).toBeNull();
+    const oleg = await registerByTelegram("111", "oleg_tg");
+    expect(await hasAccess(oleg, later(jan10, 1))).toBe(true);
+    expect((await getAccessCardForAdmin(admin, "oleg_tg", jan10)).name).toBe("Олег");
+  });
+
+  it("свой контакт у вошедшего через Telegram — ник с @", async () => {
+    const oleg = await registerByTelegram("111", "oleg_tg");
+    expect((await getMyAccess(oleg)).contact).toBe("@oleg_tg");
+  });
+
+  it("человек без ника виден в списке по номеру, доступ открывается по нему", async () => {
+    const noNick = await registerByTelegram("222", null);
+    const [item] = await listAccessForAdmin(admin);
+    expect(item.contact).toBe("tg:222");
+    await extendAccess(admin, item.contact, { months: 1 }, jan10);
+    expect(await hasAccess(noNick, later(jan10, 1))).toBe(true);
+  });
+
+  it("не почта и не ник не принимается", async () => {
+    for (const wrong of ["", "@abc", "oleg tg", "олег", "@oleg@mail.ru"]) {
+      await expect(extendAccess(admin, wrong, { months: 1 })).rejects.toThrow("Введите почту или ник в Telegram");
+    }
   });
 });
 
@@ -193,7 +228,7 @@ describe("Список «Доступы»", () => {
     await saveMyTypeTest(person.id, { group1: "А", group2: "2" });
     await extendAccess(admin, "boris@example.ru", { months: 1 });
     const list = await listAccessForAdmin(admin);
-    expect(list.map((item) => [item.email, item.name, item.status.kind])).toEqual([
+    expect(list.map((item) => [item.contact, item.name, item.status.kind])).toEqual([
       ["anna@example.ru", "Анна", "request"],
       ["boris@example.ru", null, "active"],
     ]);
@@ -202,8 +237,8 @@ describe("Список «Доступы»", () => {
   it("поиск по части почты или имени", async () => {
     await registerAnna();
     await extendAccess(admin, "boris@example.ru", { months: 1 });
-    expect((await listAccessForAdmin(admin, "анн")).map((item) => item.email)).toEqual(["anna@example.ru"]);
-    expect((await listAccessForAdmin(admin, "BORIS")).map((item) => item.email)).toEqual(["boris@example.ru"]);
+    expect((await listAccessForAdmin(admin, "анн")).map((item) => item.contact)).toEqual(["anna@example.ru"]);
+    expect((await listAccessForAdmin(admin, "BORIS")).map((item) => item.contact)).toEqual(["boris@example.ru"]);
   });
 });
 
