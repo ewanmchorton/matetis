@@ -16,6 +16,8 @@ export const routes = {
   adminProgram: "/admin/program",
   adminSupport: "/admin/support",
   adminPhrases: "/admin/phrases",
+  adminStaff: "/admin/staff",
+  adminPassword: "/admin/password",
   adminStudents: "/admin/students",
   adminStudent: "/admin/students/person",
 } as const;

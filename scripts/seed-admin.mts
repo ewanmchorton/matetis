@@ -5,6 +5,7 @@
 // Повторный запуск ничего не дублирует. Только для локальной базы.
 import { randomUUID } from "node:crypto";
 
+import { hashPassword } from "better-auth/crypto";
 import pg from "pg";
 
 try {
@@ -24,6 +25,8 @@ if (process.env.NODE_ENV === "production") {
 }
 
 const ADMIN = { name: "Админ Тестовый", email: "admin.test@matetis.local" };
+/** Пароль тестового администратора — только для локальной базы. */
+const ADMIN_PASSWORD = "matetis-local-admin";
 const STUDENT = { name: "Анна Тестовая", email: "anna.test@matetis.local" };
 
 // Квадрат Пифагора для 15.03.1988: сколько раз встречается каждая цифра 1–9.
@@ -51,7 +54,20 @@ async function ensurePerson(name: string, email: string, role: "user" | "admin")
 
 try {
   await client.query("begin");
-  await ensurePerson(ADMIN.name, ADMIN.email, "admin");
+  const adminId = await ensurePerson(ADMIN.name, ADMIN.email, "admin");
+  // Пароль для входа в админку: задаётся каждый раз заново.
+  const hash = await hashPassword(ADMIN_PASSWORD);
+  const updated = await client.query(
+    `update account set password = $2, updated_at = now() where user_id = $1 and provider_id = 'credential'`,
+    [adminId, hash],
+  );
+  if (updated.rowCount === 0) {
+    await client.query(
+      `insert into account (id, account_id, provider_id, user_id, password, created_at, updated_at)
+       values ($1, $2, 'credential', $2, $3, now(), now())`,
+      [randomUUID(), adminId, hash],
+    );
+  }
   const studentId = await ensurePerson(STUDENT.name, STUDENT.email, "user");
 
   // Тест добавляется, только если Анна его ещё не проходила.
@@ -68,7 +84,7 @@ try {
     [studentId, BIRTH_DATE, ...DIGIT_COUNTS],
   );
   await client.query("commit");
-  console.log(`Готово. Вход в админку: ${ADMIN.email}, вход по коду, письмо — в http://localhost:8025.`);
+  console.log(`Готово. Вход в админку: ${ADMIN.email}, пароль — ADMIN_PASSWORD в scripts/seed-admin.mts.`);
   console.log(`У ученицы ${STUDENT.name} есть тест и дата рождения — откройте её в разделе «Ученики».`);
 } catch (error) {
   await client.query("rollback");

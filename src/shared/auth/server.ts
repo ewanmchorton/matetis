@@ -4,10 +4,12 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { emailOTP } from "better-auth/plugins";
+import { eq } from "drizzle-orm";
 
-import { personRoles } from "@/shared/auth/roles";
+import { isStaff, personRoles } from "@/shared/auth/roles";
 import { db } from "@/shared/db";
 import * as schema from "@/shared/db/schema";
+import { user } from "@/shared/db/schema";
 import { APP_NAME } from "@/shared/config/brand";
 import { sendEmail } from "@/shared/email/send-email";
 
@@ -34,8 +36,10 @@ const localNetworkOrigins =
 export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: "pg", schema }),
   trustedOrigins: localNetworkOrigins,
-  // Вход без пароля: код из письма или бот в Telegram. Первый вход создаёт учётную запись.
-  emailAndPassword: { enabled: false },
+  // Люди входят без пароля: код из письма или бот в Telegram. Первый вход создаёт учётную запись.
+  // По почте и паролю входят только сотрудники в админку; пароль задаёт администратор
+  // (src/entities/staff), самому зарегистрироваться с паролем нельзя.
+  emailAndPassword: { enabled: true, disableSignUp: true, minPasswordLength: 8 },
   // Вход сохраняется 30 дней с последнего открытия приложения: кто заходит хотя бы раз в месяц,
   // больше не вводит код. Срок продлевается не чаще раза в сутки.
   session: { expiresIn: SESSION_DAYS * DAY_SECONDS, updateAge: DAY_SECONDS },
@@ -54,6 +58,12 @@ export const auth = betterAuth({
   },
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path === "/sign-in/email") {
+        const email = typeof ctx.body?.email === "string" ? ctx.body.email.trim().toLowerCase() : "";
+        const [person] = await db.select({ role: user.role }).from(user).where(eq(user.email, email));
+        // Не сотруднику — тот же ответ, что при неверном пароле: не выдаём, есть ли такая почта.
+        if (!isStaff(person?.role)) throw new APIError("UNAUTHORIZED", { message: "Неверная почта или пароль" });
+      }
       if (ctx.path === "/update-user" && ctx.body && "name" in ctx.body && isBlank(ctx.body.name)) {
         throw new APIError("BAD_REQUEST", { message: "Имя не может быть пустым" });
       }

@@ -11,32 +11,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 
-/** Вход в админку по коду из письма. signedInEmail — человек уже вошёл, но он не сотрудник. */
+/** Вход в админку по почте и паролю. signedInEmail — человек уже вошёл, но он не сотрудник. */
 export function AdminLoginForm({ signedInEmail }: { signedInEmail: string | null }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
-  const [codeSent, setCodeSent] = useState(false);
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-
-  async function handleSendCode(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setPending(true);
-    setError(null);
-    const { error: sendError } = await authClient.emailOtp.sendVerificationOtp({ email, type: "sign-in" });
-    setPending(false);
-    if (sendError) return setError("Не удалось отправить код. Проверьте почту и попробуйте ещё раз");
-    setCodeSent(true);
-  }
 
   async function handleSignIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setPending(true);
     setError(null);
-    const { error: signInError } = await authClient.signIn.emailOtp({ email, otp: code });
+    // rememberMe — устройство запоминается: вход держится 30 дней с последнего открытия.
+    const { error: signInError } = await authClient.signIn.email({ email, password, rememberMe: true });
     setPending(false);
-    if (signInError) return setError("Неверный или устаревший код");
+    if (signInError) return setError("Неверная почта или пароль");
     // Роль проверяет сервер: не сотрудника вернёт на эту страницу.
     router.replace(routes.admin);
     router.refresh();
@@ -66,57 +56,37 @@ export function AdminLoginForm({ signedInEmail }: { signedInEmail: string | null
             </Button>
           </div>
         ) : (
-          <form className="space-y-4" onSubmit={codeSent ? handleSignIn : handleSendCode}>
+          <form className="space-y-4" onSubmit={handleSignIn}>
             <div className="space-y-2">
               <Label htmlFor="admin-email">Почта</Label>
               <Input
                 id="admin-email"
                 type="email"
-                autoComplete="email"
+                autoComplete="username"
                 required
-                disabled={codeSent}
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
               />
             </div>
-            {codeSent && (
-              <div className="space-y-2">
-                <Label htmlFor="admin-code">Код из письма</Label>
-                <Input
-                  id="admin-code"
-                  autoComplete="one-time-code"
-                  inputMode="numeric"
-                  maxLength={6}
-                  required
-                  autoFocus
-                  value={code}
-                  onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))}
-                />
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label htmlFor="admin-password">Пароль</Label>
+              <Input
+                id="admin-password"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+            </div>
             {error && (
               <p role="alert" className="text-sm text-destructive">
                 {error}
               </p>
             )}
             <Button className="w-full" type="submit" disabled={pending}>
-              {codeSent ? (pending ? "Входим…" : "Войти") : pending ? "Отправляем…" : "Получить код"}
+              {pending ? "Входим…" : "Войти"}
             </Button>
-            {codeSent && (
-              <Button
-                className="w-full"
-                type="button"
-                variant="ghost"
-                disabled={pending}
-                onClick={() => {
-                  setCodeSent(false);
-                  setCode("");
-                  setError(null);
-                }}
-              >
-                Другая почта
-              </Button>
-            )}
           </form>
         )}
       </CardContent>

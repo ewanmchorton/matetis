@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ExternalLink, KeyRound, LayoutDashboard, Library, ListChecks, MessageSquareQuote, RotateCcw, Sprout, Users } from "lucide-react";
+import { ExternalLink, KeyRound, LayoutDashboard, Library, ListChecks, LockKeyhole, MessageSquareQuote, RotateCcw, ShieldCheck, Sprout, Users } from "lucide-react";
 
 import { libraryActions } from "@/entities/library";
 import { practiceActions } from "@/entities/practice";
@@ -24,6 +24,7 @@ const allNav = [
   { href: routes.adminPhrases, label: "Фразы дня", icon: MessageSquareQuote },
   { href: routes.adminStudents, label: "Ученики", icon: Users, adminOnly: true },
   { href: routes.adminAccess, label: "Доступы", icon: KeyRound, adminOnly: true },
+  { href: routes.adminStaff, label: "Сотрудники", icon: ShieldCheck, adminOnly: true },
 ];
 
 const roleLabels: Record<PersonRole, string> = {
@@ -81,6 +82,13 @@ export function AdminShell({ children, role }: { children: ReactNode; role: Pers
           </ul>
         </nav>
         <div className="mt-auto space-y-2">
+          <Link
+            href={routes.adminPassword}
+            className={buttonVariants({ variant: "ghost", className: "w-full justify-start text-muted-foreground" })}
+          >
+            <LockKeyhole />
+            Сменить пароль
+          </Link>
           <Link
             href={routes.program}
             target="_blank"
