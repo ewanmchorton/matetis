@@ -24,7 +24,7 @@ const allNav = [
   { href: routes.adminPhrases, label: "Фразы дня", icon: MessageSquareQuote },
   { href: routes.adminStudents, label: "Ученики", icon: Users, adminOnly: true },
   { href: routes.adminAccess, label: "Доступы", icon: KeyRound, adminOnly: true },
-  { href: routes.adminStaff, label: "Сотрудники", icon: ShieldCheck, adminOnly: true },
+  { href: routes.adminTeam, label: "Команда", icon: ShieldCheck, adminOnly: true },
 ];
 
 const roleLabels: Record<PersonRole, string> = {

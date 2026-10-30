@@ -15,7 +15,7 @@ type ListState = { status: "loading" } | { status: "error"; message: string } | 
 
 const roleNames: Record<Role, string> = { admin: "Администратор", content_manager: "Контент-менеджер", user: "Ученик" };
 
-/** Раздел «Сотрудники»: назначить роль зарегистрированному человеку, задать или сбросить пароль. */
+/** Раздел «Команда»: назначить роль зарегистрированному человеку, задать или сбросить пароль. */
 export function AdminStaffPage() {
   const [state, setState] = useState<ListState>({ status: "loading" });
   const [email, setEmail] = useState("");
@@ -85,13 +85,13 @@ export function AdminStaffPage() {
   }
 
   if (isStaticPrototype) {
-    return <h1 className="text-2xl font-semibold">Сотрудники</h1>;
+    return <h1 className="text-2xl font-semibold">Команда</h1>;
   }
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
       <div className="space-y-1">
-        <h1 className="text-2xl font-semibold">Сотрудники</h1>
+        <h1 className="text-2xl font-semibold">Команда</h1>
         <p className="text-sm text-muted-foreground">
           Администратор и контент-менеджер входят в админку по почте и паролю. Пароль задаёт администратор, сотрудник
           может поменять его сам.
@@ -99,7 +99,7 @@ export function AdminStaffPage() {
       </div>
 
       <form className="space-y-3 rounded-2xl border bg-background p-4" onSubmit={(event) => void add(event)}>
-        <p className="font-medium">Назначить сотрудника</p>
+        <p className="font-medium">Добавить в команду</p>
         <div className="space-y-1.5">
           <Label htmlFor="staff-email">Почта зарегистрированного человека</Label>
           <Input

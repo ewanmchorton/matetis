@@ -1,4 +1,4 @@
-// Сотрудники в админке: список и назначение роли ({ email, role, password? }). Только для администратора.
+// Команда в админке: список и назначение роли ({ email, role, password? }). Только для администратора.
 import { listStaffForAdmin, setStaffRole } from "@/entities/staff/server";
 import { readJsonObject, withUser } from "@/shared/api/route-helpers";
 

@@ -2,6 +2,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
+import { setSessionCookie } from "better-auth/cookies";
 import { nextCookies } from "better-auth/next-js";
 import { emailOTP } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
@@ -18,6 +19,8 @@ import { telegramLogin } from "./telegram-plugin";
 const DAY_SECONDS = 24 * 60 * 60;
 /** Сколько дней без открытия приложения человек остаётся вошедшим. */
 export const SESSION_DAYS = 30;
+/** Команда (админ и контент-менеджер) заходит реже, например раз в стихию: вход держится дольше. */
+export const TEAM_SESSION_DAYS = 100;
 
 /** Сколько минут действует код из письма. */
 export const SIGN_IN_CODE_MINUTES = 10;
@@ -67,6 +70,25 @@ export const auth = betterAuth({
       if (ctx.path === "/update-user" && ctx.body && "name" in ctx.body && isBlank(ctx.body.name)) {
         throw new APIError("BAD_REQUEST", { message: "Имя не может быть пустым" });
       }
+    }),
+    // Команда остаётся вошедшей 100 дней с последнего открытия админки (люди — 30 дней).
+    // При входе и при каждой проверке входа продлеваем срок, но не чаще раза в сутки.
+    after: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== "/sign-in/email" && ctx.path !== "/get-session") return;
+      const current = (ctx.context.newSession ?? ctx.context.returned) as
+        | { session?: { token: string; expiresAt: Date | string }; user?: { role?: string } }
+        | null
+        | undefined;
+      if (!current?.session || !current.user || !isStaff(current.user.role)) return;
+      const until = Date.now() + TEAM_SESSION_DAYS * DAY_SECONDS * 1000;
+      if (new Date(current.session.expiresAt).getTime() > until - DAY_SECONDS * 1000) return;
+      const session = await ctx.context.internalAdapter.updateSession(current.session.token, {
+        expiresAt: new Date(until),
+      });
+      if (!session) return;
+      await setSessionCookie(ctx, { session, user: current.user as never }, false, {
+        maxAge: TEAM_SESSION_DAYS * DAY_SECONDS,
+      });
     }),
   },
   databaseHooks: {
