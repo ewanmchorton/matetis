@@ -16,6 +16,7 @@
     "test": "vitest run",
     "db:seed-friends": "node scripts/seed-friends.mts",
     "db:seed-admin": "node scripts/seed-admin.mts",
+    "db:seed-program": "node scripts/seed-program.mts",
     "telegram:dev": "node scripts/telegram-dev.mts"
   },
   "dependencies": {

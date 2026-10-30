@@ -92,6 +92,13 @@
       "when": 1793285404585,
       "tag": "0012_telegram_login_contact_required",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1793357462434,
+      "tag": "0013_program",
+      "breakpoints": true
     }
   ]
 }

@@ -6,3 +6,4 @@ export * from "./access";
 export * from "./notifications";
 export * from "./daily-phrase";
 export * from "./element-season";
+export * from "./program";
