@@ -16,6 +16,9 @@ export type ScreenBackground =
   | "03_1_test"
   | "03_4_test"
   | "03_result"
+  | "04_earth_01_program"
+  | "04_earth_02_navigator"
+  | "04_earth_03_lizard"
   | "06_profile";
 
 /**
@@ -61,6 +64,11 @@ type ScreenLayoutProps = {
    */
   variant: "hero" | "page";
   background?: ScreenBackground;
+  /**
+   * Светлое пятно точно под строкой над заголовком, заголовком и подзаголовком (page): двигается
+   * вместе с текстом, заменяет общее пятно под заголовком. Только градиент, без размытия.
+   */
+  titleGlow?: boolean;
   /**
    * Текст по центру, содержимое под заголовком — узкой колонкой (hero): вписано в просвет картинки,
    * например во врата на первом экране онбординга.
@@ -148,6 +156,7 @@ function pageBackgroundStyle(background: ScreenBackground) {
 export function ScreenLayout({
   variant,
   background,
+  titleGlow = false,
   compact = false,
   centered = false,
   narrow = false,
@@ -185,7 +194,7 @@ export function ScreenLayout({
         />
       )}
 
-      {background && variant === "page" && (
+      {background && variant === "page" && !titleGlow && (
         // Светлое пятно под заголовком экрана, как в макетах: заголовок читается, картинка вокруг — нет.
         <div
           aria-hidden
@@ -264,21 +273,32 @@ export function ScreenLayout({
               }}
             />
           )}
-          {beforeTitle && (
-            <div className={cn("mb-4", variant === "page" && "mt-(--page-title-gap)")}>{beforeTitle}</div>
-          )}
-          <div
-            className={cn(
-              compact ? "space-y-1.5" : "space-y-2",
-              variant === "page" && !beforeTitle && "mt-(--page-title-gap)",
+          <div className="relative">
+            {titleGlow && (
+              <div
+                aria-hidden
+                className="pointer-events-none absolute -inset-x-(--screen-gutter) -top-8 -bottom-8 -z-10"
+                style={{
+                  background: `radial-gradient(ellipse 62% 55% at 36% 50%, ${ivory(0.9)} 0%, ${ivory(0.78)} 45%, ${ivory(0)} 100%)`,
+                }}
+              />
             )}
-          >
-            <h1 className="type-title text-foreground">{typeof title === "string" ? typograph(title) : title}</h1>
-            {subtitle && (
-              <p className={cn(compact ? "type-secondary" : "type-body", "text-muted-foreground")}>
-                {typeof subtitle === "string" ? typograph(subtitle) : subtitle}
-              </p>
+            {beforeTitle && (
+              <div className={cn("mb-4", variant === "page" && "mt-(--page-title-gap)")}>{beforeTitle}</div>
             )}
+            <div
+              className={cn(
+                compact ? "space-y-1.5" : "space-y-2",
+                variant === "page" && !beforeTitle && "mt-(--page-title-gap)",
+              )}
+            >
+              <h1 className="type-title text-foreground">{typeof title === "string" ? typograph(title) : title}</h1>
+              {subtitle && (
+                <p className={cn(compact ? "type-secondary" : "type-body", "text-muted-foreground")}>
+                  {typeof subtitle === "string" ? typograph(subtitle) : subtitle}
+                </p>
+              )}
+            </div>
           </div>
 
           {children && (

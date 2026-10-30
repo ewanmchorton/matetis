@@ -5,7 +5,7 @@ import { APIError, createAuthMiddleware } from "better-auth/api";
 import { setSessionCookie } from "better-auth/cookies";
 import { nextCookies } from "better-auth/next-js";
 import { emailOTP } from "better-auth/plugins";
-import { eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 
 import { isStaff, personRoles } from "@/shared/auth/roles";
 import { db } from "@/shared/db";
@@ -14,6 +14,7 @@ import { user } from "@/shared/db/schema";
 import { APP_NAME } from "@/shared/config/brand";
 import { sendEmail } from "@/shared/email/send-email";
 
+import { isOwner } from "./owners";
 import { telegramLogin } from "./telegram-plugin";
 
 const DAY_SECONDS = 24 * 60 * 60;
@@ -29,11 +30,12 @@ function isBlank(value: unknown): boolean {
   return typeof value !== "string" || value.trim() === "";
 }
 
-// При локальном запуске приложение открывают и с телефона в той же Wi-Fi-сети
-// (адрес вида http://192.168.0.151:4317) и по 127.0.0.1. Без этого вход оттуда отклоняется.
+// При локальном запуске приложение открывают и с телефона в той же Wi-Fi-сети: по имени Mac
+// (http://MacBook-Air-Ivan-2.local:4317 — не меняется) или по адресу вида http://192.168.1.6:4317,
+// и по 127.0.0.1. Без этого вход оттуда отклоняется.
 const localNetworkOrigins =
   process.env.NODE_ENV === "development"
-    ? ["http://127.0.0.1:4317", "http://192.168.*.*:4317", "http://10.*.*.*:4317", "http://172.*.*.*:4317"]
+    ? ["http://127.0.0.1:4317", "http://*.local:4317", "http://192.168.*.*:4317", "http://10.*.*.*:4317", "http://172.*.*.*:4317"]
     : [];
 
 export const auth = betterAuth({
@@ -92,6 +94,20 @@ export const auth = betterAuth({
     }),
   },
   databaseHooks: {
+    session: {
+      create: {
+        // Владелец (OWNER_ADMINS, см. owners.ts) при каждом входе становится администратором.
+        before: async (session) => {
+          const [person] = await db
+            .select({ email: user.email, telegramUsername: user.telegramUsername })
+            .from(user)
+            .where(eq(user.id, session.userId));
+          if (person && isOwner(person)) {
+            await db.update(user).set({ role: "admin" }).where(and(eq(user.id, session.userId), ne(user.role, "admin")));
+          }
+        },
+      },
+    },
     user: {
       create: {
         // Роль и время согласия задаёт только сервер, что бы ни пришло в запросе.

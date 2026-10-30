@@ -17,8 +17,12 @@ import { contactOf, normalizeTelegramUsername } from "./contact";
 
 /** Сколько минут действует ссылка для входа. */
 export const TELEGRAM_LOGIN_MINUTES = 10;
-/** Запрос ждёт «Начать» в боте: "pending:<хэш метки браузера>". Подтверждённый — JSON с номером и ником. */
+/**
+ * Запрос ждёт «Начать» в боте: "pending:<хэш метки браузера>". Подтверждённый — JSON с номером и ником.
+ * По нему уже вошли — "used:<номер в Telegram>": до конца срока бот на эту ссылку отвечает «Готово».
+ */
 const PENDING_PREFIX = "pending:";
+const USED_PREFIX = "used:";
 
 export type TelegramPerson = { telegramId: string; telegramUsername: string | null };
 type ConfirmedValue = TelegramPerson & { browser: string };
@@ -48,10 +52,24 @@ async function readRequest(token: string, now: Date) {
   return row && row.expiresAt > now ? row.value : null;
 }
 
-/** Бот получил /start с токеном. false — ссылка устарела или уже использована. */
-export async function confirmLoginRequest(token: string, person: TelegramPerson, now = new Date()) {
+/** Тот же человек уже подтвердил эту ссылку (или уже вошёл по ней) — например, нажал «Начать» ещё раз. */
+function confirmedBy(value: string, telegramId: string) {
+  if (value.startsWith(USED_PREFIX)) return value === USED_PREFIX + telegramId;
+  return (JSON.parse(value) as ConfirmedValue).telegramId === telegramId;
+}
+
+/**
+ * Бот получил /start с токеном. "confirmed" — вход подтверждён, "again" — этот человек уже подтвердил
+ * ссылку раньше, "expired" — ссылка устарела, выдумана или подтверждена другим человеком.
+ */
+export async function confirmLoginRequest(
+  token: string,
+  person: TelegramPerson,
+  now = new Date(),
+): Promise<"confirmed" | "again" | "expired"> {
   const value = await readRequest(token, now);
-  if (!value?.startsWith(PENDING_PREFIX)) return false;
+  if (!value) return "expired";
+  if (!value.startsWith(PENDING_PREFIX)) return confirmedBy(value, person.telegramId) ? "again" : "expired";
   const confirmed: ConfirmedValue = { browser: value.slice(PENDING_PREFIX.length), ...person };
   // Условие на прежнее значение: если ссылку одновременно подтверждают двое, засчитается один.
   const updated = await db
@@ -59,14 +77,14 @@ export async function confirmLoginRequest(token: string, person: TelegramPerson,
     .set({ value: JSON.stringify(confirmed) })
     .where(and(eq(verification.identifier, identifierOf(token)), eq(verification.value, value), gt(verification.expiresAt, now)))
     .returning({ id: verification.id });
-  return updated.length > 0;
+  return updated.length > 0 ? "confirmed" : "expired";
 }
 
 export type LoginRequestState = { status: "pending" } | { status: "expired" } | ({ status: "confirmed" } & TelegramPerson);
 
 /**
  * Состояние запроса для приложения. Чужой браузер не отличит запрос от устаревшего.
- * Подтверждённый запрос удаляется: войти по нему можно один раз.
+ * По подтверждённому запросу войти можно один раз: после входа он помечается использованным.
  */
 export async function takeLoginRequest(token: string, browserId: string, now = new Date()): Promise<LoginRequestState> {
   const value = await readRequest(token, now);
@@ -75,14 +93,16 @@ export async function takeLoginRequest(token: string, browserId: string, now = n
   if (value.startsWith(PENDING_PREFIX)) {
     return value === PENDING_PREFIX + browser ? { status: "pending" } : { status: "expired" };
   }
+  if (value.startsWith(USED_PREFIX)) return { status: "expired" };
   const confirmed = JSON.parse(value) as ConfirmedValue;
   if (confirmed.browser !== browser) return { status: "expired" };
-  const deleted = await db
-    .delete(verification)
+  const used = await db
+    .update(verification)
+    .set({ value: USED_PREFIX + confirmed.telegramId })
     .where(and(eq(verification.identifier, identifierOf(token)), eq(verification.value, value)))
     .returning({ id: verification.id });
   // Два одновременных запроса из приложения: войдёт только первый.
-  if (deleted.length === 0) return { status: "expired" };
+  if (used.length === 0) return { status: "expired" };
   return { status: "confirmed", telegramId: confirmed.telegramId, telegramUsername: confirmed.telegramUsername };
 }
 
@@ -139,5 +159,5 @@ export async function handleTelegramUpdate(update: TelegramUpdate, now = new Dat
     { telegramId: String(from.id), telegramUsername: normalizeTelegramUsername(from.username) },
     now,
   );
-  return { chatId, text: confirmed ? botReplies.confirmed : botReplies.expired };
+  return { chatId, text: confirmed === "expired" ? botReplies.expired : botReplies.confirmed };
 }

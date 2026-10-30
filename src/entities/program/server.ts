@@ -4,6 +4,7 @@ export {
   getMyNavigator,
   getMyNote,
   getMyProgram,
+  markElementVideoSeen,
   markNavigatorRead,
   markWelcomeVideoSeen,
   saveMyNote,

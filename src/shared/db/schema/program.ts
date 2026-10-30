@@ -234,6 +234,20 @@ export const welcomeVideoSeen = pgTable("welcome_video_seen", {
   seenAt: timestamp("seen_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+/** Человек посмотрел видео по стихии в этот её период: стихия и год, в котором период начался. */
+export const elementVideoSeen = pgTable(
+  "element_video_seen",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    element: text("element").notNull(),
+    seasonYear: smallint("season_year").notNull(),
+    seenAt: timestamp("seen_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.element, table.seasonYear] })],
+);
+
 /**
  * Видео раздела «Библиотека»: приветственное (welcome) и по каждой стихии (wood, fire, earth, metal, water).
  * Ссылка на YouTube и текст под видео.

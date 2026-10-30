@@ -120,6 +120,13 @@
       "when": 1793380219691,
       "tag": "0016_navigator_two_parts_elders",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1793380832546,
+      "tag": "0017_element_video_seen",
+      "breakpoints": true
     }
   ]
 }

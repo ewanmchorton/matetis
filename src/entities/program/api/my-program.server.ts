@@ -5,11 +5,13 @@ import { and, asc, eq, gte, inArray, lte } from "drizzle-orm";
 
 import { getMyBirthReading, weakestElement } from "@/entities/birth-reading/server";
 import { DEFAULT_TIME_ZONE, localDay } from "@/entities/daily-phrase";
+import type { ElementId } from "@/entities/element";
 import { getCurrentSeason, type Season } from "@/entities/element/server";
 import { getMyCurrentType } from "@/entities/type-test-attempt/server";
 import {
   db,
   elderMessage,
+  elementVideoSeen,
   elderMessageType,
   navigatorMessage,
   navigatorMessageType,
@@ -19,6 +21,8 @@ import {
   practiceMark,
   practiceNote,
   programStart,
+  programVideo,
+  user,
   welcomeVideoSeen,
 } from "@/shared/db";
 import { AppError } from "@/shared/lib/app-error";
@@ -108,16 +112,34 @@ async function navigatorFor(userId: string, programDay: number, today: string): 
   };
 }
 
-type Person = { typeId: string | null; weakElement: string | null; seasonElement: string };
+type Person = {
+  name: string;
+  typeId: string | null;
+  typeName: string | null;
+  weakElement: ElementId | null;
+  seasonElement: string;
+};
 
-/** Тип, слабая стихия и стихия года — по ним выбирается вариант практики. */
+/** Имя, тип, слабая стихия и стихия года. По типу и стихиям выбирается вариант практики. */
 async function personFor(userId: string, season: Season): Promise<Person> {
-  const [type, reading] = await Promise.all([getMyCurrentType(userId), getMyBirthReading(userId)]);
+  const [type, reading, [row]] = await Promise.all([
+    getMyCurrentType(userId),
+    getMyBirthReading(userId),
+    db.select({ name: user.name }).from(user).where(eq(user.id, userId)),
+  ]);
   return {
+    name: row?.name ?? "",
     typeId: type?.id ?? null,
+    typeName: type?.name ?? null,
     weakElement: reading ? weakestElement(reading.elements) : null,
     seasonElement: season.elementId,
   };
+}
+
+/** Год, в котором начался период стихии: зима с декабря относится к году декабря. */
+function seasonYear(today: string, element: ElementId): number {
+  const year = Number(today.slice(0, 4));
+  return element === "water" && Number(today.slice(5, 7)) < 12 ? year - 1 : year;
 }
 
 function fits(variant: PracticeVariant, person: Person) {
@@ -155,6 +177,11 @@ export type ProgramPractice = {
   daypart: "morning" | "evening" | null;
   hasVideo: boolean;
   hasAudio: boolean;
+  /** Текст и видео практики или её варианта для человека. */
+  body: string;
+  videoUrl: string | null;
+  /** Вариант для слабой стихии человека — подпись «Слабая стихия: …». */
+  forWeakElement: boolean;
   /** Ежедневная — отмечена сегодня; еженедельная — день отметки на этой неделе. */
   doneOn: string | null;
 };
@@ -172,14 +199,21 @@ export type MyProgram = {
   week: { day: string; done: boolean }[];
   /** Приветственное видео ещё не просмотрено — показать перед программой. */
   showWelcomeVideo: boolean;
+  /** Приветственное видео, если админ его добавил. */
+  welcomeVideo: LibraryVideo | null;
+  /** Видео по текущей стихии, если админ его добавил, и посмотрел ли его человек в этот период. */
+  elementVideo: (LibraryVideo & { seen: boolean }) | null;
+  person: { name: string; typeName: string | null; weakElement: ElementId | null };
 };
+
+type LibraryVideo = { videoUrl: string; body: string };
 
 /** Программа человека на сегодня. В первый раз запоминает его первый день. */
 export async function getMyProgram(userId: string, now = new Date()): Promise<MyProgram> {
   const today = await todayFor(userId, now);
   const days = weekDays(today);
   const programDay = programDayNumber(await startedOn(userId, today), today);
-  const [season, navigator, practices, marks, reads, [welcome]] = await Promise.all([
+  const [season, navigator, practices, marks, reads, [welcome], videos] = await Promise.all([
     getCurrentSeason(now),
     navigatorFor(userId, programDay, today),
     listPractices(),
@@ -192,9 +226,28 @@ export async function getMyProgram(userId: string, now = new Date()): Promise<My
       .from(navigatorRead)
       .where(and(eq(navigatorRead.userId, userId), gte(navigatorRead.day, days[0]), lte(navigatorRead.day, days[6]))),
     db.select().from(welcomeVideoSeen).where(eq(welcomeVideoSeen.userId, userId)),
+    db.select().from(programVideo),
   ]);
 
-  const open = visiblePractices(practices, await personFor(userId, season), programDay);
+  const person = await personFor(userId, season);
+  const open = visiblePractices(practices, person, programDay);
+  const video = (slot: string): LibraryVideo | null => {
+    const row = videos.find((item) => item.slot === slot);
+    return row?.videoUrl ? { videoUrl: row.videoUrl, body: row.body } : null;
+  };
+  const elementVideo = video(season.elementId);
+  const [elementSeen] = elementVideo
+    ? await db
+        .select({ seenAt: elementVideoSeen.seenAt })
+        .from(elementVideoSeen)
+        .where(
+          and(
+            eq(elementVideoSeen.userId, userId),
+            eq(elementVideoSeen.element, season.elementId),
+            eq(elementVideoSeen.seasonYear, seasonYear(today, season.elementId)),
+          ),
+        )
+    : [];
   const view = ({ item, variant }: VisiblePractice): ProgramPractice => ({
     id: item.id,
     variantId: variant?.id ?? null,
@@ -202,6 +255,9 @@ export async function getMyProgram(userId: string, now = new Date()): Promise<My
     daypart: item.daypart,
     hasVideo: Boolean((variant ?? item).videoUrl),
     hasAudio: Boolean((variant ?? item).audioPath),
+    body: (variant ?? item).body,
+    videoUrl: (variant ?? item).videoUrl,
+    forWeakElement: Boolean(variant?.weakElement),
     doneOn:
       marks.find((mark) => mark.practiceId === item.id && (item.frequency === "weekly" || mark.day === today))?.day ??
       null,
@@ -218,6 +274,9 @@ export async function getMyProgram(userId: string, now = new Date()): Promise<My
     awareness: open.filter(({ item }) => item.frequency === "awareness").map(view),
     week: days.map((day) => ({ day, done: doneDays.has(day) })),
     showWelcomeVideo: !welcome,
+    welcomeVideo: video("welcome"),
+    elementVideo: elementVideo && { ...elementVideo, seen: Boolean(elementSeen) },
+    person: { name: person.name, typeName: person.typeName, weakElement: person.weakElement },
   };
 }
 
@@ -292,6 +351,16 @@ export async function getMyNote(userId: string, practiceId: string, now = new Da
     .from(practiceNote)
     .where(and(eq(practiceNote.userId, userId), eq(practiceNote.practiceId, practiceId), eq(practiceNote.day, await todayFor(userId, now))));
   return { text: row?.text ?? "" };
+}
+
+/** Человек посмотрел видео по текущей стихии — в этот период оно уходит из «На этой неделе». */
+export async function markElementVideoSeen(userId: string, now = new Date()) {
+  const [today, season] = await Promise.all([todayFor(userId, now), getCurrentSeason(now)]);
+  await db
+    .insert(elementVideoSeen)
+    .values({ userId, element: season.elementId, seasonYear: seasonYear(today, season.elementId) })
+    .onConflictDoNothing();
+  return { ok: true };
 }
 
 /** Человек нажал «Просмотрено» у приветственного видео. */

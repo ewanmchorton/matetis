@@ -8,7 +8,7 @@ import { db, user } from "@/shared/db";
 
 /** Удаляет всех людей, всё, что к ним привязано, запросы входа, периоды доступа, отметки о напоминаниях, фразы дня, переходы на Металл, практики и послания. */
 export async function clearDatabase() {
-  await db.execute(sql`truncate table "user", verification, access_period, access_expiry_reminder, daily_phrase, metal_start, practice, navigator_message, elder_message, program_video cascade`);
+  await db.execute(sql`truncate table "user", verification, access_period, access_expiry_reminder, daily_phrase, metal_start, practice, navigator_message, elder_message, program_video, element_video_seen cascade`);
 }
 
 /** Создаёт человека напрямую в базе, минуя регистрацию. */

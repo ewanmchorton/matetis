@@ -25,6 +25,15 @@ const TELEGRAM_SECRET_KEY = "matetis-telegram-login-secret";
 let fallbackSecret: string | undefined;
 
 /**
+ * Случайная строка для метки. Не crypto.randomUUID: телефон даёт его только на https,
+ * а при проверке с телефона приложение открыто по http (http://….local:4317).
+ */
+function randomSecret(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+/**
  * Метка этого браузера для входа через Telegram: войти по нажатой ссылке сможет только он.
  * Хранится в браузере, чтобы пережить перезапуск приложения, пока человек в Telegram.
  */
@@ -32,12 +41,12 @@ function browserSecret(): string {
   try {
     const saved = localStorage.getItem(TELEGRAM_SECRET_KEY);
     if (saved) return saved;
-    const secret = crypto.randomUUID();
+    const secret = randomSecret();
     localStorage.setItem(TELEGRAM_SECRET_KEY, secret);
     return secret;
   } catch {
     // Хранилище недоступно (например, частный режим) — метка живёт, пока открыт экран.
-    return (fallbackSecret ??= crypto.randomUUID());
+    return (fallbackSecret ??= randomSecret());
   }
 }
 const consentText =

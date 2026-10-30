@@ -50,6 +50,23 @@ describe("Вход через бота", () => {
     expect(await takeLoginRequest(token, browser, now)).toEqual({ status: "expired" });
   });
 
+  it("повторное «Начать» тем же человеком — снова «Готово», и до входа, и после", async () => {
+    const token = await createLoginRequest(browser, now);
+    await handleTelegramUpdate(startMessage(`/start ${token}`), now);
+    expect((await handleTelegramUpdate(startMessage(`/start ${token}`), now))?.text).toBe(botReplies.confirmed);
+    await takeLoginRequest(token, browser, now);
+    expect((await handleTelegramUpdate(startMessage(`/start ${token}`), now))?.text).toBe(botReplies.confirmed);
+    expect(await takeLoginRequest(token, browser, now)).toEqual({ status: "expired" });
+  });
+
+  it("по использованной ссылке другой человек получает «устарела»", async () => {
+    const token = await createLoginRequest(browser, now);
+    await handleTelegramUpdate(startMessage(`/start ${token}`), now);
+    await takeLoginRequest(token, browser, now);
+    const reply = await handleTelegramUpdate(startMessage(`/start ${token}`, { id: 999, username: "other_user" }), now);
+    expect(reply?.text).toBe(botReplies.expired);
+  });
+
   it("ссылку нельзя подтвердить второй раз другим человеком", async () => {
     const token = await createLoginRequest(browser, now);
     await handleTelegramUpdate(startMessage(`/start ${token}`), now);

@@ -9,6 +9,7 @@ import {
   getMyNavigator,
   getMyNote,
   getMyProgram,
+  markElementVideoSeen,
   markNavigatorRead,
   markWelcomeVideoSeen,
   saveMyNote,
@@ -167,6 +168,27 @@ describe("Программа человека", () => {
     const program = await getMyProgram(anna, evening);
     expect(program.today).toBe("2026-12-26");
     expect(program.programDay).toBe(2);
+  });
+
+  it("в программе — имя, тип, текст практики и слабая стихия для блока осознаний", async () => {
+    await saveMyBirthDate(anna, "1988-03-15");
+    const program = await getMyProgram(anna, day(1));
+    expect(program.person).toEqual({ name: "Анна", typeName: expect.any(String), weakElement: "metal" });
+    expect(program.morning[0]).toMatchObject({ title: "Улыбка", body: "", videoUrl: null });
+  });
+
+  it("видео по стихии — пока не посмотрено в этот период; в следующую зиму снова не посмотрено", async () => {
+    expect((await getMyProgram(anna, day(1))).elementVideo).toBeNull();
+    await saveProgramVideo(manager, { slot: "water", videoUrl: "https://youtu.be/water", body: "Про Воду" });
+    expect((await getMyProgram(anna, day(1))).elementVideo).toEqual({
+      videoUrl: "https://youtu.be/water",
+      body: "Про Воду",
+      seen: false,
+    });
+    await markElementVideoSeen(anna, day(1));
+    // 25 декабря и 20 января — одна зима.
+    expect((await getMyProgram(anna, new Date("2027-01-20T12:00:00+03:00"))).elementVideo?.seen).toBe(true);
+    expect((await getMyProgram(anna, new Date("2027-12-20T12:00:00+03:00"))).elementVideo?.seen).toBe(false);
   });
 
   it("приветственное видео показывается, пока человек не нажал «Просмотрено»", async () => {
