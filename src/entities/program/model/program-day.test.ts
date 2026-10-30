@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 
-import { navigatorDay, navigatorPosition, programDayNumber, weekDays, weekStart, type NavigatorPart } from "./program-day";
+import {
+  navigatorDay,
+  navigatorPosition,
+  programDayNumber,
+  programWeek,
+  shownInWeek,
+  weekDays,
+  weeksShownBefore,
+  weekStart,
+  type NavigatorPart,
+} from "./program-day";
 
 const parts: NavigatorPart[] = [
   { part: 1, title: "Часть 1", body: "Текст 1", firstDayTask: "Задание А", secondDayTask: "Задание Б" },
@@ -57,5 +67,25 @@ describe("Цикл навигатора", () => {
     expect(day7.parts.map((part) => part.title)).toEqual(["Часть 1", "Часть 2", "Часть 3"]);
     expect(day7).toMatchObject({ task: "Задание недели", fullMessage: true, newTask: false });
     expect(navigatorDay(parts, null, 7).task).toBeNull();
+  });
+});
+
+describe("Недели программы и чередование", () => {
+  it("дни 1–7 — первая неделя, 8-й день — вторая", () => {
+    expect([1, 7, 8, 15].map(programWeek)).toEqual([1, 1, 2, 3]);
+  });
+
+  it("без чередования практика есть каждую неделю с недели, где она появилась", () => {
+    expect([1, 2, 3, 4].map((week) => shownInWeek(week, 8, null))).toEqual([false, true, true, true]);
+  });
+
+  it("с 15-го дня «first» — в 3-ю и 5-ю неделю, «second» — в 4-ю и 6-ю", () => {
+    expect([1, 2, 3, 4, 5, 6].map((week) => shownInWeek(week, 1, "first"))).toEqual([true, true, true, false, true, false]);
+    expect([1, 2, 3, 4, 5, 6].map((week) => shownInWeek(week, 8, "second"))).toEqual([false, true, false, true, false, true]);
+  });
+
+  it("номер варианта — сколько недель практика уже была", () => {
+    expect([1, 3, 5].map((week) => weeksShownBefore(week, 1, "first"))).toEqual([0, 2, 3]);
+    expect([2, 4, 6].map((week) => weeksShownBefore(week, 8, "second"))).toEqual([0, 1, 2]);
   });
 });

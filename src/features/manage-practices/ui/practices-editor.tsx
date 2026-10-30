@@ -3,16 +3,28 @@
 import { ChevronDown, Plus, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 
+import { getElements, type ElementId } from "@/entities/element";
+import { getPersonTypes } from "@/entities/person-type";
 import { request } from "@/shared/api/request";
 import { isStaticPrototype } from "@/shared/config/env";
+import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { NativeSelect } from "@/shared/ui/native-select";
 import { Textarea } from "@/shared/ui/textarea";
 
-type Frequency = "daily" | "weekly";
+type Frequency = "daily" | "weekly" | "awareness";
 type Daypart = "morning" | "evening";
+type Alternation = "first" | "second" | null;
+
+type Variant = {
+  body: string;
+  videoUrl: string | null;
+  typeIds: string[];
+  weakElement: ElementId | null;
+  seasonElement: ElementId | null;
+};
 
 type Practice = {
   id: string;
@@ -23,9 +35,16 @@ type Practice = {
   body: string;
   videoUrl: string | null;
   opensOnDay: number;
+  newEachWeek: boolean;
+  alternation: Alternation;
+  variants: Variant[];
 };
 
 type Draft = Omit<Practice, "id" | "videoUrl"> & { id?: string; videoUrl: string };
+
+const types = getPersonTypes();
+const elements = getElements();
+const emptyVariant = (): Variant => ({ body: "", videoUrl: "", typeIds: [], weakElement: null, seasonElement: null });
 
 type ListState = { status: "loading" } | { status: "error"; message: string } | { status: "ready"; practices: Practice[] };
 
@@ -40,10 +59,144 @@ function emptyDraft(frequency: Frequency, position: number): Draft {
     body: "",
     videoUrl: "",
     opensOnDay: 1,
+    newEachWeek: false,
+    alternation: null,
+    variants: [],
   };
 }
 
-/** Практики одного вида: ежедневные (утро и вечер) или еженедельные. Список, правка, добавление. */
+/** Кому достаётся вариант — коротко для заголовка. */
+function variantAudience(variant: Variant) {
+  const parts = [
+    variant.typeIds.length > 0
+      ? types
+          .filter((type) => variant.typeIds.includes(type.id))
+          .map((type) => type.name)
+          .join(", ")
+      : "все типы",
+  ];
+  if (variant.weakElement) parts.push(`слабая ${elements.find((item) => item.id === variant.weakElement)?.name}`);
+  if (variant.seasonElement) parts.push(`стихия года ${elements.find((item) => item.id === variant.seasonElement)?.name}`);
+  return parts.join(" · ");
+}
+
+/** Варианты текста практики: для типов, слабой стихии, стихии года. */
+function VariantsEditor({ variants, onChange }: { variants: Variant[]; onChange: (variants: Variant[]) => void }) {
+  const set = (index: number, change: Partial<Variant>) =>
+    onChange(variants.map((variant, i) => (i === index ? { ...variant, ...change } : variant)));
+
+  return (
+    <fieldset className="space-y-3">
+      <legend className="text-sm font-medium">Варианты</legend>
+      <p className="text-xs text-muted-foreground">
+        Нет вариантов — текст выше видят все. Есть варианты — человек видит подходящий ему, а если не подошёл ни
+        один, практики у него нет. Типы не отмечены — вариант для всех типов.
+      </p>
+      {variants.map((variant, index) => (
+        <div key={index} className="space-y-3 rounded-xl border bg-background p-4">
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-sm font-medium">
+              Вариант {index + 1}
+              <span className="block text-xs font-normal text-muted-foreground">{variantAudience(variant)}</span>
+            </p>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-11"
+              aria-label={`Удалить вариант ${index + 1}`}
+              onClick={() => onChange(variants.filter((_, i) => i !== index))}
+            >
+              <Trash2 />
+            </Button>
+          </div>
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Для каких типов">
+            {types.map((type) => {
+              const on = variant.typeIds.includes(type.id);
+              return (
+                <button
+                  key={type.id}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() =>
+                    set(index, {
+                      typeIds: on ? variant.typeIds.filter((id) => id !== type.id) : [...variant.typeIds, type.id],
+                    })
+                  }
+                  className={cn(
+                    "min-h-9 rounded-full border px-3 text-sm",
+                    on ? "border-primary bg-primary/10 text-primary" : "bg-background text-muted-foreground",
+                  )}
+                >
+                  {type.name}
+                </button>
+              );
+            })}
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor={`variant-${index}-weak`}>Для слабой стихии</Label>
+              <NativeSelect
+                id={`variant-${index}-weak`}
+                className="h-11"
+                value={variant.weakElement ?? ""}
+                onChange={(event) => set(index, { weakElement: (event.target.value || null) as ElementId | null })}
+              >
+                <option value="">Для любой</option>
+                {elements.map((element) => (
+                  <option key={element.id} value={element.id}>
+                    {element.name}
+                  </option>
+                ))}
+              </NativeSelect>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor={`variant-${index}-season`}>На стихию года</Label>
+              <NativeSelect
+                id={`variant-${index}-season`}
+                className="h-11"
+                value={variant.seasonElement ?? ""}
+                onChange={(event) => set(index, { seasonElement: (event.target.value || null) as ElementId | null })}
+              >
+                <option value="">На любую</option>
+                {elements.map((element) => (
+                  <option key={element.id} value={element.id}>
+                    {element.name}
+                  </option>
+                ))}
+              </NativeSelect>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor={`variant-${index}-body`}>Текст</Label>
+            <Textarea
+              id={`variant-${index}-body`}
+              className="min-h-24"
+              value={variant.body}
+              onChange={(event) => set(index, { body: event.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor={`variant-${index}-video`}>Видео — ссылка на YouTube</Label>
+            <Input
+              id={`variant-${index}-video`}
+              className="h-11"
+              placeholder="https://youtu.be/…"
+              value={variant.videoUrl ?? ""}
+              onChange={(event) => set(index, { videoUrl: event.target.value })}
+            />
+          </div>
+        </div>
+      ))}
+      <Button type="button" variant="outline" className="h-11" onClick={() => onChange([...variants, emptyVariant()])}>
+        <Plus />
+        Добавить вариант
+      </Button>
+    </fieldset>
+  );
+}
+
+/** Практики одного вида: ежедневные (утро и вечер), еженедельные или осознания. Список, правка, добавление. */
 export function PracticesEditor({ frequency }: { frequency: Frequency }) {
   const [state, setState] = useState<ListState>({ status: "loading" });
   const [openId, setOpenId] = useState<string | null>(null);
@@ -184,6 +337,31 @@ export function PracticesEditor({ frequency }: { frequency: Frequency }) {
         />
       </div>
       <p className="text-xs text-muted-foreground">Аудио можно будет загрузить, когда появится хранение файлов на сервере.</p>
+      <label className="flex min-h-11 items-center gap-3 text-sm">
+        <input
+          type="checkbox"
+          className="size-5"
+          checked={draft.newEachWeek}
+          onChange={(event) => setDraft({ ...draft, newEachWeek: event.target.checked })}
+        />
+        Каждую неделю новый вариант — по порядку, потом по кругу
+      </label>
+      {frequency === "weekly" && (
+        <div className="space-y-1.5">
+          <Label htmlFor="practice-alternation">С 15-го дня чередуется по неделям</Label>
+          <NativeSelect
+            id="practice-alternation"
+            className="h-11"
+            value={draft.alternation ?? ""}
+            onChange={(event) => setDraft({ ...draft, alternation: (event.target.value || null) as Alternation })}
+          >
+            <option value="">Нет, каждую неделю</option>
+            <option value="first">Да, в 3-ю, 5-ю, 7-ю… неделю</option>
+            <option value="second">Да, в 4-ю, 6-ю, 8-ю… неделю</option>
+          </NativeSelect>
+        </div>
+      )}
+      <VariantsEditor variants={draft.variants} onChange={(variants) => setDraft({ ...draft, variants })} />
       <div className="flex flex-wrap gap-2">
         <Button type="submit" className="h-11" disabled={pending}>
           Сохранить
@@ -231,7 +409,9 @@ export function PracticesEditor({ frequency }: { frequency: Frequency }) {
                         <span className="block text-xs text-muted-foreground">
                           с {item.opensOnDay}-го дня
                           {item.videoUrl ? " · видео" : ""}
-                          {item.body ? "" : " · без текста"}
+                          {item.variants.length > 0 ? ` · вариантов: ${item.variants.length}` : item.body ? "" : " · без текста"}
+                          {item.newEachWeek ? " · каждую неделю новый" : ""}
+                          {item.alternation ? " · чередуется" : ""}
                         </span>
                       </span>
                       <ChevronDown className="size-4 text-muted-foreground" />

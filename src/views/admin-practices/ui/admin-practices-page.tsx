@@ -45,12 +45,7 @@ export function AdminPracticesPage() {
 
       {tab === "daily" && <PracticesEditor frequency="daily" />}
       {tab === "weekly" && <PracticesEditor frequency="weekly" />}
-      {tab === "awareness" && (
-        <p className="rounded-2xl border bg-background p-4 text-sm text-muted-foreground">
-          Два осознания: по книге «2 жизни» и на слабую стихию. Как они подбираются человеку, уточняем у Жанны — после
-          ответа здесь появится их заполнение.
-        </p>
-      )}
+      {tab === "awareness" && <PracticesEditor frequency="awareness" />}
       {tab === "phrases" && <PhrasesEditor />}
     </div>
   );

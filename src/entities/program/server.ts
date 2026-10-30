@@ -14,6 +14,7 @@ export type {
   NavigatorMessageInput,
   Practice,
   PracticeInput,
+  PracticeVariant,
   ProgramVideo,
   ProgramVideoSlot,
 } from "./api/program-content.server";

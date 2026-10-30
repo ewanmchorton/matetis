@@ -3,6 +3,7 @@
 // в настройках); пока телефон его не сообщил — по Минску.
 import { and, asc, eq, gte, inArray, lte } from "drizzle-orm";
 
+import { getMyBirthReading, weakestElement } from "@/entities/birth-reading/server";
 import { DEFAULT_TIME_ZONE, localDay } from "@/entities/daily-phrase";
 import { getCurrentSeason, type Season } from "@/entities/element/server";
 import { getMyCurrentType } from "@/entities/type-test-attempt/server";
@@ -13,7 +14,6 @@ import {
   navigatorPart,
   navigatorRead,
   personSettings,
-  practice,
   practiceMark,
   practiceNote,
   programStart,
@@ -21,8 +21,17 @@ import {
 } from "@/shared/db";
 import { AppError } from "@/shared/lib/app-error";
 
-import { navigatorDay, navigatorPosition, programDayNumber, weekDays, type NavigatorDay } from "../model/program-day";
-import { listPractices } from "./program-content.server";
+import {
+  navigatorDay,
+  navigatorPosition,
+  programDayNumber,
+  programWeek,
+  shownInWeek,
+  weekDays,
+  weeksShownBefore,
+  type NavigatorDay,
+} from "../model/program-day";
+import { listPractices, type Practice, type PracticeVariant } from "./program-content.server";
 
 /** Сегодняшний день по часам человека: «2026-12-25». */
 async function todayFor(userId: string, now: Date): Promise<string> {
@@ -75,8 +84,49 @@ async function navigatorFor(userId: string, programDay: number, today: string): 
   };
 }
 
+type Person = { typeId: string | null; weakElement: string | null; seasonElement: string };
+
+/** Тип, слабая стихия и стихия года — по ним выбирается вариант практики. */
+async function personFor(userId: string, season: Season): Promise<Person> {
+  const [type, reading] = await Promise.all([getMyCurrentType(userId), getMyBirthReading(userId)]);
+  return {
+    typeId: type?.id ?? null,
+    weakElement: reading ? weakestElement(reading.elements) : null,
+    seasonElement: season.elementId,
+  };
+}
+
+function fits(variant: PracticeVariant, person: Person) {
+  return (
+    (variant.typeIds.length === 0 || (person.typeId !== null && variant.typeIds.includes(person.typeId))) &&
+    (variant.weakElement === null || variant.weakElement === person.weakElement) &&
+    (variant.seasonElement === null || variant.seasonElement === person.seasonElement)
+  );
+}
+
+type VisiblePractice = { item: Practice; variant: PracticeVariant | null };
+
+/**
+ * Практики человека в этот день программы. Без вариантов — текст самой практики для всех.
+ * С вариантами — подходящий человеку; если каждую неделю новый — следующий по порядку, по кругу.
+ * Не подошёл ни один вариант — практики у человека нет.
+ */
+function visiblePractices(practices: Practice[], person: Person, programDay: number): VisiblePractice[] {
+  const week = programWeek(programDay);
+  return practices.flatMap((item): VisiblePractice[] => {
+    if (item.opensOnDay > programDay || !shownInWeek(week, item.opensOnDay, item.alternation)) return [];
+    if (item.variants.length === 0) return [{ item, variant: null }];
+    const suitable = item.variants.filter((variant) => fits(variant, person));
+    if (suitable.length === 0) return [];
+    const index = item.newEachWeek ? weeksShownBefore(week, item.opensOnDay, item.alternation) % suitable.length : 0;
+    return [{ item, variant: suitable[index] }];
+  });
+}
+
 export type ProgramPractice = {
   id: string;
+  /** Какой вариант текста видит человек. null — текст самой практики. */
+  variantId: string | null;
   title: string;
   daypart: "morning" | "evening" | null;
   hasVideo: boolean;
@@ -93,6 +143,7 @@ export type MyProgram = {
   morning: ProgramPractice[];
   evening: ProgramPractice[];
   weekly: ProgramPractice[];
+  awareness: ProgramPractice[];
   /** Семь дней недели с понедельника: был ли в этот день хоть одна выполненная практика. */
   week: { day: string; done: boolean }[];
   /** Приветственное видео ещё не просмотрено — показать перед программой. */
@@ -119,13 +170,14 @@ export async function getMyProgram(userId: string, now = new Date()): Promise<My
     db.select().from(welcomeVideoSeen).where(eq(welcomeVideoSeen.userId, userId)),
   ]);
 
-  const open = practices.filter((item) => item.opensOnDay <= programDay);
-  const view = (item: (typeof practices)[number]): ProgramPractice => ({
+  const open = visiblePractices(practices, await personFor(userId, season), programDay);
+  const view = ({ item, variant }: VisiblePractice): ProgramPractice => ({
     id: item.id,
+    variantId: variant?.id ?? null,
     title: item.title,
     daypart: item.daypart,
-    hasVideo: Boolean(item.videoUrl),
-    hasAudio: Boolean(item.audioPath),
+    hasVideo: Boolean((variant ?? item).videoUrl),
+    hasAudio: Boolean((variant ?? item).audioPath),
     doneOn:
       marks.find((mark) => mark.practiceId === item.id && (item.frequency === "weekly" || mark.day === today))?.day ??
       null,
@@ -136,9 +188,10 @@ export async function getMyProgram(userId: string, now = new Date()): Promise<My
     programDay,
     season,
     navigator,
-    morning: open.filter((item) => item.daypart === "morning").map(view),
-    evening: open.filter((item) => item.daypart === "evening").map(view),
-    weekly: open.filter((item) => item.frequency === "weekly").map(view),
+    morning: open.filter(({ item }) => item.daypart === "morning").map(view),
+    evening: open.filter(({ item }) => item.daypart === "evening").map(view),
+    weekly: open.filter(({ item }) => item.frequency === "weekly").map(view),
+    awareness: open.filter(({ item }) => item.frequency === "awareness").map(view),
     week: days.map((day) => ({ day, done: doneDays.has(day) })),
     showWelcomeVideo: !welcome,
   };
@@ -159,8 +212,10 @@ export async function setPracticeDone(userId: string, practiceId: unknown, done:
   if (typeof practiceId !== "string") throw new AppError("not_found", "Практика не найдена");
   const today = await todayFor(userId, now);
   const programDay = programDayNumber(await startedOn(userId, today), today);
-  const [item] = await db.select().from(practice).where(eq(practice.id, practiceId));
-  if (!item || item.opensOnDay > programDay) throw new AppError("not_found", "Практика не найдена");
+  const [practices, season] = await Promise.all([listPractices(), getCurrentSeason(now)]);
+  const visible = visiblePractices(practices, await personFor(userId, season), programDay);
+  const item = visible.find((entry) => entry.item.id === practiceId)?.item;
+  if (!item) throw new AppError("not_found", "Практика не найдена");
 
   const days = item.frequency === "weekly" ? weekDays(today) : [today];
   const period = and(

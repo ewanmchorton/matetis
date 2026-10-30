@@ -89,3 +89,34 @@ export function navigatorDay(parts: NavigatorPart[], day7Task: string | null, cy
     fullMessage: false,
   };
 }
+
+/** С какого дня программы медитации чередуются по неделям. */
+export const ALTERNATION_FROM_DAY = 15;
+
+export type Alternation = "first" | "second" | null;
+
+/** Неделя программы: дни 1–7 — первая. */
+export function programWeek(programDay: number): number {
+  return Math.floor((programDay - 1) / 7) + 1;
+}
+
+/**
+ * Есть ли практика в программе в эту неделю. До 15-го дня — с недели, где она появляется.
+ * С 15-го дня «first» стоит в 3-ю, 5-ю… неделю, «second» — в 4-ю, 6-ю…
+ */
+export function shownInWeek(week: number, opensOnDay: number, alternation: Alternation): boolean {
+  if (week < programWeek(opensOnDay)) return false;
+  const alternationWeek = programWeek(ALTERNATION_FROM_DAY);
+  if (!alternation || week < alternationWeek) return true;
+  const firstOfPair = (week - alternationWeek) % 2 === 0;
+  return alternation === "first" ? firstOfPair : !firstOfPair;
+}
+
+/** Сколько недель практика уже была в программе до этой: номер варианта, если вариант каждую неделю новый. */
+export function weeksShownBefore(week: number, opensOnDay: number, alternation: Alternation): number {
+  let count = 0;
+  for (let earlier = 1; earlier < week; earlier += 1) {
+    if (shownInWeek(earlier, opensOnDay, alternation)) count += 1;
+  }
+  return count;
+}

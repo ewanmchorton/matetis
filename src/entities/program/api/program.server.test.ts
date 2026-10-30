@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
+import { saveMyBirthDate } from "@/entities/birth-reading/server";
 import { updateMySettings } from "@/entities/person-settings/server";
 import { saveMyTypeTest } from "@/entities/type-test-attempt/server";
 
@@ -167,6 +168,147 @@ describe("Программа человека", () => {
     expect((await getMyProgram(anna, day(1))).showWelcomeVideo).toBe(true);
     await markWelcomeVideoSeen(anna);
     expect((await getMyProgram(anna, day(2))).showWelcomeVideo).toBe(false);
+  });
+});
+
+describe("Варианты практик", () => {
+  const titles = (items: { title: string; variantId: string | null }[]) => items.map((item) => item.title);
+  /** Текст варианта, который человек видит в программе. */
+  async function shownBody(practiceTitle: string, variantId: string | null | undefined) {
+    const item = (await listPracticesForStaff(manager)).find((entry) => entry.title === practiceTitle);
+    return item?.variants.find((variant) => variant.id === variantId)?.body ?? null;
+  }
+
+  it("еженедельная практика своя у каждого типа; без подходящего варианта её нет", async () => {
+    await savePractice(manager, {
+      title: "Прогулка без телефона",
+      frequency: "weekly",
+      position: 1,
+      variants: [
+        { body: "Вопрос Целителю", typeIds: [HEALER] },
+        { body: "Вопрос Идеалисту", typeIds: [IDEALIST] },
+      ],
+    });
+    const walk = (await getMyProgram(anna, day(1))).weekly[0];
+    expect(await shownBody("Прогулка без телефона", walk.variantId)).toBe("Вопрос Целителю");
+
+    const boris = await createPerson("Борис");
+    expect((await getMyProgram(boris, day(1))).weekly).toEqual([]);
+  });
+
+  it("«каждую неделю новый» — следующий вариант по порядку, потом по кругу", async () => {
+    await savePractice(manager, {
+      title: "Прогулка без телефона",
+      frequency: "weekly",
+      position: 1,
+      newEachWeek: true,
+      variants: [
+        { body: "Вопрос 1", typeIds: [HEALER] },
+        { body: "Вопрос для Идеалиста", typeIds: [IDEALIST] },
+        { body: "Вопрос 2", typeIds: [HEALER] },
+      ],
+    });
+    const bodies = [];
+    for (const programDay of [1, 8, 15]) {
+      bodies.push(await shownBody("Прогулка без телефона", (await getMyProgram(anna, day(programDay))).weekly[0].variantId));
+    }
+    expect(bodies).toEqual(["Вопрос 1", "Вопрос 2", "Вопрос 1"]);
+  });
+
+  it("с 15-го дня медитации чередуются по неделям, новая медитация — каждый раз, когда она есть", async () => {
+    await savePractice(manager, {
+      title: "Медитация на качество силы",
+      frequency: "weekly",
+      position: 1,
+      newEachWeek: true,
+      alternation: "first",
+      variants: [
+        { body: "Медитация 1", typeIds: [HEALER] },
+        { body: "Медитация 2", typeIds: [HEALER] },
+      ],
+    });
+    await savePractice(manager, {
+      title: "Медитация на слабую стихию",
+      frequency: "weekly",
+      position: 2,
+      opensOnDay: 8,
+      alternation: "second",
+    });
+    const weeks = [];
+    for (const programDay of [1, 8, 15, 22, 29]) {
+      const { weekly } = await getMyProgram(anna, day(programDay));
+      weeks.push(
+        await Promise.all(
+          weekly.map(async (item) => (await shownBody(item.title, item.variantId)) ?? item.title),
+        ),
+      );
+    }
+    expect(weeks).toEqual([
+      ["Медитация 1"],
+      ["Медитация 2", "Медитация на слабую стихию"],
+      ["Медитация 1"],
+      ["Медитация на слабую стихию"],
+      ["Медитация 2"],
+    ]);
+  });
+
+  it("практику, которой нет в эту неделю, отметить нельзя", async () => {
+    await savePractice(manager, { title: "Медитация на качество силы", frequency: "weekly", position: 1, alternation: "first" });
+    await getMyProgram(anna, day(1));
+    const [meditation] = await listPracticesForStaff(manager);
+    await expect(setPracticeDone(anna, meditation.id, true, day(22))).rejects.toThrow("не найдена");
+  });
+
+  it("на слабую стихию — вариант стихии с наименьшим числом цифр; без даты рождения практики нет", async () => {
+    await savePractice(manager, {
+      title: "Осознание на слабую стихию",
+      frequency: "awareness",
+      position: 2,
+      variants: [
+        { body: "Про Металл", weakElement: "metal" },
+        { body: "Про Дерево", weakElement: "wood" },
+      ],
+    });
+    expect((await getMyProgram(anna, day(1))).awareness).toEqual([]);
+
+    // 15.03.1988: Металла и Огня по одной цифре, Металл раньше по кругу от Земли.
+    await saveMyBirthDate(anna, "1988-03-15");
+    const [awareness] = (await getMyProgram(anna, day(1))).awareness;
+    expect(titles([awareness])).toEqual(["Осознание на слабую стихию"]);
+    expect(await shownBody("Осознание на слабую стихию", awareness.variantId)).toBe("Про Металл");
+  });
+
+  it("вариант на стихию года — по текущей стихии, у всех типов один", async () => {
+    await savePractice(manager, {
+      title: "Полный цикл зарядки",
+      frequency: "weekly",
+      position: 1,
+      variants: [
+        { body: "Зарядка Огня", seasonElement: "fire" },
+        { body: "Зарядка Воды", seasonElement: "water" },
+      ],
+    });
+    // 25 декабря — зима, Вода.
+    const [charge] = (await getMyProgram(anna, day(1))).weekly;
+    expect(await shownBody("Полный цикл зарядки", charge.variantId)).toBe("Зарядка Воды");
+  });
+
+  it("варианты сохраняются целиком: при новом сохранении прежние заменяются", async () => {
+    const saved = await savePractice(manager, {
+      title: "Осознание по книге «2 жизни»",
+      frequency: "awareness",
+      position: 1,
+      variants: [{ body: "Старый", typeIds: [HEALER, "x"] }],
+    });
+    await savePractice(manager, {
+      id: saved.id,
+      title: "Осознание по книге «2 жизни»",
+      frequency: "awareness",
+      position: 1,
+      variants: [{ body: "Новый", typeIds: [IDEALIST] }],
+    });
+    const [item] = await listPracticesForStaff(manager);
+    expect(item.variants.map((variant) => [variant.body, variant.typeIds])).toEqual([["Новый", [IDEALIST]]]);
   });
 });
 

@@ -121,3 +121,15 @@ export function scoreElements(digitCounts: DigitCounts): ElementScore[] {
     return { element, count, level: levelForCount(count) };
   });
 }
+
+/**
+ * Слабая стихия человека — для практик на слабую стихию.
+ * Пока Жанна не дала правило: стихия с наименьшим числом цифр; при равенстве — первая по кругу Усин от Земли.
+ */
+export function weakestElement(scores: ElementScore[]): ElementId | null {
+  let weakest: ElementScore | null = null;
+  for (const score of scores) {
+    if (!weakest || score.count < weakest.count) weakest = score;
+  }
+  return weakest?.element ?? null;
+}

@@ -1,11 +1,31 @@
 // Программа: практики, послания навигатора и прогресс человека. Разделы 3а и 4 в docs/data-model.md.
 import { sql } from "drizzle-orm";
-import { check, date, index, pgEnum, pgTable, primaryKey, smallint, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  check,
+  date,
+  index,
+  pgEnum,
+  pgTable,
+  primaryKey,
+  smallint,
+  text,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
 
 import { user } from "./auth";
 
-/** Ежедневная практика — каждый день, еженедельная — один раз в неделю, в любой день. */
-export const practiceFrequency = pgEnum("practice_frequency", ["daily", "weekly"]);
+/**
+ * Ежедневная практика — каждый день, еженедельная — один раз в неделю, в любой день.
+ * Осознание — отдельный блок программы («2 жизни», на слабую стихию).
+ */
+export const practiceFrequency = pgEnum("practice_frequency", ["daily", "weekly", "awareness"]);
+/**
+ * Чередование с 15-го дня: «first» — в 3-ю, 5-ю… неделю программы, «second» — в 4-ю, 6-ю…
+ * Так чередуются медитация на качество силы и медитация на слабую стихию.
+ */
+export const practiceAlternation = pgEnum("practice_alternation", ["first", "second"]);
 /** Где стоит ежедневная практика на экране программы. */
 export const practiceDaypart = pgEnum("practice_daypart", ["morning", "evening"]);
 
@@ -27,6 +47,10 @@ export const practice = pgTable(
     videoUrl: text("video_url"),
     /** С какого дня программы появляется у нового человека. */
     opensOnDay: smallint("opens_on_day").notNull().default(1),
+    /** Каждую неделю, когда практика есть в программе, — следующий вариант по порядку, потом по кругу. */
+    newEachWeek: boolean("new_each_week").notNull().default(false),
+    /** Пусто — без чередования. */
+    alternation: practiceAlternation("alternation"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
@@ -36,6 +60,50 @@ export const practice = pgTable(
     ),
     check("practice_opens_on_day", sql`${table.opensOnDay} >= 1`),
   ],
+);
+
+/**
+ * Вариант практики: свой текст, аудио или видео для типа, слабой стихии или стихии года.
+ * Если у практики есть варианты, человек видит подходящий ему; не подошёл ни один — практики у него нет.
+ * Без вариантов — текст самой практики, для всех.
+ */
+export const practiceVariant = pgTable(
+  "practice_variant",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    practiceId: uuid("practice_id")
+      .notNull()
+      .references(() => practice.id, { onDelete: "cascade" }),
+    /** Порядок вариантов: по нему они идут неделя за неделей. */
+    position: smallint("position").notNull(),
+    body: text("body").notNull().default(""),
+    audioPath: text("audio_path"),
+    videoUrl: text("video_url"),
+    /** Для какой слабой стихии человека. Пусто — для любой. */
+    weakElement: text("weak_element"),
+    /** На какую стихию года. Пусто — на любую. */
+    seasonElement: text("season_element"),
+  },
+  (table) => [
+    index("practice_variant_practice_idx").on(table.practiceId),
+    check("practice_variant_weak_element", sql`${table.weakElement} in ('wood', 'fire', 'earth', 'metal', 'water')`),
+    check(
+      "practice_variant_season_element",
+      sql`${table.seasonElement} in ('wood', 'fire', 'earth', 'metal', 'water')`,
+    ),
+  ],
+);
+
+/** Каким типам подходит вариант (t1–t12). Ни одного — всем. */
+export const practiceVariantType = pgTable(
+  "practice_variant_type",
+  {
+    variantId: uuid("variant_id")
+      .notNull()
+      .references(() => practiceVariant.id, { onDelete: "cascade" }),
+    typeId: text("type_id").notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.variantId, table.typeId] })],
 );
 
 /** Послание Мастера для навигатора дня: три части на неделю. */
