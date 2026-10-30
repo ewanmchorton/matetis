@@ -1,4 +1,4 @@
-// Наполнение программы: практики и навигаторы дня. Только серверный код.
+// Наполнение программы: практики и послания навигатора. Только серверный код.
 // Меняют админ и контент-менеджер.
 import { asc, eq } from "drizzle-orm";
 
@@ -106,7 +106,7 @@ export type NavigatorMessage = {
 
 function messageParts(input: unknown) {
   const parts = Array.isArray(input) ? input : [];
-  if (parts.length !== 3) throw new AppError("invalid_parts", "В навигаторе три части");
+  if (parts.length !== 3) throw new AppError("invalid_parts", "В послании три части");
   return parts.map((raw, index) => {
     const part = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
     const title = text(part.title);
@@ -122,7 +122,7 @@ function messageParts(input: unknown) {
   });
 }
 
-/** Добавить навигатор (без id) или заменить существующий целиком: части и типы. */
+/** Добавить послание (без id) или заменить существующее целиком: части и типы. */
 export async function saveNavigatorMessage(viewerId: string, input: NavigatorMessageInput): Promise<NavigatorMessage> {
   await assertStaff(viewerId);
   const masterName = text(input.masterName);
@@ -133,14 +133,14 @@ export async function saveNavigatorMessage(viewerId: string, input: NavigatorMes
   }
   const known = new Set(getPersonTypes().map((type) => type.id));
   const typeIds = Array.isArray(input.typeIds) ? [...new Set(input.typeIds.filter((id) => known.has(id)))] : [];
-  if (typeIds.length === 0) throw new AppError("empty_types", "Отметьте, каким типам подходит навигатор");
+  if (typeIds.length === 0) throw new AppError("empty_types", "Отметьте, каким типам подходит послание");
   const values = { masterName, position: wholeNumber(input.position, 0, 0), day7Task: optionalText(input.day7Task) };
 
   const id = await db.transaction(async (tx) => {
     let messageId: string;
     if (typeof input.id === "string") {
       const [row] = await tx.update(navigatorMessage).set(values).where(eq(navigatorMessage.id, input.id)).returning();
-      if (!row) throw new AppError("not_found", "Навигатор не найден");
+      if (!row) throw new AppError("not_found", "Послание не найдено");
       messageId = row.id;
       await tx.delete(navigatorPart).where(eq(navigatorPart.messageId, messageId));
       await tx.delete(navigatorMessageType).where(eq(navigatorMessageType.messageId, messageId));
@@ -161,7 +161,7 @@ export async function deleteNavigatorMessage(viewerId: string, id: unknown) {
   return { ok: true };
 }
 
-/** Все навигаторы по порядку, с частями и типами. */
+/** Все послания по порядку, с частями и типами. */
 export async function listNavigatorMessagesForStaff(viewerId: string): Promise<NavigatorMessage[]> {
   await assertStaff(viewerId);
   const [messages, parts, types] = await Promise.all([

@@ -46,7 +46,7 @@ export type NavigatorToday = NavigatorDay & {
   read: boolean;
 };
 
-/** Навигатор человека на этот день программы: по порядку для его типа, по кругу. null — нет типа или навигаторов. */
+/** Послание человека на этот день программы: по порядку для его типа, по кругу. null — нет типа или посланий. */
 async function navigatorFor(userId: string, programDay: number, today: string): Promise<NavigatorToday | null> {
   const type = await getMyCurrentType(userId);
   if (!type) return null;
@@ -144,7 +144,7 @@ export async function getMyProgram(userId: string, now = new Date()): Promise<My
   };
 }
 
-/** Навигатор на сегодня для его экрана. */
+/** Навигатор на сегодня для экрана послания. */
 export async function getMyNavigator(userId: string, now = new Date()) {
   const today = await todayFor(userId, now);
   const programDay = programDayNumber(await startedOn(userId, today), today);
@@ -181,7 +181,7 @@ export async function setPracticeDone(userId: string, practiceId: unknown, done:
 export async function markNavigatorRead(userId: string, now = new Date()) {
   const today = await todayFor(userId, now);
   const navigator = await getMyNavigator(userId, now);
-  if (!navigator) throw new AppError("no_navigator", "Навигатор пока не готов");
+  if (!navigator) throw new AppError("no_navigator", "Послание пока не готово");
   await db.insert(navigatorRead).values({ userId, day: today, messageId: navigator.messageId }).onConflictDoNothing();
   return { ok: true };
 }

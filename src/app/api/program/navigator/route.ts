@@ -1,4 +1,4 @@
-// Навигатор дня: GET — текст и задание на сегодня, POST — «Прочитано».
+// Навигатор дня: GET — послание и задание на сегодня, POST — «Прочитано».
 import { getMyNavigator, markNavigatorRead } from "@/entities/program/server";
 import { withPaidUser } from "@/shared/api/route-helpers";
 

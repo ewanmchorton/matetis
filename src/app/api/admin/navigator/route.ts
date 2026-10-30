@@ -1,4 +1,4 @@
-// Навигаторы дня в админке: список, добавить или заменить ({ id?, ... }), удалить ({ id }).
+// Послания навигатора в админке (раздел «Навигатор»): список, добавить или заменить ({ id?, ... }), удалить ({ id }).
 import { deleteNavigatorMessage, listNavigatorMessagesForStaff, saveNavigatorMessage } from "@/entities/program/server";
 import { readJsonObject, withUser } from "@/shared/api/route-helpers";
 
