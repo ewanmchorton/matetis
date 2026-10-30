@@ -1,8 +1,9 @@
 // Программа человека на сегодня: открытые практики, отметки, навигатор. Только серверный код.
-// Доступ к программе проверяет вызывающий код. Дни — по Минску.
+// Доступ к программе проверяет вызывающий код. Дни — по часам телефона человека (его часовой пояс
+// в настройках); пока телефон его не сообщил — по Минску.
 import { and, asc, eq, gte, inArray, lte } from "drizzle-orm";
 
-import { localDay } from "@/entities/daily-phrase";
+import { DEFAULT_TIME_ZONE, localDay } from "@/entities/daily-phrase";
 import { getCurrentSeason, type Season } from "@/entities/element/server";
 import { getMyCurrentType } from "@/entities/type-test-attempt/server";
 import {
@@ -11,6 +12,7 @@ import {
   navigatorMessageType,
   navigatorPart,
   navigatorRead,
+  personSettings,
   practice,
   practiceMark,
   practiceNote,
@@ -22,11 +24,13 @@ import { AppError } from "@/shared/lib/app-error";
 import { navigatorDay, navigatorPosition, programDayNumber, weekDays, type NavigatorDay } from "../model/program-day";
 import { listPractices } from "./program-content.server";
 
-const PROGRAM_TIME_ZONE = "Europe/Minsk";
-
-/** Сегодняшний день по Минску: «2026-12-25». */
-export function programToday(now: Date): string {
-  return localDay(now, PROGRAM_TIME_ZONE);
+/** Сегодняшний день по часам человека: «2026-12-25». */
+async function todayFor(userId: string, now: Date): Promise<string> {
+  const [row] = await db
+    .select({ timeZone: personSettings.timeZone })
+    .from(personSettings)
+    .where(eq(personSettings.userId, userId));
+  return localDay(now, row?.timeZone ?? DEFAULT_TIME_ZONE);
 }
 
 /** Первый день человека в программе. В первый раз — сегодня. */
@@ -42,7 +46,7 @@ export type NavigatorToday = NavigatorDay & {
   read: boolean;
 };
 
-/** Послание человека на этот день программы: по порядку для его типа, по кругу. null — нет типа или посланий. */
+/** Навигатор человека на этот день программы: по порядку для его типа, по кругу. null — нет типа или навигаторов. */
 async function navigatorFor(userId: string, programDay: number, today: string): Promise<NavigatorToday | null> {
   const type = await getMyCurrentType(userId);
   if (!type) return null;
@@ -97,7 +101,7 @@ export type MyProgram = {
 
 /** Программа человека на сегодня. В первый раз запоминает его первый день. */
 export async function getMyProgram(userId: string, now = new Date()): Promise<MyProgram> {
-  const today = programToday(now);
+  const today = await todayFor(userId, now);
   const days = weekDays(today);
   const programDay = programDayNumber(await startedOn(userId, today), today);
   const [season, navigator, practices, marks, reads, [welcome]] = await Promise.all([
@@ -140,9 +144,9 @@ export async function getMyProgram(userId: string, now = new Date()): Promise<My
   };
 }
 
-/** Навигатор на сегодня для экрана послания. */
+/** Навигатор на сегодня для его экрана. */
 export async function getMyNavigator(userId: string, now = new Date()) {
-  const today = programToday(now);
+  const today = await todayFor(userId, now);
   const programDay = programDayNumber(await startedOn(userId, today), today);
   return navigatorFor(userId, programDay, today);
 }
@@ -153,7 +157,7 @@ export async function getMyNavigator(userId: string, now = new Date()) {
  */
 export async function setPracticeDone(userId: string, practiceId: unknown, done: boolean, now = new Date()) {
   if (typeof practiceId !== "string") throw new AppError("not_found", "Практика не найдена");
-  const today = programToday(now);
+  const today = await todayFor(userId, now);
   const programDay = programDayNumber(await startedOn(userId, today), today);
   const [item] = await db.select().from(practice).where(eq(practice.id, practiceId));
   if (!item || item.opensOnDay > programDay) throw new AppError("not_found", "Практика не найдена");
@@ -175,9 +179,9 @@ export async function setPracticeDone(userId: string, practiceId: unknown, done:
 
 /** «Прочитано» на экране навигатора. */
 export async function markNavigatorRead(userId: string, now = new Date()) {
-  const today = programToday(now);
+  const today = await todayFor(userId, now);
   const navigator = await getMyNavigator(userId, now);
-  if (!navigator) throw new AppError("no_navigator", "Послание пока не готово");
+  if (!navigator) throw new AppError("no_navigator", "Навигатор пока не готов");
   await db.insert(navigatorRead).values({ userId, day: today, messageId: navigator.messageId }).onConflictDoNothing();
   return { ok: true };
 }
@@ -185,7 +189,7 @@ export async function markNavigatorRead(userId: string, now = new Date()) {
 /** Заметка для себя к практике на сегодня. Пустая — удаляется. */
 export async function saveMyNote(userId: string, practiceId: unknown, rawText: unknown, now = new Date()) {
   if (typeof practiceId !== "string") throw new AppError("not_found", "Практика не найдена");
-  const today = programToday(now);
+  const today = await todayFor(userId, now);
   const key = and(eq(practiceNote.userId, userId), eq(practiceNote.practiceId, practiceId), eq(practiceNote.day, today));
   const text = typeof rawText === "string" ? rawText.trim().slice(0, 2000) : "";
   if (!text) {
@@ -207,7 +211,7 @@ export async function getMyNote(userId: string, practiceId: string, now = new Da
   const [row] = await db
     .select({ text: practiceNote.text })
     .from(practiceNote)
-    .where(and(eq(practiceNote.userId, userId), eq(practiceNote.practiceId, practiceId), eq(practiceNote.day, programToday(now))));
+    .where(and(eq(practiceNote.userId, userId), eq(practiceNote.practiceId, practiceId), eq(practiceNote.day, await todayFor(userId, now))));
   return { text: row?.text ?? "" };
 }
 

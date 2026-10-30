@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
+import { updateMySettings } from "@/entities/person-settings/server";
 import { saveMyTypeTest } from "@/entities/type-test-attempt/server";
 
 import { clearDatabase, createPerson } from "../../../../tests/people";
@@ -144,6 +145,16 @@ describe("Программа человека", () => {
       "2026-12-27",
     ]);
     expect(week.find((item) => item.day === "2026-12-25")?.done).toBe(true);
+  });
+
+  it("«сегодня» считается по часам телефона человека", async () => {
+    // 20:00 UTC 25 декабря: в Минске ещё 25-е, во Владивостоке уже 26-е.
+    const evening = new Date("2026-12-25T20:00:00Z");
+    expect((await getMyProgram(anna, evening)).today).toBe("2026-12-25");
+    await updateMySettings(anna, { timeZone: "Asia/Vladivostok" });
+    const program = await getMyProgram(anna, evening);
+    expect(program.today).toBe("2026-12-26");
+    expect(program.programDay).toBe(2);
   });
 
   it("приветственное видео показывается, пока человек не нажал «Просмотрено»", async () => {

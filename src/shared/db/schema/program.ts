@@ -1,4 +1,4 @@
-// Программа: практики, послания навигатора и прогресс человека. Разделы 3а и 4 в docs/data-model.md.
+// Программа: практики, навигаторы дня и прогресс человека. Разделы 3а и 4 в docs/data-model.md.
 import { sql } from "drizzle-orm";
 import { check, date, index, pgEnum, pgTable, primaryKey, smallint, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
@@ -38,19 +38,19 @@ export const practice = pgTable(
   ],
 );
 
-/** Послание Мастера для навигатора дня: три части на неделю. */
+/** Навигатор дня: текст Мастера из трёх частей на неделю. */
 export const navigatorMessage = pgTable("navigator_message", {
   id: uuid("id").primaryKey().defaultRandom(),
   masterName: text("master_name").notNull(),
-  /** Порядок, в котором послания приходят. */
+  /** Порядок, в котором навигаторы приходят. */
   position: smallint("position").notNull(),
-  /** Задание седьмого дня, когда читают послание полностью. Пусто — без задания. */
+  /** Задание седьмого дня, когда читают навигатор полностью. Пусто — без задания. */
   day7Task: text("day7_task"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 /**
- * Часть послания (1–3) и её два задания: на первый и второй день части.
+ * Часть навигатора (1–3) и её два задания: на первый и второй день части.
  * Пустые задания второй и третьей части — такие же, как у первой.
  */
 export const navigatorPart = pgTable(
@@ -71,7 +71,7 @@ export const navigatorPart = pgTable(
   ],
 );
 
-/** Каким типам подходит послание (t1–t12, src/entities/person-type). */
+/** Каким типам подходит навигатор (t1–t12, src/entities/person-type). */
 export const navigatorMessageType = pgTable(
   "navigator_message_type",
   {
@@ -110,7 +110,7 @@ export const practiceMark = pgTable(
   ],
 );
 
-/** «Прочитано» на экране навигатора: какое послание и в какой день. */
+/** «Прочитано» на экране навигатора: какой навигатор и в какой день. */
 export const navigatorRead = pgTable("navigator_read", {
   userId: text("user_id")
     .notNull()
