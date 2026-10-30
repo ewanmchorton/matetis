@@ -12,16 +12,18 @@ import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Textarea } from "@/shared/ui/textarea";
 
+import { EldersEditor } from "./elders-editor";
+
 type Part = { title: string; body: string; firstDayTask: string; secondDayTask: string };
 type Message = {
   id: string;
   masterName: string;
   position: number;
-  day7Task: string | null;
+  day5Task: string | null;
   typeIds: string[];
   parts: { part: number; title: string; body: string; firstDayTask: string | null; secondDayTask: string | null }[];
 };
-type Draft = { id?: string; masterName: string; position: number; day7Task: string; typeIds: string[]; parts: Part[] };
+type Draft = { id?: string; masterName: string; position: number; day5Task: string; typeIds: string[]; parts: Part[] };
 type ListState = { status: "loading" } | { status: "error"; message: string } | { status: "ready"; messages: Message[] };
 
 const types = getPersonTypes();
@@ -32,9 +34,9 @@ function toDraft(message: Message): Draft {
     id: message.id,
     masterName: message.masterName,
     position: message.position,
-    day7Task: message.day7Task ?? "",
+    day5Task: message.day5Task ?? "",
     typeIds: message.typeIds,
-    parts: [1, 2, 3].map((number) => {
+    parts: [1, 2].map((number) => {
       const part = message.parts.find((item) => item.part === number);
       return {
         title: part?.title ?? "",
@@ -53,7 +55,7 @@ function typeNames(typeIds: string[]) {
     .join(", ");
 }
 
-/** Раздел «Навигатор»: послания Мастеров из трёх частей, по порядку для своих типов. */
+/** Раздел «Навигатор»: послания Мастеров из двух частей и послания старцев, по порядку для своих типов. */
 export function AdminNavigatorPage() {
   const [state, setState] = useState<ListState>({ status: "loading" });
   const [openId, setOpenId] = useState<string | null>(null);
@@ -90,9 +92,9 @@ export function AdminNavigatorPage() {
     setDraft({
       masterName: "",
       position: messages.length + 1,
-      day7Task: "",
+      day5Task: "",
       typeIds: [],
-      parts: [emptyPart(), emptyPart(), emptyPart()],
+      parts: [emptyPart(), emptyPart()],
     });
   }
 
@@ -233,11 +235,13 @@ export function AdminNavigatorPage() {
       ))}
 
       <div className="space-y-1.5">
-        <Label htmlFor="day7-task">Задание 7-го дня, когда послание читают полностью (можно оставить пустым)</Label>
+        <Label htmlFor="day5-task">
+          Задание 5-го дня, объединяющее: послание читают полностью (можно оставить пустым)
+        </Label>
         <Textarea
-          id="day7-task"
-          value={draft.day7Task}
-          onChange={(event) => setDraft({ ...draft, day7Task: event.target.value })}
+          id="day5-task"
+          value={draft.day5Task}
+          onChange={(event) => setDraft({ ...draft, day5Task: event.target.value })}
         />
       </div>
 
@@ -259,11 +263,12 @@ export function AdminNavigatorPage() {
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold">Навигатор</h1>
         <p className="text-sm text-muted-foreground">
-          Одно послание — на неделю: по два дня на каждую часть, на 7-й день всё послание целиком. Послания идут по
-          порядку для своих типов, потом сначала.
+          Одно послание — на неделю: по два дня на каждую часть, на 5-й день всё послание целиком, на 6-й и 7-й —
+          послание старцев с заданиями 1-го и 2-го дня. Послания идут по порядку для своих типов, потом сначала.
         </p>
       </div>
 
+      <h2 className="font-semibold">Послания Мастеров</h2>
       {state.status === "loading" && <p className="text-sm text-muted-foreground">Загружаем…</p>}
       {state.status === "error" && (
         <p role="alert" className="text-sm text-destructive">
@@ -321,6 +326,8 @@ export function AdminNavigatorPage() {
           Добавить послание
         </Button>
       )}
+
+      <EldersEditor />
     </div>
   );
 }

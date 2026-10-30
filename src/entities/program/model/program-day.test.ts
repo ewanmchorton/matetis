@@ -15,7 +15,6 @@ import {
 const parts: NavigatorPart[] = [
   { part: 1, title: "Часть 1", body: "Текст 1", firstDayTask: "Задание А", secondDayTask: "Задание Б" },
   { part: 2, title: "Часть 2", body: "Текст 2", firstDayTask: null, secondDayTask: null },
-  { part: 3, title: "Часть 3", body: "Текст 3", firstDayTask: "Своё задание 5-го дня", secondDayTask: null },
 ];
 
 describe("День программы", () => {
@@ -52,21 +51,27 @@ describe("Цикл навигатора", () => {
     expect(navigatorDay(parts, null, 2)).toMatchObject({ parts: [{ title: "Часть 1" }], task: "Задание Б", newTask: true });
   });
 
-  it("задания второй части по умолчанию повторяют задания первой", () => {
-    expect(navigatorDay(parts, null, 3)).toMatchObject({ parts: [{ title: "Часть 2" }], task: "Задание А" });
-    expect(navigatorDay(parts, null, 4)).toMatchObject({ parts: [{ title: "Часть 2" }], task: "Задание Б" });
+  it("дни 3–4 — вторая часть, её задания по умолчанию повторяют задания первой", () => {
+    expect(navigatorDay(parts, null, 3)).toMatchObject({ kind: "part", parts: [{ title: "Часть 2" }], task: "Задание А" });
+    expect(navigatorDay(parts, null, 4)).toMatchObject({ parts: [{ title: "Часть 2" }], task: "Задание Б", newTask: true });
   });
 
-  it("своё задание части заменяет повтор", () => {
-    expect(navigatorDay(parts, null, 5).task).toBe("Своё задание 5-го дня");
-    expect(navigatorDay(parts, null, 6).task).toBe("Задание Б");
+  it("своё задание второй части заменяет повтор", () => {
+    const own = parts.map((part) => (part.part === 2 ? { ...part, firstDayTask: "Своё задание 3-го дня" } : part));
+    expect(navigatorDay(own, null, 3).task).toBe("Своё задание 3-го дня");
+    expect(navigatorDay(own, null, 4).task).toBe("Задание Б");
   });
 
-  it("на седьмой день — всё послание и задание седьмого дня, если есть", () => {
-    const day7 = navigatorDay(parts, "Задание недели", 7);
-    expect(day7.parts.map((part) => part.title)).toEqual(["Часть 1", "Часть 2", "Часть 3"]);
-    expect(day7).toMatchObject({ task: "Задание недели", fullMessage: true, newTask: false });
-    expect(navigatorDay(parts, null, 7).task).toBeNull();
+  it("на пятый день — послание целиком и объединяющее задание, если есть", () => {
+    const day5 = navigatorDay(parts, "Объединяющее задание", 5);
+    expect(day5.parts.map((part) => part.title)).toEqual(["Часть 1", "Часть 2"]);
+    expect(day5).toMatchObject({ kind: "full", task: "Объединяющее задание", newTask: false });
+    expect(navigatorDay(parts, null, 5).task).toBeNull();
+  });
+
+  it("6-й и 7-й день — послание старцев, задания как в 1-й и 2-й день", () => {
+    expect(navigatorDay(parts, null, 6)).toMatchObject({ kind: "elders", parts: [], task: "Задание А", newTask: false });
+    expect(navigatorDay(parts, null, 7)).toMatchObject({ kind: "elders", parts: [], task: "Задание Б", newTask: true });
   });
 });
 

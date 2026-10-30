@@ -47,46 +47,54 @@ export type NavigatorPart = {
   secondDayTask: string | null;
 };
 
+/** Что в этот день навигатора: часть послания, послание целиком (5-й день) или послание старцев (6-й и 7-й). */
+export type NavigatorDayKind = "part" | "full" | "elders";
+
 export type NavigatorDay = {
   cycleDay: number;
-  /** Какие части показать: в дни 1–6 одна, в седьмой день — все три. */
+  kind: NavigatorDayKind;
+  /** Какие части показать: в дни 1–4 одна, на 5-й день — обе. В дни старцев — пусто, текст берётся у старцев. */
   parts: { title: string; body: string }[];
   /** Задание на сегодня. null — задания нет. */
   task: string | null;
-  /** Второй день части: тот же текст, новое задание. */
+  /** Второй день части или 7-й день: тот же текст, новое задание. */
   newTask: boolean;
-  /** Седьмой день: послание полностью. */
-  fullMessage: boolean;
 };
 
 /**
  * Что показывает навигатор в этот день недели послания.
- * Дни 1–2 — часть 1, 3–4 — часть 2, 5–6 — часть 3, в нечётный день задание первого дня части,
- * в чётный — второго. Пустые задания второй и третьей части берутся из первой. День 7 — всё послание.
+ * Дни 1–2 — часть 1, 3–4 — часть 2: в нечётный день задание первого дня части, в чётный — второго.
+ * Пустые задания второй части берутся из первой. День 5 — послание целиком и своё задание.
+ * Дни 6 и 7 — послание старцев, задания — как в 1-й и 2-й день.
  */
-export function navigatorDay(parts: NavigatorPart[], day7Task: string | null, cycleDay: number): NavigatorDay {
+export function navigatorDay(parts: NavigatorPart[], day5Task: string | null, cycleDay: number): NavigatorDay {
   const sorted = [...parts].sort((a, b) => a.part - b.part);
-  if (cycleDay >= NAVIGATOR_CYCLE_DAYS) {
+  const first = sorted[0];
+  if (cycleDay === 5) {
     return {
       cycleDay,
+      kind: "full",
       parts: sorted.map(({ title, body }) => ({ title, body })),
-      task: day7Task?.trim() || null,
+      task: day5Task?.trim() || null,
       newTask: false,
-      fullMessage: true,
     };
   }
-  const current = sorted[Math.ceil(cycleDay / 2) - 1] ?? sorted[0];
-  const first = sorted[0];
+  if (cycleDay >= 6) {
+    const secondDay = cycleDay === 7;
+    const task = secondDay ? first.secondDayTask?.trim() : first.firstDayTask?.trim();
+    return { cycleDay, kind: "elders", parts: [], task: task || null, newTask: secondDay };
+  }
+  const current = sorted[Math.ceil(cycleDay / 2) - 1] ?? first;
   const secondDay = cycleDay % 2 === 0;
   const task = secondDay
     ? current.secondDayTask?.trim() || first.secondDayTask?.trim()
     : current.firstDayTask?.trim() || first.firstDayTask?.trim();
   return {
     cycleDay,
+    kind: "part",
     parts: [{ title: current.title, body: current.body }],
     task: task || null,
     newTask: secondDay,
-    fullMessage: false,
   };
 }
 

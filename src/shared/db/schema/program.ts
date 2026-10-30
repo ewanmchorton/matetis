@@ -106,20 +106,20 @@ export const practiceVariantType = pgTable(
   (table) => [primaryKey({ columns: [table.variantId, table.typeId] })],
 );
 
-/** Послание Мастера для навигатора дня: три части на неделю. */
+/** Послание Мастера для навигатора дня: две части, на 5-й день — целиком. */
 export const navigatorMessage = pgTable("navigator_message", {
   id: uuid("id").primaryKey().defaultRandom(),
   masterName: text("master_name").notNull(),
   /** Порядок, в котором послания приходят. */
   position: smallint("position").notNull(),
-  /** Задание седьмого дня, когда читают послание полностью. Пусто — без задания. */
-  day7Task: text("day7_task"),
+  /** Задание пятого дня, когда читают послание полностью. Пусто — без задания. */
+  day5Task: text("day5_task"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 /**
- * Часть послания (1–3) и её два задания: на первый и второй день части.
- * Пустые задания второй и третьей части — такие же, как у первой.
+ * Часть послания (1–2) и её два задания: на первый и второй день части.
+ * Пустые задания второй части — такие же, как у первой.
  */
 export const navigatorPart = pgTable(
   "navigator_part",
@@ -135,7 +135,7 @@ export const navigatorPart = pgTable(
   },
   (table) => [
     primaryKey({ columns: [table.messageId, table.part] }),
-    check("navigator_part_number", sql`${table.part} between 1 and 3`),
+    check("navigator_part_number", sql`${table.part} between 1 and 2`),
   ],
 );
 
@@ -146,6 +146,27 @@ export const navigatorMessageType = pgTable(
     messageId: uuid("message_id")
       .notNull()
       .references(() => navigatorMessage.id, { onDelete: "cascade" }),
+    typeId: text("type_id").notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.messageId, table.typeId] })],
+);
+
+/** Послание Печерских старцев на 6-й и 7-й день навигатора. По порядку для своих типов, по кругу. */
+export const elderMessage = pgTable("elder_message", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  position: smallint("position").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** Каким типам подходит послание старцев (t1–t12). */
+export const elderMessageType = pgTable(
+  "elder_message_type",
+  {
+    messageId: uuid("message_id")
+      .notNull()
+      .references(() => elderMessage.id, { onDelete: "cascade" }),
     typeId: text("type_id").notNull(),
   },
   (table) => [primaryKey({ columns: [table.messageId, table.typeId] })],

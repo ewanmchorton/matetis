@@ -10,6 +10,7 @@ export {
   setPracticeDone,
 } from "./api/my-program.server";
 export type {
+  ElderMessage,
   NavigatorMessage,
   NavigatorMessageInput,
   Practice,
@@ -19,12 +20,15 @@ export type {
   ProgramVideoSlot,
 } from "./api/program-content.server";
 export {
+  deleteElderMessage,
   deleteNavigatorMessage,
   deletePractice,
+  listElderMessagesForStaff,
   listNavigatorMessagesForStaff,
   listPracticesForStaff,
   listProgramVideosForStaff,
   programVideoSlots,
+  saveElderMessage,
   saveNavigatorMessage,
   savePractice,
   saveProgramVideo,

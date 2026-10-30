@@ -17,6 +17,7 @@ import {
 import {
   listPracticesForStaff,
   listProgramVideosForStaff,
+  saveElderMessage,
   saveNavigatorMessage,
   savePractice,
   saveProgramVideo,
@@ -44,8 +45,12 @@ async function addMessage(masterName: string, position: number, typeIds = [HEALE
     masterName,
     position,
     typeIds,
-    parts: [part(1, [`${masterName}: задание 1`, `${masterName}: задание 2`]), part(2), part(3)],
+    parts: [part(1, [`${masterName}: задание 1`, `${masterName}: задание 2`]), part(2)],
   });
+}
+
+async function addElders(title: string, position: number, typeIds = [HEALER]) {
+  return saveElderMessage(manager, { title, body: `${title}: текст`, position, typeIds });
 }
 
 beforeEach(async () => {
@@ -71,16 +76,16 @@ describe("Наполнение программы", () => {
     await expect(savePractice(anna, { title: "Улыбка", frequency: "weekly" })).rejects.toThrow("только сотрудникам");
   });
 
-  it("послание — три части, задания первой части и хотя бы один тип обязательны", async () => {
+  it("послание — две части, задания первой части и хотя бы один тип обязательны", async () => {
     await expect(
-      saveNavigatorMessage(manager, { masterName: "Сурия", typeIds: [HEALER], parts: [part(1), part(2), part(3)] }),
+      saveNavigatorMessage(manager, { masterName: "Сурия", typeIds: [HEALER], parts: [part(1), part(2)] }),
     ).rejects.toThrow("оба задания первой части");
     await expect(
-      saveNavigatorMessage(manager, { masterName: "Сурия", parts: [part(1, ["а", "б"]), part(2), part(3)] }),
+      saveNavigatorMessage(manager, { masterName: "Сурия", parts: [part(1, ["а", "б"]), part(2)] }),
     ).rejects.toThrow("каким типам");
     await expect(
-      saveNavigatorMessage(manager, { masterName: "Сурия", typeIds: [HEALER], parts: [part(1, ["а", "б"])] }),
-    ).rejects.toThrow("три части");
+      saveNavigatorMessage(manager, { masterName: "Сурия", typeIds: [HEALER], parts: [part(1, ["а", "б"]), part(2), part(3)] }),
+    ).rejects.toThrow("две части");
   });
 });
 
@@ -330,14 +335,44 @@ describe("Навигатор дня", () => {
     expect(third?.parts.map((item) => item.title)).toEqual(["Заголовок 2"]);
   });
 
-  it("седьмой день — послание полностью, восьмой — следующее послание", async () => {
+  it("пятый день — послание полностью, восьмой — следующее послание", async () => {
     await addMessage("Сурия", 1);
     await addMessage("Эль Морья", 2);
     await getMyProgram(anna, day(1));
-    const seventh = await getMyNavigator(anna, day(7));
-    expect(seventh).toMatchObject({ fullMessage: true, masterName: "Сурия" });
-    expect(seventh?.parts).toHaveLength(3);
+    const fifth = await getMyNavigator(anna, day(5));
+    expect(fifth).toMatchObject({ kind: "full", masterName: "Сурия" });
+    expect(fifth?.parts).toHaveLength(2);
     expect((await getMyNavigator(anna, day(8)))?.masterName).toBe("Эль Морья");
+  });
+
+  it("6-й и 7-й день — послание старцев для типа, задания первого и второго дня", async () => {
+    await addMessage("Сурия", 1);
+    await addElders("Старцы 1", 1);
+    await addElders("Старцы 2", 2);
+    await addElders("Для Идеалиста", 0, [IDEALIST]);
+    await getMyProgram(anna, day(1));
+    expect(await getMyNavigator(anna, day(6))).toMatchObject({
+      kind: "elders",
+      masterName: null,
+      elders: { title: "Старцы 1", body: "Старцы 1: текст" },
+      task: "Сурия: задание 1",
+    });
+    expect(await getMyNavigator(anna, day(7))).toMatchObject({ elders: { title: "Старцы 1" }, task: "Сурия: задание 2" });
+    // Вторая неделя — следующее послание старцев, третья — снова первое.
+    expect((await getMyNavigator(anna, day(13)))?.elders?.title).toBe("Старцы 2");
+    expect((await getMyNavigator(anna, day(20)))?.elders?.title).toBe("Старцы 1");
+  });
+
+  it("без послания старцев для типа в 6-й и 7-й день навигатора нет", async () => {
+    await addMessage("Сурия", 1);
+    await getMyProgram(anna, day(1));
+    expect(await getMyNavigator(anna, day(6))).toBeNull();
+  });
+
+  it("послание старцев — с заголовком, текстом и хотя бы одним типом", async () => {
+    await expect(saveElderMessage(manager, { title: "", body: "Текст", typeIds: [HEALER] })).rejects.toThrow("Заполните");
+    await expect(saveElderMessage(manager, { title: "Т", body: "Текст", typeIds: [] })).rejects.toThrow("типам");
+    await expect(saveElderMessage(anna, { title: "Т", body: "Текст", typeIds: [HEALER] })).rejects.toThrow();
   });
 
   it("когда послания закончились — снова с первого", async () => {
