@@ -36,7 +36,7 @@ describe("Уведомление о заявке", () => {
     const id = await createPerson("Ольга", "user", "olga@example.ru");
     await notifyNewRequest({ id, email: "olga@example.ru", name: "Ольга", role: "user" });
     expect(sent.messages).toEqual([
-      { endpoint: "https://push.example/admin-phone", body: "Новая заявка: Ольга", url: "/admin/access?filter=request" },
+      { endpoint: "https://push.example/admin-phone", body: "Новая заявка: Ольга", url: "/admin/matetis?filter=request" },
     ]);
   });
 
@@ -89,7 +89,7 @@ describe("Ежедневная сводка о доступах", () => {
       {
         endpoint: "https://push.example/admin-phone",
         body: "У 2 человек доступ закончится в ближайшие 3 дня",
-        url: "/admin/access?filter=expiring",
+        url: "/admin/matetis?filter=expiring",
       },
     ]);
   });

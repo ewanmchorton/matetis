@@ -55,7 +55,7 @@ export async function notifyNewRequest(person: ContactPerson & { id: string; nam
   await notifyAdmins({
     title: APP_NAME,
     body: `Новая заявка: ${person.name || contactOf(person)}`,
-    url: `${routes.adminAccess}?filter=request`,
+    url: `${routes.adminMatetis}?filter=request`,
   });
 }
 
@@ -109,7 +109,7 @@ export async function sendExpiringDigest(now = new Date()): Promise<number> {
   await notifyAdmins({
     title: APP_NAME,
     body: `У ${peopleCount(expiring.length)} доступ закончится в ближайшие ${EXPIRING_DAYS} дня`,
-    url: `${routes.adminAccess}?filter=expiring`,
+    url: `${routes.adminMatetis}?filter=expiring`,
   });
   return expiring.length;
 }

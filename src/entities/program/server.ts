@@ -9,12 +9,22 @@ export {
   saveMyNote,
   setPracticeDone,
 } from "./api/my-program.server";
-export type { NavigatorMessage, NavigatorMessageInput, Practice, PracticeInput } from "./api/program-content.server";
+export type {
+  NavigatorMessage,
+  NavigatorMessageInput,
+  Practice,
+  PracticeInput,
+  ProgramVideo,
+  ProgramVideoSlot,
+} from "./api/program-content.server";
 export {
   deleteNavigatorMessage,
   deletePractice,
   listNavigatorMessagesForStaff,
   listPracticesForStaff,
+  listProgramVideosForStaff,
+  programVideoSlots,
   saveNavigatorMessage,
   savePractice,
+  saveProgramVideo,
 } from "./api/program-content.server";

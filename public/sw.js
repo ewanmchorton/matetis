@@ -17,7 +17,7 @@ self.addEventListener("push", (event) => {
     self.registration.showNotification(message.title || "МАТЭТИС", {
       body: message.body || "",
       icon: "icon-192.png",
-      data: { url: message.url || "/admin/access" },
+      data: { url: message.url || "/" },
     }),
   );
 });

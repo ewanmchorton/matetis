@@ -3,28 +3,21 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ExternalLink, KeyRound, LayoutDashboard, Library, ListChecks, LockKeyhole, MessageSquareQuote, RotateCcw, ShieldCheck, Sprout, Users } from "lucide-react";
+import { Compass, ExternalLink, LayoutDashboard, Library, ListChecks, LockKeyhole, Users } from "lucide-react";
 
-import { libraryActions } from "@/entities/library";
-import { practiceActions } from "@/entities/practice";
-import { progressActions } from "@/entities/progress";
-import { socialActions } from "@/entities/social";
 import type { PersonRole } from "@/shared/auth/roles";
 import { APP_NAME } from "@/shared/config/brand";
 import { routes } from "@/shared/config/routes";
 import { cn } from "@/shared/lib/utils";
-import { Button, buttonVariants } from "@/shared/ui/button";
+import { buttonVariants } from "@/shared/ui/button";
 
 // adminOnly — раздел не виден контент-менеджеру.
 const allNav = [
   { href: routes.admin, label: "Обзор", icon: LayoutDashboard },
-  { href: routes.adminMaterials, label: "Материалы", icon: Library },
-  { href: routes.adminProgram, label: "Практики и ритуалы", icon: ListChecks },
-  { href: routes.adminSupport, label: "Доп. практики", icon: Sprout },
-  { href: routes.adminPhrases, label: "Фразы дня", icon: MessageSquareQuote },
-  { href: routes.adminStudents, label: "Ученики", icon: Users, adminOnly: true },
-  { href: routes.adminAccess, label: "Доступы", icon: KeyRound, adminOnly: true },
-  { href: routes.adminTeam, label: "Команда", icon: ShieldCheck, adminOnly: true },
+  { href: routes.adminNavigator, label: "Навигатор", icon: Compass },
+  { href: routes.adminPractices, label: "Практики", icon: ListChecks },
+  { href: routes.adminLibrary, label: "Библиотека", icon: Library },
+  { href: routes.adminMatetis, label: "Матэтисы", icon: Users, adminOnly: true },
 ];
 
 const roleLabels: Record<PersonRole, string> = {
@@ -33,13 +26,6 @@ const roleLabels: Record<PersonRole, string> = {
   user: "Ученик",
 };
 
-function resetDemo() {
-  if (!window.confirm("Вернуть демо-данные приложения и админки?")) return;
-  libraryActions.reset();
-  practiceActions.reset();
-  progressActions.reset();
-  socialActions.reset();
-}
 
 export function AdminShell({ children, role }: { children: ReactNode; role: PersonRole }) {
   const pathname = usePathname();
@@ -97,10 +83,6 @@ export function AdminShell({ children, role }: { children: ReactNode; role: Pers
             <ExternalLink />
             Открыть приложение
           </Link>
-          <Button variant="ghost" className="w-full justify-start text-muted-foreground" onClick={resetDemo}>
-            <RotateCcw />
-            Сбросить демо-данные
-          </Button>
         </div>
       </aside>
 
@@ -120,9 +102,7 @@ export function AdminShell({ children, role }: { children: ReactNode; role: Pers
               </Link>
             ))}
           </nav>
-          <p className="hidden text-sm text-muted-foreground md:block">
-            Демо-режим: данные хранятся в этом браузере, файлы не загружаются на сервер.
-          </p>
+          <span className="hidden md:block" />
           <div className="flex shrink-0 items-center gap-2 text-sm">
             <span className="grid size-8 place-items-center rounded-full bg-primary/10 font-medium text-primary">
               {roleLabels[role].charAt(0)}

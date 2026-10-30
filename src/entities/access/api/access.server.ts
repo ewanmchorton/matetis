@@ -178,7 +178,7 @@ function statusTime(status: AccessStatus): number {
 }
 
 /**
- * Все люди для раздела «Доступы»: зарегистрированные (кроме сотрудников) и контакты, добавленные заранее.
+ * Все ученики для раздела «Матэтисы»: зарегистрированные (кроме команды) и контакты, добавленные заранее.
  * search — часть почты, ника или имени.
  */
 export async function listAccessForAdmin(adminId: string, search = "", now = new Date()): Promise<AccessListItem[]> {
@@ -227,6 +227,9 @@ export async function listAccessItems(search = "", now = new Date()): Promise<Ac
 }
 
 export type AccessCard = AccessListItem & {
+  /** Зарегистрированный человек с этим контактом: id и роль. null — ещё не зарегистрировался. */
+  userId: string | null;
+  role: string | null;
   /** Новые сверху. */
   periods: AccessPeriod[];
   suggestedAmounts: SuggestedAmounts;
@@ -254,6 +257,8 @@ async function cardOf(contact: string, now: Date): Promise<AccessCard> {
   return {
     contact,
     name: person?.name ?? null,
+    userId: person?.id ?? null,
+    role: person?.role ?? null,
     status,
     periods,
     suggestedAmounts: suggestAmounts(settings, periods.length === 0),

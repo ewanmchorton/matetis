@@ -30,6 +30,8 @@ export type AccessPeriodDto = {
 export type AccessListItemDto = { contact: string; name: string | null; status: AccessStatusDto };
 
 export type AccessCardDto = AccessListItemDto & {
+  userId: string | null;
+  role: "user" | "content_manager" | "admin" | null;
   periods: AccessPeriodDto[];
   suggestedAmounts: Record<"1" | "3" | "12", number | null>;
 };

@@ -4,7 +4,7 @@ import { asc, eq } from "drizzle-orm";
 
 import { getPersonTypes } from "@/entities/person-type";
 import { assertStaff } from "@/shared/auth/assert-admin";
-import { db, navigatorMessage, navigatorMessageType, navigatorPart, practice } from "@/shared/db";
+import { db, navigatorMessage, navigatorMessageType, navigatorPart, practice, programVideo } from "@/shared/db";
 import { AppError } from "@/shared/lib/app-error";
 
 export type Practice = typeof practice.$inferSelect;
@@ -179,4 +179,33 @@ export async function listNavigatorMessagesForStaff(viewerId: string): Promise<N
       .filter((part) => part.messageId === message.id)
       .map(({ part, title, body, firstDayTask, secondDayTask }) => ({ part, title, body, firstDayTask, secondDayTask })),
   }));
+}
+
+/** Места для видео в разделе «Библиотека»: приветственное и по каждой стихии. */
+export const programVideoSlots = ["welcome", "water", "wood", "fire", "earth", "metal"] as const;
+export type ProgramVideoSlot = (typeof programVideoSlots)[number];
+export type ProgramVideo = { slot: ProgramVideoSlot; videoUrl: string | null; body: string };
+
+/** Все видео библиотеки по порядку; незаполненные — пустые. */
+export async function listProgramVideosForStaff(viewerId: string): Promise<ProgramVideo[]> {
+  await assertStaff(viewerId);
+  const rows = await db.select().from(programVideo);
+  return programVideoSlots.map((slot) => {
+    const row = rows.find((item) => item.slot === slot);
+    return { slot, videoUrl: row?.videoUrl ?? null, body: row?.body ?? "" };
+  });
+}
+
+/** Сохранить видео: ссылку на YouTube и текст. */
+export async function saveProgramVideo(viewerId: string, input: { slot?: unknown; videoUrl?: unknown; body?: unknown }) {
+  await assertStaff(viewerId);
+  const slot = programVideoSlots.find((item) => item === input.slot);
+  if (!slot) throw new AppError("invalid_slot", "Неизвестное видео");
+  const videoUrl = optionalText(input.videoUrl);
+  if (videoUrl && !/^https:\/\/(www\.)?(youtube\.com|youtu\.be)\//.test(videoUrl)) {
+    throw new AppError("invalid_video", "Видео — ссылка на YouTube");
+  }
+  const values = { slot, videoUrl, body: text(input.body), updatedAt: new Date() };
+  await db.insert(programVideo).values(values).onConflictDoUpdate({ target: programVideo.slot, set: values });
+  return { slot, videoUrl, body: values.body };
 }

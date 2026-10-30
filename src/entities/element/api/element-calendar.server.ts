@@ -5,7 +5,17 @@ import { assertStaff } from "@/shared/auth/assert-admin";
 import { db, metalStart } from "@/shared/db";
 import { AppError } from "@/shared/lib/app-error";
 
-import { backgroundAt, defaultMetalStart, elementAt, isMetalDateAllowed, metalYearFor, minskMidnight, minskYearMonth, type SeasonBackground } from "../model/calendar";
+import {
+  backgroundAt,
+  defaultMetalStart,
+  elementAt,
+  isMetalDateAllowed,
+  isMetalSettingVisible,
+  metalYearFor,
+  minskMidnight,
+  minskYearMonth,
+  type SeasonBackground,
+} from "../model/calendar";
 import type { ElementId } from "../model/types";
 
 /** Даты Металла за эти годы: «2026-10-14» → полночь по Минску. */
@@ -38,6 +48,8 @@ export type ElementCalendarState = Season & {
   metalYear: number;
   /** День Металла этой осенью, «2026-10-14». null — не задан, Металл с 1 ноября. */
   metalStartsOn: string | null;
+  /** Показывать ли настройку дня Металла: с 1 октября до недели после перехода. */
+  metalSettingVisible: boolean;
 };
 
 /** Для админки: текущая стихия, фон и день перехода на Металл. */
@@ -48,7 +60,9 @@ export async function getElementCalendarForStaff(viewerId: string, now = new Dat
     getCurrentSeason(now),
     db.select({ startsOn: metalStart.startsOn }).from(metalStart).where(eq(metalStart.year, metalYear)).limit(1),
   ]);
-  return { ...season, metalYear, metalStartsOn: row?.startsOn ?? null };
+  const metalStartsOn = row?.startsOn ?? null;
+  const metalFrom = metalStartsOn ? dayToMoment(metalStartsOn) : defaultMetalStart(metalYear);
+  return { ...season, metalYear, metalStartsOn, metalSettingVisible: isMetalSettingVisible(now, metalFrom) };
 }
 
 /**

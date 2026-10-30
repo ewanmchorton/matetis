@@ -73,6 +73,15 @@ export function backgroundAt(now: Date, metalFrom: (year: number) => Date): Seas
   return { kind: "element", elementId: elementAt(now, metalFrom(minskYearMonth(now).year)) };
 }
 
+/**
+ * Показывать ли в админке настройку дня Металла: с 1 октября до недели после перехода.
+ * Остальной год она не нужна.
+ */
+export function isMetalSettingVisible(now: Date, metalFrom: Date): boolean {
+  const { year } = minskYearMonth(now);
+  return now >= minskMidnight(year, 10, 1) && now.getTime() < metalFrom.getTime() + 7 * DAY_MS;
+}
+
 /** Дата Металла подходит, только если она осенью: со 2 сентября по 30 ноября. */
 export function isMetalDateAllowed(month: number, day: number): boolean {
   if (month === 9) return day >= 2;

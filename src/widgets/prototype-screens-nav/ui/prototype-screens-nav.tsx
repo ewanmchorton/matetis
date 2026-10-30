@@ -30,7 +30,6 @@ const prototypeScreens: { href: string; label: string; note?: string }[] = [
   { href: `${routes.elementResult}?badge=1`, label: "Итог стихии", note: "бейдж" },
   { href: `${routes.elementResult}?badge=0`, label: "Итог стихии", note: "без бейджа" },
   { href: routes.admin, label: "Админка", note: "веб-версия" },
-  { href: routes.adminSupport, label: "Админка", note: "доп. практики" },
 ];
 
 function isActive(pathname: string, href: string): boolean {

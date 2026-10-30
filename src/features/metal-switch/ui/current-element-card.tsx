@@ -9,7 +9,13 @@ import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 
 type Background = { kind: "element"; elementId: ElementId } | { kind: "transition"; from: ElementId; to: ElementId };
-type CalendarState = { elementId: ElementId; background: Background; metalYear: number; metalStartsOn: string | null };
+type CalendarState = {
+  elementId: ElementId;
+  background: Background;
+  metalYear: number;
+  metalStartsOn: string | null;
+  metalSettingVisible: boolean;
+};
 
 function backgroundLabel(background: Background) {
   if (background.kind === "element") return `стихии ${getElement(background.elementId).genitive}`;
@@ -19,6 +25,7 @@ function backgroundLabel(background: Background) {
 /**
  * Текущая стихия в админке и день перехода с Земли на Металл.
  * Остальные стихии идут по временам года сами; день Металла каждый год разный — его говорит Жанна.
+ * Настройка дня видна только с 1 октября до недели после перехода.
  */
 export function CurrentElementCard() {
   const [state, setState] = useState<CalendarState | null>(null);
@@ -58,7 +65,7 @@ export function CurrentElementCard() {
         {state && <span className="text-sm text-muted-foreground">фон {backgroundLabel(state.background)}</span>}
       </div>
 
-      {state && (
+      {state?.metalSettingVisible && (
         <div className="space-y-2">
           <label htmlFor="metal-day" className="block text-sm font-medium">
             Металл осенью {state.metalYear} года начинается с

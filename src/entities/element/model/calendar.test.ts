@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { backgroundAt, defaultMetalStart, elementAt, isMetalDateAllowed, minskMidnight } from "./calendar";
+import { backgroundAt, defaultMetalStart, elementAt, isMetalDateAllowed, isMetalSettingVisible, minskMidnight } from "./calendar";
 
 const at = (iso: string) => new Date(iso);
 const metal2026 = minskMidnight(2026, 10, 14);
@@ -72,5 +72,16 @@ describe("Фоны стихий и переходов", () => {
 
   it("в начале декабря ещё переход Металл → Вода", () => {
     expect(backgroundAt(at("2026-12-03T12:00:00+03:00"), withMetal)).toEqual({ kind: "transition", from: "metal", to: "water" });
+  });
+});
+
+describe("Настройка дня Металла в админке", () => {
+  it("видна с 1 октября до недели после перехода, в остальное время скрыта", () => {
+    const nov1 = defaultMetalStart(2026);
+    expect(isMetalSettingVisible(at("2026-09-30T12:00:00+03:00"), nov1)).toBe(false);
+    expect(isMetalSettingVisible(at("2026-10-01T00:00:00+03:00"), nov1)).toBe(true);
+    expect(isMetalSettingVisible(at("2026-11-07T23:00:00+03:00"), nov1)).toBe(true);
+    expect(isMetalSettingVisible(at("2026-11-08T00:00:00+03:00"), nov1)).toBe(false);
+    expect(isMetalSettingVisible(at("2027-03-01T12:00:00+03:00"), defaultMetalStart(2027))).toBe(false);
   });
 });

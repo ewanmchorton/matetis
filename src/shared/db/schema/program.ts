@@ -144,3 +144,18 @@ export const welcomeVideoSeen = pgTable("welcome_video_seen", {
     .references(() => user.id, { onDelete: "cascade" }),
   seenAt: timestamp("seen_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+/**
+ * Видео раздела «Библиотека»: приветственное (welcome) и по каждой стихии (wood, fire, earth, metal, water).
+ * Ссылка на YouTube и текст под видео.
+ */
+export const programVideo = pgTable(
+  "program_video",
+  {
+    slot: text("slot").primaryKey(),
+    videoUrl: text("video_url"),
+    body: text("body").notNull().default(""),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [check("program_video_slot", sql`${table.slot} in ('welcome', 'wood', 'fire', 'earth', 'metal', 'water')`)],
+);

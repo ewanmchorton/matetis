@@ -13,7 +13,13 @@ import {
   saveMyNote,
   setPracticeDone,
 } from "./my-program.server";
-import { listPracticesForStaff, saveNavigatorMessage, savePractice } from "./program-content.server";
+import {
+  listPracticesForStaff,
+  listProgramVideosForStaff,
+  saveNavigatorMessage,
+  savePractice,
+  saveProgramVideo,
+} from "./program-content.server";
 
 const HEALER = "t1";
 const IDEALIST = "t2";
@@ -231,5 +237,20 @@ describe("Заметки для себя", () => {
     expect(await getMyNote(anna, thinking.id, day(2))).toEqual({ text: "" });
     await saveMyNote(anna, thinking.id, "", day(1));
     expect(await getMyNote(anna, thinking.id, day(1))).toEqual({ text: "" });
+  });
+});
+
+describe("Видео библиотеки", () => {
+  it("контент-менеджер сохраняет приветственное видео и видео по стихии, остальные пустые", async () => {
+    await saveProgramVideo(manager, { slot: "welcome", videoUrl: "https://youtu.be/abc", body: "Как устроена программа" });
+    await saveProgramVideo(manager, { slot: "earth", videoUrl: "https://www.youtube.com/watch?v=x", body: "" });
+    const videos = await listProgramVideosForStaff(manager);
+    expect(videos.map((video) => video.slot)).toEqual(["welcome", "water", "wood", "fire", "earth", "metal"]);
+    expect(videos[0]).toEqual({ slot: "welcome", videoUrl: "https://youtu.be/abc", body: "Как устроена программа" });
+    expect(videos[1].videoUrl).toBeNull();
+  });
+
+  it("видео — только ссылка на YouTube", async () => {
+    await expect(saveProgramVideo(manager, { slot: "welcome", videoUrl: "https://vimeo.com/1" })).rejects.toThrow("YouTube");
   });
 });
