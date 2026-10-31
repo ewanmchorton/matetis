@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { loadMyProgram } from "@/entities/program";
+import { isAudioPractice, loadMyProgram, numberedSteps } from "@/entities/program";
 import type { ProgramPractice } from "@/entities/program/server";
 import { request } from "@/shared/api/request";
 import { isStaticPrototype } from "@/shared/config/env";
@@ -14,11 +14,19 @@ import { Button } from "@/shared/ui/button";
 import { GlassCard } from "@/shared/ui/glass-card";
 import { ScreenLayout } from "@/widgets/screen-layout";
 
+import { AudioPlayer } from "./audio-player";
+
 type State = { status: "loading" } | { status: "error"; message: string } | { status: "ready"; practice: ProgramPractice };
 
 const daypartNames = { morning: "Утро", evening: "Вечер" } as const;
 
-/** Экран практики с заметками для себя: «Мышление по навигатору дня». */
+/** Длительность записи, пока аудио не загружено в админке. */
+const PLACEHOLDER_AUDIO_SECONDS = 5 * 60;
+
+/**
+ * Экран практики. «Мышление по навигатору дня» — текст и заметки для себя;
+ * практика с аудио («Внутренняя улыбка») — плеер и текст, без заметок.
+ */
 export function PracticePage({ practiceId }: { practiceId: string }) {
   const router = useRouter();
   const [state, setState] = useState<State>({ status: "loading" });
@@ -44,8 +52,10 @@ export function PracticePage({ practiceId }: { practiceId: string }) {
   }, [notePath, practiceId]);
 
   const practice = state.status === "ready" ? state.practice : null;
+  const withAudio = practice ? isAudioPractice(practice) : false;
 
   async function saveNote() {
+    if (withAudio) return;
     if (note.trim() !== savedNote) await request(notePath, { method: "PUT", body: JSON.stringify({ text: note }) });
   }
 
@@ -70,7 +80,7 @@ export function PracticePage({ practiceId }: { practiceId: string }) {
   return (
     <ScreenLayout
       variant="page"
-      background="04_earth_03_lizard"
+      background={withAudio ? "04_earth_04_practice" : "04_earth_03_lizard"}
       beforeTitle={
         practice?.daypart && (
           <p className="type-caption text-muted-foreground">{daypartNames[practice.daypart]} · каждый день</p>
@@ -94,7 +104,17 @@ export function PracticePage({ practiceId }: { practiceId: string }) {
           </p>
         </GlassCard>
       )}
-      {practice && (
+      {practice && withAudio && (
+        <>
+          <AudioPlayer durationSeconds={PLACEHOLDER_AUDIO_SECONDS} />
+          {practice.body && (
+            <GlassCard className="bg-background/80">
+              <PracticeText body={practice.body} />
+            </GlassCard>
+          )}
+        </>
+      )}
+      {practice && !withAudio && (
         <>
           <GlassCard className="space-y-4 bg-background/80">
             {practice.body && <p className="type-body text-foreground">{typograph(practice.body)}</p>}
@@ -113,5 +133,18 @@ export function PracticePage({ practiceId }: { practiceId: string }) {
         </>
       )}
     </ScreenLayout>
+  );
+}
+
+/** Пронумерованные шаги — списком с отступом под номером, остальное — абзацем. */
+function PracticeText({ body }: { body: string }) {
+  const steps = numberedSteps(body);
+  if (!steps) return <p className="type-body whitespace-pre-line text-foreground">{typograph(body)}</p>;
+  return (
+    <ol className="list-decimal space-y-0 pl-6 type-body text-foreground marker:text-foreground">
+      {steps.map((step) => (
+        <li key={step}>{typograph(step)}</li>
+      ))}
+    </ol>
   );
 }

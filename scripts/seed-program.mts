@@ -29,7 +29,7 @@ type Seed = {
 
 // Порядок и дни — из docs/data-model.md, раздел «3а. Программа».
 const practices: Seed[] = [
-  { title: "Улыбка", frequency: "daily", daypart: "morning", opensOnDay: 1 },
+  { title: "Внутренняя улыбка", frequency: "daily", daypart: "morning", opensOnDay: 1 },
   { title: "Линия души", frequency: "daily", daypart: "morning", opensOnDay: 8 },
   { title: "Мини-зарядка", frequency: "daily", daypart: "morning", opensOnDay: 1 },
   { title: "Целительные звуки", frequency: "daily", daypart: "evening", opensOnDay: 4 },

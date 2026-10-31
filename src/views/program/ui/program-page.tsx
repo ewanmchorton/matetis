@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { ElementBadge, getElement } from "@/entities/element";
+import { opensPracticeScreen } from "@/entities/program";
 import type { MyProgram, ProgramPractice } from "@/entities/program/server";
 import { PhrasePrompt } from "@/features/phrase-notifications";
 import { routes } from "@/shared/config/routes";
@@ -18,9 +19,6 @@ import { useMyProgram } from "../api/program-api";
 import { PracticeRow } from "./practice-row";
 import { WeekLetters } from "./week-letters";
 import { WelcomeVideo } from "./welcome-video";
-
-/** «Мышление по навигатору дня» открывается на своём экране с заметками. */
-export const isThinkingPractice = (practice: ProgramPractice) => practice.title.startsWith("Мышление по навигатору");
 
 const weekdays = ["понедельник", "вторник", "среду", "четверг", "пятницу", "субботу", "воскресенье"];
 
@@ -107,7 +105,7 @@ function DayBlock({
             meta={practiceMeta(practice)}
             done={Boolean(practice.doneOn)}
             onDone={(done) => onDone([practice.id], done)}
-            href={isThinkingPractice(practice) ? `${routes.practice}/${practice.id}` : undefined}
+            href={opensPracticeScreen(practice) ? `${routes.practice}/${practice.id}` : undefined}
           />
         ))}
       </GlassCard>
