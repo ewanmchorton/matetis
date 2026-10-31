@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState, type ComponentProps } from "react";
 import { LayoutGrid } from "lucide-react";
 
 import { routes } from "@/shared/config/routes";
@@ -30,6 +31,14 @@ const prototypeScreens: { href: string; label: string; note?: string }[] = [
   { href: routes.admin, label: "Админка", note: "веб-версия" },
 ];
 
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
+/** reload — обычная ссылка: страница загрузится заново. Иначе — быстрый переход Next.js. */
+function ScreenLink({ href, reload, ...props }: ComponentProps<"a"> & { href: string; reload: boolean }) {
+  if (reload) return <a href={`${basePath}${href}`} {...props} />;
+  return <Link href={href} {...props} />;
+}
+
 function isActive(pathname: string, search: string, href: string): boolean {
   const [path, query = ""] = href.split("?");
   // Экран «без доступа» и обычный — на одном адресе, различаются только ?demo=…
@@ -42,9 +51,10 @@ export function PrototypeScreensNav() {
   // Список рисуется только в открытом меню, то есть в браузере: адрес уже известен.
   // useSearchParams не берём — на сайте-прототипе он требует отдельной обёртки для сборки.
   const search = typeof window === "undefined" ? "" : window.location.search;
+  const [open, setOpen] = useState(false);
 
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
         render={
           <Button
@@ -68,8 +78,11 @@ export function PrototypeScreensNav() {
               const active = isActive(pathname, search, screen.href);
               return (
                 <li key={screen.href}>
-                  <Link
+                  {/* Вход в демо ?demo=… и выход из него — с загрузкой страницы заново:
+                      иначе приложение не перечитает демо-данные доступа. */}
+                  <ScreenLink
                     href={screen.href}
+                    reload={screen.href.includes("demo=") || search.includes("demo=")}
                     className={cn(
                       "flex items-center justify-between rounded-lg px-3 py-2.5 text-sm transition-colors",
                       active
@@ -77,12 +90,14 @@ export function PrototypeScreensNav() {
                         : "hover:bg-muted",
                     )}
                     aria-current={active ? "page" : undefined}
+                    // Выбрал экран — меню закрывается, экран сразу виден.
+                    onClick={() => setOpen(false)}
                   >
                     <span>{screen.label}</span>
                     {screen.note && (
                       <span className="text-xs text-muted-foreground">{screen.note}</span>
                     )}
-                  </Link>
+                  </ScreenLink>
                 </li>
               );
             })}
