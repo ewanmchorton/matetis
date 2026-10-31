@@ -19,6 +19,7 @@ export type ScreenBackground =
   | "04_earth_01_program"
   | "04_earth_02_navigator"
   | "04_earth_03_lizard"
+  | "04_earth_04_practice"
   | "06_profile";
 
 /**

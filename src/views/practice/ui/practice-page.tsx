@@ -70,7 +70,7 @@ export function PracticePage({ practiceId }: { practiceId: string }) {
   return (
     <ScreenLayout
       variant="page"
-      background="04_earth_03_lizard"
+      background="04_earth_04_practice"
       beforeTitle={
         practice?.daypart && (
           <p className="type-caption text-muted-foreground">{daypartNames[practice.daypart]} · каждый день</p>

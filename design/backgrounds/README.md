@@ -16,3 +16,7 @@ PNG, 1290 × 2796 px, без элементов интерфейса. Один �
 | `03_result.png` | `03_5_res` — результат теста |
 | `05_together.png` | `05_vmeste` — «Вместе» |
 | `06_profile.png` | `06_profile` — профиль |
+| `04_earth program bg.png` | `04_earth_01_program` — программа (практики дня) |
+| `04_earth navigator bg.PNG` | `04_earth_02_navigator` — навигатор |
+| `04_earth practice bg.PNG` | Экран практики или медитации (улыбка, зарядка и другие) |
+| `04_earth_03_lizard bg.png` | Видео по стихии |
