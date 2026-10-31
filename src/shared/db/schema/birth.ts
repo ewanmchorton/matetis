@@ -1,5 +1,5 @@
 // Расчёт по дате рождения: квадрат Пифагора. Раздел 2 в docs/data-model.md, методика — docs/elements-method.md.
-// Храним, сколько раз встречается каждая цифра 1–9. Суммы по стихиям и оценки
+// Храним, сколько раз встречается каждая цифра 0–9. Суммы по стихиям и оценки
 // не храним: сервер считает их из цифр по таблице соответствия.
 import { sql } from "drizzle-orm";
 import { check, date, pgTable, smallint, text, timestamp } from "drizzle-orm/pg-core";
@@ -16,6 +16,9 @@ export const birthReading = pgTable(
       .primaryKey()
       .references(() => user.id, { onDelete: "cascade" }),
     birthDate: date("birth_date", { mode: "string" }).notNull(),
+    // Ноль считается с 31.10.2026 (новая схема Жанны). Значение по умолчанию нужно только
+    // для уже сохранённых строк при добавлении столбца — миграция сразу их пересчитывает.
+    digit0: digitCount("digit_0").default(0),
     digit1: digitCount("digit_1"),
     digit2: digitCount("digit_2"),
     digit3: digitCount("digit_3"),
@@ -30,7 +33,7 @@ export const birthReading = pgTable(
   (table) => [
     check(
       "birth_reading_digits_not_negative",
-      sql`least(${table.digit1}, ${table.digit2}, ${table.digit3}, ${table.digit4}, ${table.digit5}, ${table.digit6}, ${table.digit7}, ${table.digit8}, ${table.digit9}) >= 0`,
+      sql`least(${table.digit0}, ${table.digit1}, ${table.digit2}, ${table.digit3}, ${table.digit4}, ${table.digit5}, ${table.digit6}, ${table.digit7}, ${table.digit8}, ${table.digit9}) >= 0`,
     ),
   ],
 );

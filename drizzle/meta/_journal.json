@@ -127,6 +127,13 @@
       "when": 1793380832546,
       "tag": "0017_element_video_seen",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1793458672403,
+      "tag": "0018_birth_reading_zero",
+      "breakpoints": true
     }
   ]
 }

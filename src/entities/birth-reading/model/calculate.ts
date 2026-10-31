@@ -3,23 +3,23 @@
 import type { ElementId } from "@/entities/element";
 import { AppError } from "@/shared/lib/app-error";
 
-export type Digit = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+export type Digit = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
-/** Сколько раз встречается каждая цифра 1–9. Нули не считаются. */
+/** Сколько раз встречается каждая цифра 0–9. */
 export type DigitCounts = Record<Digit, number>;
 
-export const digits: readonly Digit[] = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+export const digits: readonly Digit[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
 /** Стихии в порядке круга Усин, начиная с Земли. */
 export const elementOrder: readonly ElementId[] = ["earth", "metal", "water", "wood", "fire"];
 
-/** Какие цифры относятся к стихии. По схеме Жанны, без деления на инь и ян. */
+/** Какие цифры относятся к стихии. По схеме Жанны «Концепция У-син в нумерологии», без деления на инь и ян. */
 export const elementDigits: Record<ElementId, readonly Digit[]> = {
-  earth: [2, 5, 8],
-  metal: [6, 7],
-  water: [1],
-  wood: [3, 4],
-  fire: [9],
+  earth: [3, 5],
+  metal: [2, 9],
+  water: [1, 6],
+  wood: [0, 8],
+  fire: [4, 7],
 };
 
 export type ElementLevel =
@@ -83,29 +83,31 @@ export function parseBirthDate(value: unknown, today = new Date()): { day: numbe
   return { day, month, year };
 }
 
-function digitsOf(value: number): number[] {
+function digitsOf(value: number | string): number[] {
   // Минус у третьего числа не цифра: для некоторых дат 2000-х оно получается отрицательным.
-  return String(Math.abs(value)).split("").map(Number);
+  return String(value).replace("-", "").split("").map(Number);
 }
+
+const twoDigits = (value: number) => String(value).padStart(2, "0");
 
 const sum = (values: number[]) => values.reduce((total, value) => total + value, 0);
 
 /** Квадрат Пифагора: рабочие числа и сколько раз встречается каждая цифра. */
 export function calculateBirthSquare(birthDate: string, today?: Date): BirthSquare {
   const { day, month, year } = parseBirthDate(birthDate, today);
-  const dayDigits = digitsOf(day);
-  const dateDigits = [...dayDigits, ...digitsOf(month), ...digitsOf(year)];
+  // Дата как пишется — ДД.ММ.ГГГГ: ноль в «06» тоже цифра.
+  const dateDigits = digitsOf(`${twoDigits(day)}${twoDigits(month)}${year}`);
 
   const first = sum(dateDigits);
   const second = sum(digitsOf(first));
-  // Первая цифра дня; для дней 1–9 это сама цифра дня (ноль в «05» не считается).
-  const third = first - 2 * dayDigits[0];
+  // Первая цифра дня; для дней 01–09 это сама цифра дня (ноль в «05» пропускаем).
+  const third = first - 2 * digitsOf(day)[0];
   const fourth = sum(digitsOf(third));
   const workingNumbers: BirthSquare["workingNumbers"] = [first, second, third, fourth];
 
   const digitCounts = Object.fromEntries(digits.map((digit) => [digit, 0])) as DigitCounts;
-  for (const value of [...dateDigits, ...workingNumbers.flatMap(digitsOf)]) {
-    if (value !== 0) digitCounts[value as Digit] += 1;
+  for (const value of [...dateDigits, ...workingNumbers.flatMap((number) => digitsOf(number))]) {
+    digitCounts[value as Digit] += 1;
   }
   return { workingNumbers, digitCounts };
 }

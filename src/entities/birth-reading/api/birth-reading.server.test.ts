@@ -23,13 +23,13 @@ describe("Расчёт по дате рождения в базе", () => {
     await saveMyBirthDate(anna, "1988-03-15");
     const reading = await getMyBirthReading(anna);
     expect(reading?.birthDate).toBe("1988-03-15");
-    expect(reading?.digitCounts).toEqual({ 1: 2, 2: 0, 3: 4, 4: 0, 5: 2, 6: 1, 7: 0, 8: 3, 9: 1 });
+    expect(reading?.digitCounts).toEqual({ 0: 1, 1: 2, 2: 0, 3: 4, 4: 0, 5: 2, 6: 1, 7: 0, 8: 3, 9: 1 });
     expect(reading?.elements.map(({ element, count }) => [element, count])).toEqual([
-      ["earth", 5],
+      ["earth", 6],
       ["metal", 1],
-      ["water", 2],
+      ["water", 3],
       ["wood", 4],
-      ["fire", 1],
+      ["fire", 0],
     ]);
   });
 
@@ -58,7 +58,7 @@ describe("Доступ администратора", () => {
   it("администратор видит расчёт любого человека", async () => {
     await saveMyBirthDate(anna, "1988-03-15");
     const reading = await getBirthReadingForAdmin(admin, anna);
-    expect(reading?.elements[0]).toEqual({ element: "earth", count: 5, level: "very_strong" });
+    expect(reading?.elements[0]).toEqual({ element: "earth", count: 6, level: "overload" });
   });
 
   it("администратор видит, что человек дату не указал", async () => {

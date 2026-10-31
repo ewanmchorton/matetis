@@ -173,7 +173,7 @@ describe("Программа человека", () => {
   it("в программе — имя, тип, текст практики и слабая стихия для блока осознаний", async () => {
     await saveMyBirthDate(anna, "1988-03-15");
     const program = await getMyProgram(anna, day(1));
-    expect(program.person).toEqual({ name: "Анна", typeName: expect.any(String), weakElement: "metal" });
+    expect(program.person).toEqual({ name: "Анна", typeName: expect.any(String), weakElement: "fire" });
     expect(program.morning[0]).toMatchObject({ title: "Улыбка", body: "", videoUrl: null });
   });
 
@@ -292,17 +292,17 @@ describe("Варианты практик", () => {
       frequency: "awareness",
       position: 2,
       variants: [
-        { body: "Про Металл", weakElement: "metal" },
+        { body: "Про Огонь", weakElement: "fire" },
         { body: "Про Дерево", weakElement: "wood" },
       ],
     });
     expect((await getMyProgram(anna, day(1))).awareness).toEqual([]);
 
-    // 15.03.1988: Металла и Огня по одной цифре, Металл раньше по кругу от Земли.
+    // 15.03.1988: у Огня (4, 7) ни одной цифры — меньше всех.
     await saveMyBirthDate(anna, "1988-03-15");
     const [awareness] = (await getMyProgram(anna, day(1))).awareness;
     expect(titles([awareness])).toEqual(["Осознание на слабую стихию"]);
-    expect(await shownBody("Осознание на слабую стихию", awareness.variantId)).toBe("Про Металл");
+    expect(await shownBody("Осознание на слабую стихию", awareness.variantId)).toBe("Про Огонь");
   });
 
   it("вариант на стихию года — по текущей стихии, у всех типов один", async () => {

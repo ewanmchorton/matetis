@@ -6,32 +6,38 @@ const today = new Date(2026, 9, 19);
 const square = (birthDate: string) => calculateBirthSquare(birthDate, today);
 
 describe("Квадрат Пифагора по дате рождения", () => {
-  it("15.03.1988: рабочие числа 35, 8, 33, 6", () => {
-    expect(square("1988-03-15").workingNumbers).toEqual([35, 8, 33, 6]);
+  it("18.06.1990: рабочие числа 34, 7, 32, 5", () => {
+    expect(square("1990-06-18").workingNumbers).toEqual([34, 7, 32, 5]);
   });
 
-  it("15.03.1988: цифры даты и рабочих чисел посчитаны, нули пропущены", () => {
-    expect(square("1988-03-15").digitCounts).toEqual({
-      1: 2, 2: 0, 3: 4, 4: 0, 5: 2, 6: 1, 7: 0, 8: 3, 9: 1,
+  it("18.06.1990: цифры даты и рабочих чисел посчитаны вместе с нулями", () => {
+    expect(square("1990-06-18").digitCounts).toEqual({
+      0: 2, 1: 2, 2: 1, 3: 2, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 2,
     });
   });
 
-  it("день с нулём (05.07.1990): третье число — минус удвоенная пятёрка", () => {
+  it("15.03.1988: рабочие числа 35, 8, 33, 6, ноль из месяца «03» посчитан", () => {
+    const result = square("1988-03-15");
+    expect(result.workingNumbers).toEqual([35, 8, 33, 6]);
+    expect(result.digitCounts).toEqual({ 0: 1, 1: 2, 2: 0, 3: 4, 4: 0, 5: 2, 6: 1, 7: 0, 8: 3, 9: 1 });
+  });
+
+  it("день с нулём (05.07.1990): третье число — минус удвоенная пятёрка, нули дня и месяца считаются", () => {
     const result = square("1990-07-05");
     expect(result.workingNumbers).toEqual([31, 4, 21, 3]);
-    expect(result.digitCounts).toEqual({ 1: 3, 2: 1, 3: 2, 4: 1, 5: 1, 6: 0, 7: 1, 8: 0, 9: 2 });
+    expect(result.digitCounts).toEqual({ 0: 3, 1: 3, 2: 1, 3: 2, 4: 1, 5: 1, 6: 0, 7: 1, 8: 0, 9: 2 });
   });
 
   it("дата 2000-х считается так же, как остальные (21.11.2003)", () => {
     const result = square("2003-11-21");
     expect(result.workingNumbers).toEqual([10, 1, 6, 6]);
-    expect(result.digitCounts).toEqual({ 1: 5, 2: 2, 3: 1, 4: 0, 5: 0, 6: 2, 7: 0, 8: 0, 9: 0 });
+    expect(result.digitCounts).toEqual({ 0: 3, 1: 5, 2: 2, 3: 1, 4: 0, 5: 0, 6: 2, 7: 0, 8: 0, 9: 0 });
   });
 
   it("отрицательное третье число (09.01.2000): минус не считается цифрой", () => {
     const result = square("2000-01-09");
     expect(result.workingNumbers).toEqual([12, 3, -6, 6]);
-    expect(result.digitCounts).toEqual({ 1: 2, 2: 2, 3: 1, 4: 0, 5: 0, 6: 2, 7: 0, 8: 0, 9: 1 });
+    expect(result.digitCounts).toEqual({ 0: 5, 1: 2, 2: 2, 3: 1, 4: 0, 5: 0, 6: 2, 7: 0, 8: 0, 9: 1 });
   });
 
   it("второе и четвёртое числа — сумма цифр один раз, без сведения к одной цифре (29.12.1999)", () => {
@@ -40,24 +46,26 @@ describe("Квадрат Пифагора по дате рождения", () =>
 });
 
 describe("Распределение по стихиям", () => {
-  it("15.03.1988: Земля 5, Металл 1, Вода 2, Дерево 4, Огонь 1 — в порядке круга Усин", () => {
-    expect(scoreElements(square("1988-03-15").digitCounts)).toEqual([
-      { element: "earth", count: 5, level: "very_strong" },
-      { element: "metal", count: 1, level: "present" },
-      { element: "water", count: 2, level: "balanced" },
-      { element: "wood", count: 4, level: "strong" },
-      { element: "fire", count: 1, level: "present" },
+  it("18.06.1990: Земля 3, Металл 3, Вода 3, Дерево 3, Огонь 2 — в порядке круга Усин", () => {
+    expect(scoreElements(square("1990-06-18").digitCounts)).toEqual([
+      { element: "earth", count: 3, level: "unbalanced" },
+      { element: "metal", count: 3, level: "unbalanced" },
+      { element: "water", count: 3, level: "unbalanced" },
+      { element: "wood", count: 3, level: "unbalanced" },
+      { element: "fire", count: 2, level: "balanced" },
     ]);
   });
 
-  it("Земля — 2, 5, 8; Металл — 6, 7; Вода — 1; Дерево — 3, 4; Огонь — 9", () => {
-    const counts = { 1: 1, 2: 10, 3: 100, 4: 1000, 5: 10000, 6: 100000, 7: 1000000, 8: 10000000, 9: 100000000 };
+  it("Земля — 3, 5; Металл — 2, 9; Вода — 1, 6; Дерево — 0, 8; Огонь — 4, 7", () => {
+    const counts = {
+      0: 1, 1: 10, 2: 100, 3: 1000, 4: 10000, 5: 100000, 6: 1000000, 7: 10000000, 8: 100000000, 9: 1000000000,
+    };
     expect(scoreElements(counts).map(({ element, count }) => [element, count])).toEqual([
-      ["earth", 10010010],
-      ["metal", 1100000],
-      ["water", 1],
-      ["wood", 1100],
-      ["fire", 100000000],
+      ["earth", 101000],
+      ["metal", 1000000100],
+      ["water", 1000010],
+      ["wood", 100000001],
+      ["fire", 10010000],
     ]);
   });
 

@@ -29,10 +29,10 @@ const ADMIN = { name: "Админ Тестовый", email: "admin.test@matetis.
 const ADMIN_PASSWORD = "matetis-local-admin";
 const STUDENT = { name: "Анна Тестовая", email: "anna.test@matetis.local" };
 
-// Квадрат Пифагора для 15.03.1988: сколько раз встречается каждая цифра 1–9.
+// Квадрат Пифагора для 15.03.1988: сколько раз встречается каждая цифра 0–9.
 // Совпадает с расчётом в src/entities/birth-reading/model/calculate.ts (проверено тестом).
 const BIRTH_DATE = "1988-03-15";
-const DIGIT_COUNTS = [2, 0, 4, 0, 2, 1, 0, 3, 1];
+const DIGIT_COUNTS = [1, 2, 0, 4, 0, 2, 1, 0, 3, 1];
 
 const client = new pg.Client({ connectionString: databaseUrl });
 await client.connect();
@@ -78,8 +78,8 @@ try {
   );
   // Дата рождения не перезаписывается, если Анна уже указала свою.
   await client.query(
-    `insert into birth_reading (user_id, birth_date, digit_1, digit_2, digit_3, digit_4, digit_5, digit_6, digit_7, digit_8, digit_9)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+    `insert into birth_reading (user_id, birth_date, digit_0, digit_1, digit_2, digit_3, digit_4, digit_5, digit_6, digit_7, digit_8, digit_9)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
      on conflict (user_id) do nothing`,
     [studentId, BIRTH_DATE, ...DIGIT_COUNTS],
   );

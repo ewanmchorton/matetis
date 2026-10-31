@@ -20,6 +20,7 @@ type BirthReadingRow = typeof birthReading.$inferSelect;
 
 function toDigitColumns(counts: DigitCounts) {
   return {
+    digit0: counts[0],
     digit1: counts[1],
     digit2: counts[2],
     digit3: counts[3],
