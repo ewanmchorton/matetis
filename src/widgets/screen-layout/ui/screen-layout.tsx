@@ -5,7 +5,10 @@ import { cn } from "@/shared/lib/utils";
 import { Logo } from "@/shared/ui/logo";
 import { StepDots } from "@/shared/ui/step-dots";
 
-/** Фоны из design/backgrounds, уменьшенные до 780 px в ширину (2× от 390). Лежат в public/backgrounds. */
+/**
+ * Фоны из design/backgrounds, уменьшенные до 780 px в ширину (2× от 390). Лежат в public/backgrounds.
+ * 04_earth_* — фоны экранов программы для стихии Земля; у других стихий будут свои.
+ */
 export type ScreenBackground =
   | "01_reg"
   | "02_0_intro_underlay"
