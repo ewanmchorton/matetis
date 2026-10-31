@@ -125,13 +125,20 @@ export function scoreElements(digitCounts: DigitCounts): ElementScore[] {
 }
 
 /**
- * Слабая стихия человека — для практик на слабую стихию.
- * Пока Жанна не дала правило: стихия с наименьшим числом цифр; при равенстве — первая по кругу Усин от Земли.
+ * Слабые стихии человека — для практик на слабую стихию. Правило Жанны от 31.10.2026, по порядку:
+ * 0 или 1 цифра; если таких нет — ровно 3; если и таких нет — 5 и больше; остались только 2 и 4 — берём 2.
+ * Порядок — по кругу Усин от Земли. Если слабых несколько, программа прокачивает их по очереди.
  */
-export function weakestElement(scores: ElementScore[]): ElementId | null {
-  let weakest: ElementScore | null = null;
-  for (const score of scores) {
-    if (!weakest || score.count < weakest.count) weakest = score;
+export function weakElements(scores: ElementScore[]): ElementId[] {
+  const rules: ((count: number) => boolean)[] = [
+    (count) => count <= 1,
+    (count) => count === 3,
+    (count) => count >= 5,
+    (count) => count === 2,
+  ];
+  for (const rule of rules) {
+    const found = scores.filter((score) => rule(score.count)).map((score) => score.element);
+    if (found.length > 0) return found;
   }
-  return weakest?.element ?? null;
+  return [];
 }

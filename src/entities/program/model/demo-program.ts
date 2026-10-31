@@ -30,7 +30,7 @@ const practice = (
   hasAudio: false,
   body,
   videoUrl: null,
-  forWeakElement: false,
+  weakElement: null,
   doneOn: null,
 });
 
@@ -103,6 +103,6 @@ export function demoProgram(now = new Date()): MyProgram {
     showWelcomeVideo: false,
     welcomeVideo: null,
     elementVideo: null,
-    person: { name: "Ваня", typeName: "Целитель", weakElement: null },
+    person: { name: "Ваня", typeName: "Целитель" },
   };
 }

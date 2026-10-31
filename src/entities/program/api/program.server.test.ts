@@ -170,10 +170,10 @@ describe("Программа человека", () => {
     expect(program.programDay).toBe(2);
   });
 
-  it("в программе — имя, тип, текст практики и слабая стихия для блока осознаний", async () => {
+  it("в программе — имя, тип и текст практики, список слабых стихий человеку не отдаётся", async () => {
     await saveMyBirthDate(anna, "1988-03-15");
     const program = await getMyProgram(anna, day(1));
-    expect(program.person).toEqual({ name: "Анна", typeName: expect.any(String), weakElement: "fire" });
+    expect(program.person).toEqual({ name: "Анна", typeName: expect.any(String) });
     expect(program.morning[0]).toMatchObject({ title: "Улыбка", body: "", videoUrl: null });
   });
 
@@ -286,23 +286,48 @@ describe("Варианты практик", () => {
     await expect(setPracticeDone(anna, meditation.id, true, day(22))).rejects.toThrow("не найдена");
   });
 
-  it("на слабую стихию — вариант стихии с наименьшим числом цифр; без даты рождения практики нет", async () => {
+  it("на слабую стихию — вариант слабой стихии человека; без даты рождения практики нет", async () => {
     await savePractice(manager, {
       title: "Осознание на слабую стихию",
       frequency: "awareness",
       position: 2,
       variants: [
-        { body: "Про Огонь", weakElement: "fire" },
+        { body: "Про Металл", weakElement: "metal" },
         { body: "Про Дерево", weakElement: "wood" },
       ],
     });
     expect((await getMyProgram(anna, day(1))).awareness).toEqual([]);
 
-    // 15.03.1988: у Огня (4, 7) ни одной цифры — меньше всех.
+    // 15.03.1988: слабые — Металл (1 цифра) и Огонь (0). Первым по кругу от Земли идёт Металл.
     await saveMyBirthDate(anna, "1988-03-15");
     const [awareness] = (await getMyProgram(anna, day(1))).awareness;
     expect(titles([awareness])).toEqual(["Осознание на слабую стихию"]);
-    expect(await shownBody("Осознание на слабую стихию", awareness.variantId)).toBe("Про Огонь");
+    expect(awareness.weakElement).toBe("metal");
+    expect(await shownBody("Осознание на слабую стихию", awareness.variantId)).toBe("Про Металл");
+  });
+
+  it("несколько слабых — медитация раз в 2 недели прокачивает их по очереди", async () => {
+    await savePractice(manager, {
+      title: "Медитация на слабую стихию",
+      frequency: "weekly",
+      position: 1,
+      opensOnDay: 8,
+      alternation: "second",
+      variants: [
+        { body: "Металл", weakElement: "metal" },
+        { body: "Огонь", weakElement: "fire" },
+        { body: "Дерево", weakElement: "wood" },
+      ],
+    });
+    // 15.03.1988: слабые Металл и Огонь. Медитация стоит во 2-ю, 4-ю, 6-ю… неделю.
+    await saveMyBirthDate(anna, "1988-03-15");
+    await getMyProgram(anna, day(1)); // программа начинается в день первого открытия
+    const shown = [];
+    for (const programDay of [8, 15, 22, 29, 36]) {
+      const [meditation] = (await getMyProgram(anna, day(programDay))).weekly;
+      shown.push(meditation ? await shownBody(meditation.title, meditation.variantId) : "—");
+    }
+    expect(shown).toEqual(["Металл", "—", "Огонь", "—", "Металл"]);
   });
 
   it("вариант на стихию года — по текущей стихии, у всех типов один", async () => {

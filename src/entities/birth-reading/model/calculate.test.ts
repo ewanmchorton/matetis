@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { calculateBirthSquare, levelForCount, parseBirthDate, scoreElements } from "./calculate";
+import { calculateBirthSquare, levelForCount, parseBirthDate, scoreElements, weakElements, type ElementScore } from "./calculate";
 
 const today = new Date(2026, 9, 19);
 const square = (birthDate: string) => calculateBirthSquare(birthDate, today);
@@ -80,6 +80,38 @@ describe("Распределение по стихиям", () => {
       "overload",
       "overload",
     ]);
+  });
+});
+
+/** Стихии с заданным числом цифр, в порядке круга от Земли: Земля, Металл, Вода, Дерево, Огонь. */
+function scores(earth: number, metal: number, water: number, wood: number, fire: number): ElementScore[] {
+  const counts = { earth, metal, water, wood, fire };
+  return (Object.keys(counts) as (keyof typeof counts)[]).map((element) => ({
+    element,
+    count: counts[element],
+    level: levelForCount(counts[element]),
+  }));
+}
+
+describe("Слабые стихии", () => {
+  it("слабые — где 0 или 1 цифра (15.03.1988: Металл 1, Огонь 0)", () => {
+    expect(weakElements(scoreElements(square("1988-03-15").digitCounts))).toEqual(["metal", "fire"]);
+  });
+
+  it("нет 0 и 1 — берём тройки (18.06.1990: Земля, Металл, Вода, Дерево)", () => {
+    expect(weakElements(scoreElements(square("1990-06-18").digitCounts))).toEqual(["earth", "metal", "water", "wood"]);
+  });
+
+  it("есть и единица, и тройки — слабая только единица", () => {
+    expect(weakElements(scores(3, 3, 1, 4, 3))).toEqual(["water"]);
+  });
+
+  it("нет 0, 1 и 3 — берём 5 и больше", () => {
+    expect(weakElements(scores(5, 2, 2, 4, 6))).toEqual(["earth", "fire"]);
+  });
+
+  it("остались только 2 и 4 — берём двойки", () => {
+    expect(weakElements(scores(4, 2, 2, 2, 4))).toEqual(["metal", "water", "wood"]);
   });
 });
 

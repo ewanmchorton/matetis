@@ -3,7 +3,7 @@
 // в настройках); пока телефон его не сообщил — по Минску.
 import { and, asc, eq, gte, inArray, lte } from "drizzle-orm";
 
-import { getMyBirthReading, weakestElement } from "@/entities/birth-reading/server";
+import { getMyBirthReading, weakElements } from "@/entities/birth-reading/server";
 import { DEFAULT_TIME_ZONE, localDay } from "@/entities/daily-phrase";
 import type { ElementId } from "@/entities/element";
 import { getCurrentSeason, type Season } from "@/entities/element/server";
@@ -116,7 +116,8 @@ type Person = {
   name: string;
   typeId: string | null;
   typeName: string | null;
-  weakElement: ElementId | null;
+  /** Слабые стихии по кругу от Земли. Практика на слабую стихию берёт их по очереди. */
+  weakElements: ElementId[];
   seasonElement: string;
 };
 
@@ -131,7 +132,7 @@ async function personFor(userId: string, season: Season): Promise<Person> {
     name: row?.name ?? "",
     typeId: type?.id ?? null,
     typeName: type?.name ?? null,
-    weakElement: reading ? weakestElement(reading.elements) : null,
+    weakElements: reading ? weakElements(reading.elements) : [],
     seasonElement: season.elementId,
   };
 }
@@ -142,10 +143,10 @@ function seasonYear(today: string, element: ElementId): number {
   return element === "water" && Number(today.slice(5, 7)) < 12 ? year - 1 : year;
 }
 
-function fits(variant: PracticeVariant, person: Person) {
+function fits(variant: PracticeVariant, person: Person, weakElement: ElementId | null) {
   return (
     (variant.typeIds.length === 0 || (person.typeId !== null && variant.typeIds.includes(person.typeId))) &&
-    (variant.weakElement === null || variant.weakElement === person.weakElement) &&
+    (variant.weakElement === null || variant.weakElement === weakElement) &&
     (variant.seasonElement === null || variant.seasonElement === person.seasonElement)
   );
 }
@@ -155,6 +156,8 @@ type VisiblePractice = { item: Practice; variant: PracticeVariant | null };
 /**
  * Практики человека в этот день программы. Без вариантов — текст самой практики для всех.
  * С вариантами — подходящий человеку; если каждую неделю новый — следующий по порядку, по кругу.
+ * Варианты на слабую стихию: при каждом появлении практики — следующая слабая стихия по очереди
+ * (медитация раз в 2 недели — стихия меняется раз в 2 недели).
  * Не подошёл ни один вариант — практики у человека нет.
  */
 function visiblePractices(practices: Practice[], person: Person, programDay: number): VisiblePractice[] {
@@ -162,9 +165,12 @@ function visiblePractices(practices: Practice[], person: Person, programDay: num
   return practices.flatMap((item): VisiblePractice[] => {
     if (item.opensOnDay > programDay || !shownInWeek(week, item.opensOnDay, item.alternation)) return [];
     if (item.variants.length === 0) return [{ item, variant: null }];
-    const suitable = item.variants.filter((variant) => fits(variant, person));
+    const shownBefore = weeksShownBefore(week, item.opensOnDay, item.alternation);
+    const { weakElements: weak } = person;
+    const weakElement = weak.length > 0 ? weak[shownBefore % weak.length] : null;
+    const suitable = item.variants.filter((variant) => fits(variant, person, weakElement));
     if (suitable.length === 0) return [];
-    const index = item.newEachWeek ? weeksShownBefore(week, item.opensOnDay, item.alternation) % suitable.length : 0;
+    const index = item.newEachWeek ? shownBefore % suitable.length : 0;
     return [{ item, variant: suitable[index] }];
   });
 }
@@ -180,8 +186,8 @@ export type ProgramPractice = {
   /** Текст и видео практики или её варианта для человека. */
   body: string;
   videoUrl: string | null;
-  /** Вариант для слабой стихии человека — подпись «Слабая стихия: …». */
-  forWeakElement: boolean;
+  /** Вариант на слабую стихию — какую стихию он прокачивает сейчас (подпись «Слабая стихия: …»). */
+  weakElement: ElementId | null;
   /** Ежедневная — отмечена сегодня; еженедельная — день отметки на этой неделе. */
   doneOn: string | null;
 };
@@ -203,7 +209,7 @@ export type MyProgram = {
   welcomeVideo: LibraryVideo | null;
   /** Видео по текущей стихии, если админ его добавил, и посмотрел ли его человек в этот период. */
   elementVideo: (LibraryVideo & { seen: boolean }) | null;
-  person: { name: string; typeName: string | null; weakElement: ElementId | null };
+  person: { name: string; typeName: string | null };
 };
 
 type LibraryVideo = { videoUrl: string; body: string };
@@ -257,7 +263,7 @@ export async function getMyProgram(userId: string, now = new Date()): Promise<My
     hasAudio: Boolean((variant ?? item).audioPath),
     body: (variant ?? item).body,
     videoUrl: (variant ?? item).videoUrl,
-    forWeakElement: Boolean(variant?.weakElement),
+    weakElement: variant?.weakElement ?? null,
     doneOn:
       marks.find((mark) => mark.practiceId === item.id && (item.frequency === "weekly" || mark.day === today))?.day ??
       null,
@@ -276,7 +282,7 @@ export async function getMyProgram(userId: string, now = new Date()): Promise<My
     showWelcomeVideo: !welcome,
     welcomeVideo: video("welcome"),
     elementVideo: elementVideo && { ...elementVideo, seen: Boolean(elementSeen) },
-    person: { name: person.name, typeName: person.typeName, weakElement: person.weakElement },
+    person: { name: person.name, typeName: person.typeName },
   };
 }
 

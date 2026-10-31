@@ -200,8 +200,8 @@ export function ProgramPage() {
               {program.awareness.map((practice) => (
                 <GlassCard key={practice.id} className="space-y-2">
                   <p className="type-caption text-muted-foreground">
-                    {practice.forWeakElement && program.person.weakElement
-                      ? `Слабая стихия: ${getElement(program.person.weakElement).name}`
+                    {practice.weakElement
+                      ? `Слабая стихия: ${getElement(practice.weakElement).name}`
                       : practice.title}
                   </p>
                   {practice.body && <p className="type-body text-foreground">{typograph(practice.body)}</p>}

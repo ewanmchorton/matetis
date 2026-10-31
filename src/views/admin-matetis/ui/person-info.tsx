@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from "react";
 
-import { ElementScoresList, WuXingCircle, type DigitCounts, type ElementScore } from "@/entities/birth-reading";
+import {
+  elementNames,
+  ElementScoresList,
+  weakElements,
+  WuXingCircle,
+  type DigitCounts,
+  type ElementScore,
+} from "@/entities/birth-reading";
 import type { PersonType } from "@/entities/person-type";
 import { request } from "@/shared/api/request";
 
@@ -61,7 +68,9 @@ export function PersonInfo({ userId }: { userId: string }) {
         <h2 className="font-semibold">Стихии по дате рождения</h2>
         <p className="text-sm text-muted-foreground">
           {data.birthReading
-            ? `Дата рождения ${formatBirthDate(data.birthReading.birthDate)}.`
+            ? `Дата рождения ${formatBirthDate(data.birthReading.birthDate)}. Слабые: ${weakElements(data.birthReading.elements)
+                .map((element) => elementNames[element])
+                .join(", ")} — прокачиваются по очереди.`
             : "Дату рождения пока не указал(а)."}
         </p>
         {data.birthReading && (
