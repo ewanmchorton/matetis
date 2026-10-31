@@ -4,8 +4,10 @@ import { XIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { demoProgram } from "@/entities/program";
 import type { NavigatorToday } from "@/entities/program/server";
 import { request } from "@/shared/api/request";
+import { isStaticPrototype } from "@/shared/config/env";
 import { routes } from "@/shared/config/routes";
 import { typograph } from "@/shared/lib/typograph";
 import { BackButton } from "@/shared/ui/back-button";
@@ -42,6 +44,12 @@ export function NavigatorPage() {
   const [pending, setPending] = useState(false);
 
   useEffect(() => {
+    if (isStaticPrototype) {
+      // На GitHub Pages сервера нет — показываем послание-пример.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setState({ status: "ready", navigator: demoProgram().navigator });
+      return;
+    }
     request<NavigatorToday | null>("/api/program/navigator")
       .then((navigator) => setState({ status: "ready", navigator }))
       .catch((loadError: Error) => setState({ status: "error", message: loadError.message }));
@@ -59,7 +67,7 @@ export function NavigatorPage() {
   async function markRead() {
     setPending(true);
     try {
-      await request("/api/program/navigator", { method: "POST" });
+      if (!isStaticPrototype) await request("/api/program/navigator", { method: "POST" });
       router.push(routes.program);
     } catch (readError) {
       setState({ status: "error", message: (readError as Error).message });

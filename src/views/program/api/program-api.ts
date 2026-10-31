@@ -18,10 +18,6 @@ export function useMyProgram() {
   const [actionError, setActionError] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
-    if (isStaticPrototype) {
-      setState({ status: "error", message: "На этом сайте нет сервера — программа работает в приложении." });
-      return;
-    }
     try {
       setState({ status: "ready", program: await loadMyProgram() });
     } catch (loadError) {
@@ -36,6 +32,8 @@ export function useMyProgram() {
   }, [reload]);
 
   async function run(action: () => Promise<unknown>) {
+    // На GitHub Pages сервера нет: отметки живут только на экране.
+    if (isStaticPrototype) return;
     setActionError(null);
     try {
       await action();

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { loadMyProgram } from "@/entities/program";
 import type { ProgramPractice } from "@/entities/program/server";
 import { request } from "@/shared/api/request";
+import { isStaticPrototype } from "@/shared/config/env";
 import { routes } from "@/shared/config/routes";
 import { typograph } from "@/shared/lib/typograph";
 import { BackButton } from "@/shared/ui/back-button";
@@ -27,7 +28,9 @@ export function PracticePage({ practiceId }: { practiceId: string }) {
   const notePath = `/api/program/notes/${encodeURIComponent(practiceId)}`;
 
   useEffect(() => {
-    Promise.all([loadMyProgram(), request<{ text: string }>(notePath)])
+    // На GitHub Pages сервера нет: заметки не хранятся, поле пустое.
+    const savedNote = isStaticPrototype ? Promise.resolve({ text: "" }) : request<{ text: string }>(notePath);
+    Promise.all([loadMyProgram(), savedNote])
       .then(([program, saved]) => {
         const practice = [...program.morning, ...program.evening, ...program.weekly].find(
           (item) => item.id === practiceId,
@@ -49,6 +52,7 @@ export function PracticePage({ practiceId }: { practiceId: string }) {
   async function finish(done: boolean) {
     setPending(true);
     try {
+      if (isStaticPrototype) return router.push(routes.program);
       await saveNote();
       if (done) {
         await request(`/api/program/practices/${encodeURIComponent(practiceId)}`, {
