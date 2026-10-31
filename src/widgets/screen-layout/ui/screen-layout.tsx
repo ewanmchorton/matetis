@@ -65,8 +65,8 @@ type ScreenLayoutProps = {
   variant: "hero" | "page";
   background?: ScreenBackground;
   /**
-   * Светлое пятно точно под строкой над заголовком, заголовком и подзаголовком (page): двигается
-   * вместе с текстом, заменяет общее пятно под заголовком. Только градиент, без размытия.
+   * Общая плавная светлая область под логотипом, строкой над заголовком, заголовком и подзаголовком
+   * (page): светлее всего у левого края, уходит вправо и вниз. Заменяет пятно под заголовком.
    */
   titleGlow?: boolean;
   /**
@@ -277,9 +277,11 @@ export function ScreenLayout({
             {titleGlow && (
               <div
                 aria-hidden
-                className="pointer-events-none absolute -inset-x-(--screen-gutter) -top-8 -bottom-8 -z-10"
+                className="pointer-events-none absolute -inset-x-(--screen-gutter) -top-[140px] -bottom-12 -z-10"
                 style={{
-                  background: `radial-gradient(ellipse 62% 55% at 36% 50%, ${ivory(0.9)} 0%, ${ivory(0.78)} 45%, ${ivory(0)} 100%)`,
+                  // Центр эллипса — посередине текста (область выше текста на 140 px, ниже на 48 px),
+                  // высота — по тексту: чем больше строк, тем выше засветление. К краям — до нуля.
+                  background: `radial-gradient(ellipse 110% 50% at 0% calc(50% + 46px), ${ivory(0.88)} 0%, ${ivory(0.8)} 55%, ${ivory(0.4)} 80%, ${ivory(0)} 100%)`,
                 }}
               />
             )}

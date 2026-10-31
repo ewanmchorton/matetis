@@ -11,6 +11,7 @@ import { routes } from "@/shared/config/routes";
 import { typograph } from "@/shared/lib/typograph";
 import { Button } from "@/shared/ui/button";
 import { GlassCard } from "@/shared/ui/glass-card";
+import { TextGlow } from "@/shared/ui/text-glow";
 import { ScreenLayout } from "@/widgets/screen-layout";
 
 import { useMyProgram } from "../api/program-api";
@@ -51,21 +52,19 @@ function greeting(name: string) {
   return firstName ? `Доброе утро, ${firstName}` : "Доброе утро";
 }
 
-/**
- * Заголовок блока прямо на картинке: под ним мягкое светлое пятно, чтобы он читался
- * (docs/design-guide.md, «Графика и фоны»). Без размытия — в Safari оно рисуется с резкими краями.
- */
+/** Заголовок блока прямо на картинке: подложка по размеру текста, чтобы он читался. */
 function SectionTitle({ title, note, action }: { title: string; note?: string; action?: ReactNode }) {
   return (
-    <div className="relative flex items-center justify-between gap-3">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -inset-x-6 -inset-y-3 -z-10"
-        style={{ background: "radial-gradient(ellipse 45% 60% at 25% 50%, rgb(250 247 242 / 0.75) 30%, rgb(250 247 242 / 0) 100%)" }}
-      />
+    <div className="flex items-center justify-between gap-3">
       <div className="space-y-1">
-        <h2 className="type-section text-foreground">{title}</h2>
-        {note && <p className="type-caption text-muted-foreground">{note}</p>}
+        <TextGlow kind="title">
+          <h2 className="type-section text-foreground">{title}</h2>
+        </TextGlow>
+        {note && (
+          <TextGlow kind="text">
+            <p className="type-caption text-muted-foreground">{note}</p>
+          </TextGlow>
+        )}
       </div>
       {action}
     </div>
