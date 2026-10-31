@@ -180,6 +180,7 @@ export function TypeTestFlow({ test }: { test: TypeTest }) {
         variant="hero"
         background="03_name"
         fullImage
+        haze
         beforeTitle={<StepProgress current={step + 1} total={totalSteps} />}
         title="Как вас зовут?"
         actions={
@@ -210,6 +211,7 @@ export function TypeTestFlow({ test }: { test: TypeTest }) {
       variant="hero"
       background="03_birth"
       fullImage
+      haze
       beforeTitle={<StepProgress current={totalSteps} total={totalSteps} />}
       title="Укажите вашу дату рождения"
       actions={
@@ -221,7 +223,7 @@ export function TypeTestFlow({ test }: { test: TypeTest }) {
         </>
       }
     >
-      {/* Календарь телефона. Пустое поле на iPhone ничего не показывает, поэтому подсказку рисуем сами. */}
+      {/* Календарь телефона. Пустое поле на iPhone ничего не показывает, поэтому подсказку и дату рисуем сами. */}
       <div className="grid gap-1">
         <label htmlFor="birth-date" className="type-secondary leading-tight text-muted-foreground">
           Дата рождения
@@ -239,17 +241,19 @@ export function TypeTestFlow({ test }: { test: TypeTest }) {
             }}
             className={cn(
               "peer h-(--field-height) appearance-none rounded-2xl border-input bg-background/70 px-4 text-left type-body backdrop-blur-sm md:text-[17px]",
-              !birthDate && "text-transparent focus:text-foreground",
+              // Телефон пишет дату по-своему («18 Jun 1990»), поэтому поверх показываем ДД.ММ.ГГГГ.
+              "text-transparent focus:text-foreground",
             )}
           />
-          {!birthDate && (
-            <span
-              aria-hidden
-              className="pointer-events-none absolute inset-y-0 left-4 flex items-center type-body text-muted-foreground/70 peer-focus:hidden"
-            >
-              ДД.ММ.ГГГГ
-            </span>
-          )}
+          <span
+            aria-hidden
+            className={cn(
+              "pointer-events-none absolute inset-y-0 left-4 flex items-center type-body peer-focus:hidden",
+              birthDate ? "text-foreground" : "text-muted-foreground/70",
+            )}
+          >
+            {birthDate ? birthDate.split("-").reverse().join(".") : "ДД.ММ.ГГГГ"}
+          </span>
         </div>
       </div>
       {error && (
