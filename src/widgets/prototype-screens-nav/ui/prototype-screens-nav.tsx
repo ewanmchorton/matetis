@@ -17,12 +17,12 @@ import {
 } from "@/shared/ui/sheet";
 
 /** Для разработки прототипа: быстрый переход между экранами. */
-// ?demo=expired показывает «Срок подписки истёк» без входа — см. entities/access/api/use-my-access.ts.
+// ?demo=… показывает экраны без доступа, без входа — см. entities/access/api/use-my-access.ts.
 const prototypeScreens: { href: string; label: string; note?: string }[] = [
   { href: routes.auth, label: "Регистрация и вход" },
   { href: routes.onboarding, label: "Онбординг" },
   { href: routes.typeTest, label: "Тест на тип" },
-  { href: routes.typeResult, label: "Результат теста" },
+  { href: `${routes.typeResult}?demo=request`, label: "Результат теста" },
   { href: routes.program, label: "Программа" },
   { href: `${routes.program}?demo=expired`, label: "Срок подписки истёк" },
   { href: routes.together, label: "Вместе" },

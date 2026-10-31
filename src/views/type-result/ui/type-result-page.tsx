@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 
 import { hasAccessNow, useMyAccess } from "@/entities/access";
 import { getCurrentElement } from "@/entities/element";
-import { getPersonType, type PersonType } from "@/entities/person-type";
+import { getPersonType, getPersonTypes, type PersonType } from "@/entities/person-type";
 import { useProgress } from "@/entities/progress";
 import { ContactAdminButtons, ContactAdminText } from "@/features/contact-admin";
 import { request, type RequestError } from "@/shared/api/request";
@@ -24,7 +24,9 @@ function useMyType(): ResultState {
   const router = useRouter();
   const isClient = useIsClient();
   const { typeId } = useProgress();
-  const localType = typeId ? getPersonType(typeId) : undefined;
+  // Из меню экранов (?demo=request) результат показывается и без пройденного теста — на примере первого типа.
+  const isDemo = isClient && new URLSearchParams(window.location.search).has("demo");
+  const localType = typeId ? getPersonType(typeId) : isDemo ? getPersonTypes()[0] : undefined;
   const [state, setState] = useState<ResultState | { status: "local" }>({ status: "loading" });
 
   useEffect(() => {

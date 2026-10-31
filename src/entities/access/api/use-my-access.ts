@@ -9,13 +9,16 @@ import type { MyAccess } from "../model/types";
 
 /**
  * Демо для GitHub Pages и разработки без входа: доступ открыт, экраны проходятся целиком.
- * ?demo=expired — «Срок подписки истёк».
+ * ?demo=expired — «Срок подписки истёк», ?demo=request — тест пройден, доступа ещё нет.
  */
 function demoAccess(): MyAccess {
-  const expired = new URLSearchParams(window.location.search).get("demo") === "expired";
-  const status: MyAccess["status"] = expired
-    ? { kind: "expired", endedAt: "2026-01-01T00:00:00Z" }
-    : { kind: "active", until: "2099-01-01T00:00:00Z", daysLeft: 999, expiring: false };
+  const demo = new URLSearchParams(window.location.search).get("demo");
+  const status: MyAccess["status"] =
+    demo === "expired"
+      ? { kind: "expired", endedAt: "2026-01-01T00:00:00Z" }
+      : demo === "request"
+        ? { kind: "request" }
+        : { kind: "active", until: "2099-01-01T00:00:00Z", daysLeft: 999, expiring: false };
   return { status, contact: "anna@example.ru", adminPhone: "+375293344101", adminTelegram: "vernojit" };
 }
 
