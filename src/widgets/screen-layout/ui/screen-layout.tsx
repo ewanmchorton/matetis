@@ -17,12 +17,14 @@ export type ScreenBackground =
   | "02_3_onboard"
   | "02_4_onboard"
   | "03_1_test"
-  | "03_4_test"
+  | "03_name"
+  | "03_birth"
   | "03_result"
   | "04_earth_01_program"
   | "04_earth_02_navigator"
   | "04_earth_03_lizard"
   | "04_earth_04_practice"
+  | "04_expired"
   | "06_profile";
 
 /**
@@ -30,9 +32,17 @@ export type ScreenBackground =
  * верх заголовка. Выше этой точки — пейзаж, ниже — светлая часть, на которой лежит текст.
  */
 const heroTextLine: Partial<Record<ScreenBackground, number>> = {
-  "01_reg": 0.9,
+  "01_reg": 1.15,
   "02_1_onboard": 1.5,
-  "03_4_test": 1.2,
+};
+
+/**
+ * Экраны fullImage: на какой высоте картинки (в ширинах экрана) начинается текст — строка «Шаг N из M».
+ * Выше — арка, ниже текста картинка продолжается до кнопок.
+ */
+const fullImageTextTop: Partial<Record<ScreenBackground, number>> = {
+  "03_name": 0.92,
+  "03_birth": 0.79,
 };
 
 /**
@@ -80,6 +90,11 @@ type ScreenLayoutProps = {
   centered?: boolean;
   /** Шире поля по бокам: по краям картинки графика (листья), на ней текст плохо читается. */
   narrow?: boolean;
+  /**
+   * Картинка на весь экран (hero), как в макетах шагов «Имя» и «Дата рождения»: текст — в светлой середине
+   * картинки, кнопки — внизу поверх неё. Без fullImage картинка только над текстом.
+   */
+  fullImage?: boolean;
   /** Плотнее: подзаголовок 15 px и меньше промежутки. Для экранов с длинной формой. */
   compact?: boolean;
   /** Правая часть строки с логотипом: например, «Пропустить». */
@@ -164,6 +179,7 @@ export function ScreenLayout({
   compact = false,
   centered = false,
   narrow = false,
+  fullImage = false,
   headerAction,
   haze = false,
   textGlow = false,
@@ -209,7 +225,25 @@ export function ScreenLayout({
         />
       )}
 
-      {variant === "hero" ? (
+      {variant === "hero" && fullImage ? (
+        <>
+          {background && (
+            <div
+              aria-hidden
+              className="pointer-events-none fixed inset-y-0 left-1/2 -z-10 w-full max-w-[440px] -translate-x-1/2 bg-background bg-cover bg-top"
+              style={{ backgroundImage: [topFade(110), imageUrl(background)].join(", ") }}
+            />
+          )}
+          {header}
+          {/* Отступ до текста: верх текста ложится на ту же точку картинки, что в макете. */}
+          <div
+            aria-hidden
+            style={{
+              height: `max(24px, calc(${screenWidth} * ${(background && fullImageTextTop[background]) ?? 0.8} - var(--safe-top) - var(--header-top) - var(--header-height)))`,
+            }}
+          />
+        </>
+      ) : variant === "hero" ? (
         // Верхняя часть растягивается и опускает текст к низу экрана.
         // Картинка привязана к заголовку: над ним — пейзаж, под ним — светлая часть.
         <div className="relative flex flex-1 flex-col">
@@ -253,7 +287,7 @@ export function ScreenLayout({
           "flex flex-col px-(--screen-gutter)",
           // Отступ под нижним меню добавляет раскладка вкладок, здесь — только 24 px.
           variant === "hero" || actions ? "pb-[calc(var(--safe-bottom)+var(--action-bottom))]" : "pb-6",
-          variant === "page" && "flex-1",
+          (variant === "page" || fullImage) && "flex-1",
         )}
       >
         <div className={cn("relative", centered && "text-center")}>
@@ -322,7 +356,7 @@ export function ScreenLayout({
         {afterHaze && <div className={cn("flex flex-col", compact ? "mt-4 gap-4" : "mt-6 gap-6")}>{afterHaze}</div>}
 
         {(actions || steps) && (
-          <div className={cn("flex flex-col gap-6", compact ? "pt-4" : "pt-6", variant === "page" && "mt-auto")}>
+          <div className={cn("flex flex-col gap-6", compact ? "pt-4" : "pt-6", (variant === "page" || fullImage) && "mt-auto")}>
             {steps && <StepDots count={steps.count} current={steps.current} />}
             {actions && <div className="flex gap-3">{actions}</div>}
           </div>

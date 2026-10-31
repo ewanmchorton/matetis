@@ -178,7 +178,8 @@ export function TypeTestFlow({ test }: { test: TypeTest }) {
     return (
       <ScreenLayout
         variant="hero"
-        background="03_4_test"
+        background="03_name"
+        fullImage
         beforeTitle={<StepProgress current={step + 1} total={totalSteps} />}
         title="Как вас зовут?"
         actions={
@@ -207,7 +208,8 @@ export function TypeTestFlow({ test }: { test: TypeTest }) {
   return (
     <ScreenLayout
       variant="hero"
-      background="03_4_test"
+      background="03_birth"
+      fullImage
       beforeTitle={<StepProgress current={totalSteps} total={totalSteps} />}
       title="Укажите вашу дату рождения"
       actions={
@@ -220,30 +222,35 @@ export function TypeTestFlow({ test }: { test: TypeTest }) {
       }
     >
       {/* Календарь телефона. Пустое поле на iPhone ничего не показывает, поэтому подсказку рисуем сами. */}
-      <div className="relative">
-        <Input
-          type="date"
-          aria-label="Дата рождения"
-          min="1900-01-01"
-          max={today}
-          value={birthDate}
-          onChange={(event) => {
-            setError(null);
-            setBirthDate(event.target.value);
-          }}
-          className={cn(
-            "peer h-(--field-height) appearance-none rounded-2xl border-input bg-background/70 px-4 text-left type-body backdrop-blur-sm md:text-[17px]",
-            !birthDate && "text-transparent focus:text-foreground",
+      <div className="grid gap-1">
+        <label htmlFor="birth-date" className="type-secondary leading-tight text-muted-foreground">
+          Дата рождения
+        </label>
+        <div className="relative">
+          <Input
+            id="birth-date"
+            type="date"
+            min="1900-01-01"
+            max={today}
+            value={birthDate}
+            onChange={(event) => {
+              setError(null);
+              setBirthDate(event.target.value);
+            }}
+            className={cn(
+              "peer h-(--field-height) appearance-none rounded-2xl border-input bg-background/70 px-4 text-left type-body backdrop-blur-sm md:text-[17px]",
+              !birthDate && "text-transparent focus:text-foreground",
+            )}
+          />
+          {!birthDate && (
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 left-4 flex items-center type-body text-muted-foreground/70 peer-focus:hidden"
+            >
+              ДД.ММ.ГГГГ
+            </span>
           )}
-        />
-        {!birthDate && (
-          <span
-            aria-hidden
-            className="pointer-events-none absolute inset-y-0 left-4 flex items-center type-body text-muted-foreground/70 peer-focus:hidden"
-          >
-            ДД.ММ.ГГГГ
-          </span>
-        )}
+        </div>
       </div>
       {error && (
         <p role="alert" className="-mt-3 type-secondary text-destructive">

@@ -40,7 +40,7 @@ export function AccessGate({ children }: { children: ReactNode }) {
 
   const title = tabTitles.find(([href]) => pathname.startsWith(href))?.[1] ?? "Программа";
   return (
-    <ScreenLayout variant="page" background="03_result" title={title}>
+    <ScreenLayout variant="page" background="04_expired" title={title}>
       <GlassCard aria-labelledby="access-expired-title" className="space-y-2">
         <h2 id="access-expired-title" className="type-section text-foreground">
           Срок подписки истёк

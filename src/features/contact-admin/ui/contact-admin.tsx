@@ -55,7 +55,9 @@ export function ContactAdminButtons({ access, purpose }: { access: MyAccess; pur
           rel="noreferrer"
           className="flex flex-col items-center gap-1 type-caption font-normal text-muted-foreground"
         >
-          <TelegramIcon className="size-14 text-[#26A5E4]" />
+          <span className="grid size-14 place-items-center rounded-full bg-[#229ED9] text-white">
+            <TelegramIcon className="size-14" />
+          </span>
           Telegram
         </a>
         <a
