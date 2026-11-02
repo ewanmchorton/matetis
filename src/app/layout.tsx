@@ -6,6 +6,8 @@ import { RegisterServiceWorker } from "@/shared/pwa/register-sw";
 
 import "./globals.css";
 
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 const manrope = Manrope({
   variable: "--font-manrope",
   subsets: ["latin", "cyrillic"],
@@ -23,14 +25,20 @@ export const metadata: Metadata = {
   description:
     "Ежедневные практики, ритуалы и рекомендации по вашему типу и текущей стихии.",
   applicationName: APP_NAME,
-  manifest: "/manifest.webmanifest",
+  // Адреса — с префиксом сайта-прототипа (/matetis на GitHub Pages), иначе иконки там не находятся.
+  manifest: `${basePath}/manifest.webmanifest`,
   appleWebApp: {
     capable: true,
     title: APP_NAME,
     statusBarStyle: "default",
   },
+  // Логотип: вкладка браузера, экран «Домой» на iPhone. Для Android — иконки в manifest.webmanifest.
   icons: {
-    apple: "/icon-192.png",
+    icon: [
+      { url: `${basePath}/favicon.ico`, sizes: "16x16 32x32 48x48" },
+      { url: `${basePath}/icon-192.png`, type: "image/png", sizes: "192x192" },
+    ],
+    apple: { url: `${basePath}/apple-touch-icon.png`, sizes: "180x180" },
   },
 };
 
