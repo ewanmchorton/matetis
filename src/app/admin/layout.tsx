@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   // Свой значок на главном экране: открывает сразу админку, а не часть для учеников.
   // Установить его можно только со страниц админки.
   manifest: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/admin-manifest.webmanifest`,
-  appleWebApp: { capable: true, title: "МАТЭТИС Доступы" },
+  appleWebApp: { capable: true, title: "МАТЭТИС Админ" },
 };
 
 export default function AdminRootLayout({ children }: LayoutProps<"/admin">) {
