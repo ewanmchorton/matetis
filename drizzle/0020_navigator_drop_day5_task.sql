@@ -1,0 +1,1 @@
+ALTER TABLE "navigator_message" DROP COLUMN "day5_task";

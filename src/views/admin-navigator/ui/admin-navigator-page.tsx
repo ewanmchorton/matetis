@@ -12,18 +12,20 @@ import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Textarea } from "@/shared/ui/textarea";
 
-import { EldersEditor } from "./elders-editor";
-
 type Part = { title: string; body: string; firstDayTask: string; secondDayTask: string };
 type Message = {
   id: string;
+  title: string;
   masterName: string;
+  givenOn: string;
+  intro: string;
+  closing: string;
   position: number;
-  day5Task: string | null;
+  day7Task: string | null;
   typeIds: string[];
   parts: { part: number; title: string; body: string; firstDayTask: string | null; secondDayTask: string | null }[];
 };
-type Draft = { id?: string; masterName: string; position: number; day5Task: string; typeIds: string[]; parts: Part[] };
+type Draft = Omit<Message, "id" | "day7Task" | "parts"> & { id?: string; day7Task: string; parts: Part[] };
 type ListState = { status: "loading" } | { status: "error"; message: string } | { status: "ready"; messages: Message[] };
 
 const types = getPersonTypes();
@@ -32,11 +34,15 @@ const emptyPart = (): Part => ({ title: "", body: "", firstDayTask: "", secondDa
 function toDraft(message: Message): Draft {
   return {
     id: message.id,
+    title: message.title,
     masterName: message.masterName,
+    givenOn: message.givenOn,
+    intro: message.intro,
+    closing: message.closing,
     position: message.position,
-    day5Task: message.day5Task ?? "",
+    day7Task: message.day7Task ?? "",
     typeIds: message.typeIds,
-    parts: [1, 2].map((number) => {
+    parts: [1, 2, 3].map((number) => {
       const part = message.parts.find((item) => item.part === number);
       return {
         title: part?.title ?? "",
@@ -55,7 +61,7 @@ function typeNames(typeIds: string[]) {
     .join(", ");
 }
 
-/** Раздел «Навигатор»: послания Мастеров из двух частей и послания старцев, по порядку для своих типов. */
+/** Раздел «Навигатор»: послания Мастеров из трёх частей, по порядку для своих типов. */
 export function AdminNavigatorPage() {
   const [state, setState] = useState<ListState>({ status: "loading" });
   const [openId, setOpenId] = useState<string | null>(null);
@@ -90,11 +96,15 @@ export function AdminNavigatorPage() {
     setError(null);
     setOpenId("new");
     setDraft({
+      title: "",
       masterName: "",
+      givenOn: "",
+      intro: "",
+      closing: "",
       position: messages.length + 1,
-      day5Task: "",
+      day7Task: "",
       typeIds: [],
-      parts: [emptyPart(), emptyPart()],
+      parts: [emptyPart(), emptyPart(), emptyPart()],
     });
   }
 
@@ -126,7 +136,7 @@ export function AdminNavigatorPage() {
   }
 
   async function remove(message: Message) {
-    if (!window.confirm(`Удалить послание Мастера ${message.masterName}?`)) return;
+    if (!window.confirm(`Удалить послание «${message.title}»?`)) return;
     try {
       await request("/api/admin/navigator", { method: "DELETE", body: JSON.stringify({ id: message.id }) });
       close();
@@ -138,7 +148,17 @@ export function AdminNavigatorPage() {
 
   const form = draft && (
     <form className="space-y-5 border-t bg-muted/30 p-4" onSubmit={(event) => void save(event)}>
-      <div className="grid gap-3 sm:grid-cols-[1fr_140px]">
+      <div className="space-y-1.5">
+        <Label htmlFor="message-title">Название послания</Label>
+        <Input
+          id="message-title"
+          className="h-11"
+          required
+          value={draft.title}
+          onChange={(event) => setDraft({ ...draft, title: event.target.value })}
+        />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-[1fr_180px_120px]">
         <div className="space-y-1.5">
           <Label htmlFor="master-name">Имя Мастера</Label>
           <Input
@@ -147,6 +167,17 @@ export function AdminNavigatorPage() {
             required
             value={draft.masterName}
             onChange={(event) => setDraft({ ...draft, masterName: event.target.value })}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="message-date">Дата послания</Label>
+          <Input
+            id="message-date"
+            type="date"
+            className="h-11"
+            required
+            value={draft.givenOn}
+            onChange={(event) => setDraft({ ...draft, givenOn: event.target.value })}
           />
         </div>
         <div className="space-y-1.5">
@@ -184,13 +215,24 @@ export function AdminNavigatorPage() {
         </div>
       </fieldset>
 
+      <div className="space-y-1.5">
+        <Label htmlFor="message-intro">Вступление — его читают на 7-й день</Label>
+        <Textarea
+          id="message-intro"
+          className="min-h-28"
+          required
+          value={draft.intro}
+          onChange={(event) => setDraft({ ...draft, intro: event.target.value })}
+        />
+      </div>
+
       {draft.parts.map((part, index) => (
         <fieldset key={index} className="space-y-3 rounded-xl border bg-background p-4">
           <legend className="px-1 text-sm font-medium">
             Часть {index + 1} · дни {index * 2 + 1} и {index * 2 + 2}
           </legend>
           <div className="space-y-1.5">
-            <Label htmlFor={`part-${index}-title`}>Заголовок — его видно на карточке программы</Label>
+            <Label htmlFor={`part-${index}-title`}>Название части — его видно на карточке программы</Label>
             <Input
               id={`part-${index}-title`}
               className="h-11"
@@ -214,8 +256,7 @@ export function AdminNavigatorPage() {
               <Label htmlFor={`part-${index}-task1`}>Задание {index * 2 + 1}-го дня</Label>
               <Textarea
                 id={`part-${index}-task1`}
-                required={index === 0}
-                placeholder={index === 0 ? "" : "Пусто — как в 1-й день"}
+                required
                 value={part.firstDayTask}
                 onChange={(event) => setPart(index, { firstDayTask: event.target.value })}
               />
@@ -224,8 +265,7 @@ export function AdminNavigatorPage() {
               <Label htmlFor={`part-${index}-task2`}>Задание {index * 2 + 2}-го дня</Label>
               <Textarea
                 id={`part-${index}-task2`}
-                required={index === 0}
-                placeholder={index === 0 ? "" : "Пусто — как во 2-й день"}
+                placeholder={`Пусто — как в ${index * 2 + 1}-й день`}
                 value={part.secondDayTask}
                 onChange={(event) => setPart(index, { secondDayTask: event.target.value })}
               />
@@ -235,13 +275,21 @@ export function AdminNavigatorPage() {
       ))}
 
       <div className="space-y-1.5">
-        <Label htmlFor="day5-task">
-          Задание 5-го дня, объединяющее: послание читают полностью (можно оставить пустым)
-        </Label>
+        <Label htmlFor="message-closing">Завершение — его читают на 7-й день</Label>
         <Textarea
-          id="day5-task"
-          value={draft.day5Task}
-          onChange={(event) => setDraft({ ...draft, day5Task: event.target.value })}
+          id="message-closing"
+          required
+          value={draft.closing}
+          onChange={(event) => setDraft({ ...draft, closing: event.target.value })}
+        />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="day7-task">Задание 7-го дня: послание читают полностью (можно оставить пустым)</Label>
+        <Textarea
+          id="day7-task"
+          value={draft.day7Task}
+          onChange={(event) => setDraft({ ...draft, day7Task: event.target.value })}
         />
       </div>
 
@@ -263,8 +311,9 @@ export function AdminNavigatorPage() {
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold">Навигатор</h1>
         <p className="text-sm text-muted-foreground">
-          Одно послание — на неделю: по два дня на каждую часть, на 5-й день всё послание целиком, на 6-й и 7-й —
-          послание старцев с заданиями 1-го и 2-го дня. Послания идут по порядку для своих типов, потом сначала.
+          Одно послание — на неделю: по два дня на каждую из трёх частей, на 7-й день — послание полностью, с
+          названием, автором, датой, вступлением и завершением. Послания идут по порядку для своих типов, потом
+          сначала.
         </p>
       </div>
 
@@ -295,9 +344,9 @@ export function AdminNavigatorPage() {
                 >
                   <span className="w-8 text-sm text-muted-foreground">{message.position}</span>
                   <span className="min-w-0 flex-1">
-                    <span className="block font-medium">{message.masterName}</span>
+                    <span className="block font-medium">{message.title}</span>
                     <span className="block truncate text-xs text-muted-foreground">
-                      {message.parts[0]?.title} · {typeNames(message.typeIds)}
+                      {message.masterName} · {typeNames(message.typeIds)}
                     </span>
                   </span>
                   <ChevronDown className="size-4 text-muted-foreground" />
@@ -306,7 +355,7 @@ export function AdminNavigatorPage() {
                   variant="ghost"
                   size="icon"
                   className="size-11"
-                  aria-label={`Удалить послание ${message.masterName}`}
+                  aria-label={`Удалить послание «${message.title}»`}
                   onClick={() => void remove(message)}
                 >
                   <Trash2 />
@@ -327,7 +376,6 @@ export function AdminNavigatorPage() {
         </Button>
       )}
 
-      <EldersEditor />
     </div>
   );
 }

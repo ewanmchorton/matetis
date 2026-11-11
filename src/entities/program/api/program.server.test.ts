@@ -18,7 +18,6 @@ import {
 import {
   listPracticesForStaff,
   listProgramVideosForStaff,
-  saveElderMessage,
   saveNavigatorMessage,
   savePractice,
   saveProgramVideo,
@@ -34,24 +33,27 @@ const day = (programDay: number) => new Date(start.getTime() + (programDay - 1) 
 let manager: string;
 let anna: string;
 
-const part = (n: number, tasks: [string | null, string | null] = [null, null]) => ({
+const part = (n: number, tasks: [string | null, string | null] = [`задание ${n * 2 - 1}`, null]) => ({
   title: `Заголовок ${n}`,
   body: `Текст ${n}`,
   firstDayTask: tasks[0],
   secondDayTask: tasks[1],
 });
 
-async function addMessage(masterName: string, position: number, typeIds = [HEALER]) {
-  return saveNavigatorMessage(manager, {
-    masterName,
-    position,
-    typeIds,
-    parts: [part(1, [`${masterName}: задание 1`, `${masterName}: задание 2`]), part(2)],
-  });
-}
+const message = (masterName: string, overrides: Record<string, unknown> = {}) => ({
+  title: `Послание ${masterName}`,
+  masterName,
+  givenOn: "2006-07-04",
+  intro: "Вступление",
+  closing: "Завершение",
+  day7Task: "Задание 7-го дня",
+  typeIds: [HEALER],
+  parts: [part(1, [`${masterName}: задание 1`, `${masterName}: задание 2`]), part(2), part(3)],
+  ...overrides,
+});
 
-async function addElders(title: string, position: number, typeIds = [HEALER]) {
-  return saveElderMessage(manager, { title, body: `${title}: текст`, position, typeIds });
+async function addMessage(masterName: string, position: number, typeIds = [HEALER]) {
+  return saveNavigatorMessage(manager, message(masterName, { position, typeIds }));
 }
 
 beforeEach(async () => {
@@ -77,16 +79,17 @@ describe("Наполнение программы", () => {
     await expect(savePractice(anna, { title: "Улыбка", frequency: "weekly" })).rejects.toThrow("только сотрудникам");
   });
 
-  it("послание — две части, задания первой части и хотя бы один тип обязательны", async () => {
+  it("послание — три части, у каждой задание первого дня; название, дата, вступление, завершение и тип обязательны", async () => {
+    await expect(saveNavigatorMessage(manager, message("Сурия", { parts: [part(1), part(2)] }))).rejects.toThrow(
+      "три части",
+    );
     await expect(
-      saveNavigatorMessage(manager, { masterName: "Сурия", typeIds: [HEALER], parts: [part(1), part(2)] }),
-    ).rejects.toThrow("оба задания первой части");
-    await expect(
-      saveNavigatorMessage(manager, { masterName: "Сурия", parts: [part(1, ["а", "б"]), part(2)] }),
-    ).rejects.toThrow("каким типам");
-    await expect(
-      saveNavigatorMessage(manager, { masterName: "Сурия", typeIds: [HEALER], parts: [part(1, ["а", "б"]), part(2), part(3)] }),
-    ).rejects.toThrow("две части");
+      saveNavigatorMessage(manager, message("Сурия", { parts: [part(1), part(2, [null, null]), part(3)] })),
+    ).rejects.toThrow("части 2");
+    await expect(saveNavigatorMessage(manager, message("Сурия", { title: "" }))).rejects.toThrow("название");
+    await expect(saveNavigatorMessage(manager, message("Сурия", { givenOn: "4 июля" }))).rejects.toThrow("дату");
+    await expect(saveNavigatorMessage(manager, message("Сурия", { closing: "" }))).rejects.toThrow("завершение");
+    await expect(saveNavigatorMessage(manager, message("Сурия", { typeIds: [] }))).rejects.toThrow("каким типам");
   });
 });
 
@@ -373,53 +376,33 @@ describe("Навигатор дня", () => {
     expect(navigator?.parts.map((item) => item.title)).toEqual(["Заголовок 1"]);
   });
 
-  it("второй день — тот же текст и новое задание, третий — вторая часть с заданием первого дня", async () => {
+  it("второй день — тот же текст и новое задание, третий — вторая часть", async () => {
     await addMessage("Сурия", 1);
     await getMyProgram(anna, day(1));
     expect(await getMyNavigator(anna, day(2))).toMatchObject({ newTask: true, task: "Сурия: задание 2" });
     const third = await getMyNavigator(anna, day(3));
-    expect(third).toMatchObject({ task: "Сурия: задание 1", newTask: false });
-    expect(third?.parts.map((item) => item.title)).toEqual(["Заголовок 2"]);
+    expect(third).toMatchObject({ title: "Заголовок 2", task: "задание 3", newTask: false });
+    // Своего задания 4-го дня нет — повторяется задание 3-го.
+    expect(await getMyNavigator(anna, day(4))).toMatchObject({ task: "задание 3", newTask: false });
+    expect(await getMyNavigator(anna, day(5))).toMatchObject({ title: "Заголовок 3", task: "задание 5" });
   });
 
-  it("пятый день — послание полностью, восьмой — следующее послание", async () => {
+  it("седьмой день — послание полностью с названием, автором и датой, восьмой — следующее послание", async () => {
     await addMessage("Сурия", 1);
     await addMessage("Эль Морья", 2);
     await getMyProgram(anna, day(1));
-    const fifth = await getMyNavigator(anna, day(5));
-    expect(fifth).toMatchObject({ kind: "full", masterName: "Сурия" });
-    expect(fifth?.parts).toHaveLength(2);
-    expect((await getMyNavigator(anna, day(8)))?.masterName).toBe("Эль Морья");
-  });
-
-  it("6-й и 7-й день — послание старцев для типа, задания первого и второго дня", async () => {
-    await addMessage("Сурия", 1);
-    await addElders("Старцы 1", 1);
-    await addElders("Старцы 2", 2);
-    await addElders("Для Идеалиста", 0, [IDEALIST]);
-    await getMyProgram(anna, day(1));
-    expect(await getMyNavigator(anna, day(6))).toMatchObject({
-      kind: "elders",
-      masterName: null,
-      elders: { title: "Старцы 1", body: "Старцы 1: текст" },
-      task: "Сурия: задание 1",
+    const seventh = await getMyNavigator(anna, day(7));
+    expect(seventh).toMatchObject({
+      kind: "full",
+      title: "Послание Сурия",
+      masterName: "Сурия",
+      givenOn: "2006-07-04",
+      intro: "Вступление",
+      closing: "Завершение",
+      task: "Задание 7-го дня",
     });
-    expect(await getMyNavigator(anna, day(7))).toMatchObject({ elders: { title: "Старцы 1" }, task: "Сурия: задание 2" });
-    // Вторая неделя — следующее послание старцев, третья — снова первое.
-    expect((await getMyNavigator(anna, day(13)))?.elders?.title).toBe("Старцы 2");
-    expect((await getMyNavigator(anna, day(20)))?.elders?.title).toBe("Старцы 1");
-  });
-
-  it("без послания старцев для типа в 6-й и 7-й день навигатора нет", async () => {
-    await addMessage("Сурия", 1);
-    await getMyProgram(anna, day(1));
-    expect(await getMyNavigator(anna, day(6))).toBeNull();
-  });
-
-  it("послание старцев — с заголовком, текстом и хотя бы одним типом", async () => {
-    await expect(saveElderMessage(manager, { title: "", body: "Текст", typeIds: [HEALER] })).rejects.toThrow("Заполните");
-    await expect(saveElderMessage(manager, { title: "Т", body: "Текст", typeIds: [] })).rejects.toThrow("типам");
-    await expect(saveElderMessage(anna, { title: "Т", body: "Текст", typeIds: [HEALER] })).rejects.toThrow();
+    expect(seventh?.parts).toHaveLength(3);
+    expect((await getMyNavigator(anna, day(8)))?.masterName).toBe("Эль Морья");
   });
 
   it("когда послания закончились — снова с первого", async () => {

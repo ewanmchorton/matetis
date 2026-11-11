@@ -114,12 +114,11 @@ function DayBlock({
 }
 
 function NavigatorCard({ navigator }: { navigator: NonNullable<MyProgram["navigator"]> }) {
-  const title = navigator.kind === "elders" ? navigator.elders?.title : navigator.parts[0]?.title;
   return (
     <Link href={routes.navigator} className="block">
       <GlassCard className="space-y-3">
         <p className="type-caption text-muted-foreground">Навигатор дня</p>
-        <h2 className="font-display text-[26px] leading-[1.2] font-medium text-foreground">{typograph(title ?? "")}</h2>
+        <h2 className="font-display text-[26px] leading-[1.2] font-medium text-foreground">{typograph(navigator.title)}</h2>
         <p className="flex items-center gap-1 type-secondary text-primary">
           {navigator.newTask ? "Новое задание" : "Внутри — задание на сегодня"}
           <ChevronRight className="size-4" aria-hidden />

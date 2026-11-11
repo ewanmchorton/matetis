@@ -47,54 +47,64 @@ export type NavigatorPart = {
   secondDayTask: string | null;
 };
 
-/** Что в этот день навигатора: часть послания, послание целиком (5-й день) или послание старцев (6-й и 7-й). */
-export type NavigatorDayKind = "part" | "full" | "elders";
+/** Что читают на 7-й день вместе с частями: заголовок, вступление, завершение и задание дня. */
+export type NavigatorWhole = {
+  title: string;
+  intro: string;
+  closing: string;
+  day7Task: string | null;
+};
+
+/** Что в этот день навигатора: часть послания (дни 1–6) или послание полностью (7-й день). */
+export type NavigatorDayKind = "part" | "full";
 
 export type NavigatorDay = {
   cycleDay: number;
   kind: NavigatorDayKind;
-  /** Какие части показать: в дни 1–4 одна, на 5-й день — обе. В дни старцев — пусто, текст берётся у старцев. */
+  /** Заголовок на карточке программы: части, а на 7-й день — всего послания. */
+  title: string;
+  /** Какие части показать: в дни 1–6 одна, на 7-й день — все три. */
   parts: { title: string; body: string }[];
+  /** Вступление и завершение послания — только на 7-й день. */
+  intro: string | null;
+  closing: string | null;
   /** Задание на сегодня. null — задания нет. */
   task: string | null;
-  /** Второй день части или 7-й день: тот же текст, новое задание. */
+  /** Второй день части со своим заданием: тот же текст, новое задание. */
   newTask: boolean;
 };
 
 /**
  * Что показывает навигатор в этот день недели послания.
- * Дни 1–2 — часть 1, 3–4 — часть 2: в нечётный день задание первого дня части, в чётный — второго.
- * Пустые задания второй части берутся из первой. День 5 — послание целиком и своё задание.
- * Дни 6 и 7 — послание старцев, задания — как в 1-й и 2-й день.
+ * Дни 1–2 — часть 1, 3–4 — часть 2, 5–6 — часть 3: в первый день части её задание первого дня,
+ * во второй — задание второго дня; пока его нет — то же, что в первый.
+ * День 7 — послание полностью: заголовок, вступление, все части, завершение и задание 7-го дня.
  */
-export function navigatorDay(parts: NavigatorPart[], day5Task: string | null, cycleDay: number): NavigatorDay {
+export function navigatorDay(whole: NavigatorWhole, parts: NavigatorPart[], cycleDay: number): NavigatorDay {
   const sorted = [...parts].sort((a, b) => a.part - b.part);
-  const first = sorted[0];
-  if (cycleDay === 5) {
+  if (cycleDay >= NAVIGATOR_CYCLE_DAYS) {
     return {
       cycleDay,
       kind: "full",
+      title: whole.title,
       parts: sorted.map(({ title, body }) => ({ title, body })),
-      task: day5Task?.trim() || null,
+      intro: whole.intro,
+      closing: whole.closing,
+      task: whole.day7Task?.trim() || null,
       newTask: false,
     };
   }
-  if (cycleDay >= 6) {
-    const secondDay = cycleDay === 7;
-    const task = secondDay ? first.secondDayTask?.trim() : first.firstDayTask?.trim();
-    return { cycleDay, kind: "elders", parts: [], task: task || null, newTask: secondDay };
-  }
-  const current = sorted[Math.ceil(cycleDay / 2) - 1] ?? first;
-  const secondDay = cycleDay % 2 === 0;
-  const task = secondDay
-    ? current.secondDayTask?.trim() || first.secondDayTask?.trim()
-    : current.firstDayTask?.trim() || first.firstDayTask?.trim();
+  const current = sorted[Math.ceil(cycleDay / 2) - 1] ?? sorted[0];
+  const ownSecondTask = cycleDay % 2 === 0 ? current.secondDayTask?.trim() : undefined;
   return {
     cycleDay,
     kind: "part",
+    title: current.title,
     parts: [{ title: current.title, body: current.body }],
-    task: task || null,
-    newTask: secondDay,
+    intro: null,
+    closing: null,
+    task: ownSecondTask || current.firstDayTask?.trim() || null,
+    newTask: Boolean(ownSecondTask),
   };
 }
 

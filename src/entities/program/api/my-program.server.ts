@@ -10,9 +10,7 @@ import { getCurrentSeason, type Season } from "@/entities/element/server";
 import { getMyCurrentType } from "@/entities/type-test-attempt/server";
 import {
   db,
-  elderMessage,
   elementVideoSeen,
-  elderMessageType,
   navigatorMessage,
   navigatorMessageType,
   navigatorPart,
@@ -57,33 +55,29 @@ async function startedOn(userId: string, today: string): Promise<string> {
 
 export type NavigatorToday = NavigatorDay & {
   messageId: string;
-  /** От чьего имени послание; в дни старцев — null. */
-  masterName: string | null;
-  /** Послание старцев на 6-й и 7-й день. */
-  elders: { title: string; body: string } | null;
+  masterName: string;
+  /** Дата послания: «2006-07-04». */
+  givenOn: string;
   read: boolean;
 };
 
-/** Послание старцев для типа на эту неделю навигатора: по порядку, по кругу. */
-async function eldersFor(typeId: string, messageNumber: number) {
-  const messages = await db
-    .select({ title: elderMessage.title, body: elderMessage.body })
-    .from(elderMessage)
-    .innerJoin(elderMessageType, eq(elderMessageType.messageId, elderMessage.id))
-    .where(eq(elderMessageType.typeId, typeId))
-    .orderBy(asc(elderMessage.position), asc(elderMessage.createdAt));
-  return messages.length > 0 ? messages[messageNumber % messages.length] : null;
-}
-
 /**
  * Послание человека на этот день программы: по порядку для его типа, по кругу.
- * null — нет типа или посланий; в дни старцев — если для типа нет послания старцев.
+ * null — нет типа или посланий для него.
  */
 async function navigatorFor(userId: string, programDay: number, today: string): Promise<NavigatorToday | null> {
   const type = await getMyCurrentType(userId);
   if (!type) return null;
   const messages = await db
-    .select({ id: navigatorMessage.id, masterName: navigatorMessage.masterName, day5Task: navigatorMessage.day5Task })
+    .select({
+      id: navigatorMessage.id,
+      title: navigatorMessage.title,
+      masterName: navigatorMessage.masterName,
+      givenOn: navigatorMessage.givenOn,
+      intro: navigatorMessage.intro,
+      closing: navigatorMessage.closing,
+      day7Task: navigatorMessage.day7Task,
+    })
     .from(navigatorMessage)
     .innerJoin(navigatorMessageType, eq(navigatorMessageType.messageId, navigatorMessage.id))
     .where(eq(navigatorMessageType.typeId, type.id))
@@ -93,23 +87,15 @@ async function navigatorFor(userId: string, programDay: number, today: string): 
   const { messageNumber, cycleDay } = navigatorPosition(programDay);
   const message = messages[messageNumber % messages.length];
   const day = navigatorDay(
+    message,
     await db.select().from(navigatorPart).where(eq(navigatorPart.messageId, message.id)),
-    message.day5Task,
     cycleDay,
   );
-  const elders = day.kind === "elders" ? await eldersFor(type.id, messageNumber) : null;
-  if (day.kind === "elders" && !elders) return null;
   const [read] = await db
     .select({ day: navigatorRead.day })
     .from(navigatorRead)
     .where(and(eq(navigatorRead.userId, userId), eq(navigatorRead.day, today)));
-  return {
-    ...day,
-    messageId: message.id,
-    masterName: day.kind === "elders" ? null : message.masterName,
-    elders,
-    read: Boolean(read),
-  };
+  return { ...day, messageId: message.id, masterName: message.masterName, givenOn: message.givenOn, read: Boolean(read) };
 }
 
 type Person = {

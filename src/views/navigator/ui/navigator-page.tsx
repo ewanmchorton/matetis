@@ -19,8 +19,17 @@ type State = { status: "loading" } | { status: "error"; message: string } | { st
 
 /** Источник посланий Мастеров. Один на все, в базе не хранится. */
 const MASTERS_BOOK = "«Книга Мудрости» Т.Н. Микушина";
-/** Источник посланий старцев — уточнится, когда будут примеры. */
-const ELDERS_SOURCE = "Печорские старцы";
+
+/** «2006-07-04» → «4 июля 2006 года». */
+function messageDate(givenOn: string) {
+  const [year, month, day] = givenOn.split("-").map(Number);
+  const dayMonth = new Date(Date.UTC(year, month - 1, day)).toLocaleDateString("ru-RU", {
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  });
+  return `${dayMonth} ${year} года`;
+}
 
 function Paragraphs({ text }: { text: string }) {
   return text
@@ -36,7 +45,7 @@ function Paragraphs({ text }: { text: string }) {
 
 const partTitleClass = "font-display text-[26px] leading-[1.2] font-medium text-foreground";
 
-/** Экран навигатора дня: часть послания (или послание целиком, или старцы), источник, задание, «Прочитано». */
+/** Экран навигатора дня: часть послания (на 7-й день — послание полностью), источник, задание, «Прочитано». */
 export function NavigatorPage() {
   const router = useRouter();
   const [state, setState] = useState<State>({ status: "loading" });
@@ -94,19 +103,24 @@ export function NavigatorPage() {
       {navigator && (
         <>
           <GlassCard className="flex flex-col gap-4 bg-background/80">
-            {navigator.kind === "elders" && navigator.elders ? (
-              <>
-                <h2 className={partTitleClass}>{typograph(navigator.elders.title)}</h2>
-                <Paragraphs text={navigator.elders.body} />
-              </>
-            ) : (
-              navigator.parts.map((part, index) => (
-                <div key={index} className="flex flex-col gap-4">
-                  <h2 className={partTitleClass}>{typograph(part.title)}</h2>
-                  <Paragraphs text={part.body} />
+            {navigator.kind === "full" && (
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1">
+                  <h2 className={partTitleClass}>{typograph(navigator.title)}</h2>
+                  <p className="type-caption text-muted-foreground">
+                    {navigator.masterName} · {messageDate(navigator.givenOn)}
+                  </p>
                 </div>
-              ))
+                {navigator.intro && <Paragraphs text={navigator.intro} />}
+              </div>
             )}
+            {navigator.parts.map((part, index) => (
+              <div key={index} className="flex flex-col gap-4">
+                <h2 className={partTitleClass}>{typograph(part.title)}</h2>
+                <Paragraphs text={part.body} />
+              </div>
+            ))}
+            {navigator.closing && <Paragraphs text={navigator.closing} />}
             <button
               type="button"
               className="-my-3 min-h-11 self-start type-caption text-muted-foreground underline underline-offset-3"
@@ -144,15 +158,9 @@ export function NavigatorPage() {
                   <XIcon className="size-5" />
                 </button>
                 <p className="mt-2 type-secondary text-muted-foreground">
-                  {navigator.kind === "elders" ? (
-                    ELDERS_SOURCE
-                  ) : (
-                    <>
-                      {MASTERS_BOOK}
-                      <br />
-                      {navigator.masterName}
-                    </>
-                  )}
+                  {MASTERS_BOOK}
+                  <br />
+                  {navigator.masterName}
                 </p>
               </div>
             </div>

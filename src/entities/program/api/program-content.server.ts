@@ -6,8 +6,6 @@ import { getPersonTypes } from "@/entities/person-type";
 import { assertStaff } from "@/shared/auth/assert-admin";
 import {
   db,
-  elderMessage,
-  elderMessageType,
   navigatorMessage,
   navigatorMessageType,
   navigatorPart,
@@ -179,54 +177,81 @@ export async function deletePractice(viewerId: string, id: unknown) {
 
 export type NavigatorMessageInput = {
   id?: unknown;
+  title?: unknown;
   masterName?: unknown;
+  /** Дата послания: «2006-07-04». */
+  givenOn?: unknown;
+  intro?: unknown;
+  closing?: unknown;
   position?: unknown;
-  day5Task?: unknown;
+  day7Task?: unknown;
   typeIds?: unknown;
-  /** Ровно две части по порядку. */
+  /** Ровно три части по порядку. */
   parts?: unknown;
 };
 
 export type NavigatorMessage = {
   id: string;
+  title: string;
   masterName: string;
+  givenOn: string;
+  intro: string;
+  closing: string;
   position: number;
-  day5Task: string | null;
+  day7Task: string | null;
   typeIds: string[];
   parts: { part: number; title: string; body: string; firstDayTask: string | null; secondDayTask: string | null }[];
 };
 
+const PARTS_COUNT = 3;
+
 function messageParts(input: unknown) {
   const parts = Array.isArray(input) ? input : [];
-  if (parts.length !== 2) throw new AppError("invalid_parts", "В послании две части");
+  if (parts.length !== PARTS_COUNT) throw new AppError("invalid_parts", "В послании три части");
   return parts.map((raw, index) => {
     const part = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
     const title = text(part.title);
     const body = text(part.body);
-    if (!title || !body) throw new AppError("empty_part", `Заполните заголовок и текст части ${index + 1}`);
-    return {
-      part: index + 1,
-      title,
-      body,
-      firstDayTask: optionalText(part.firstDayTask),
-      secondDayTask: optionalText(part.secondDayTask),
-    };
+    const firstDayTask = optionalText(part.firstDayTask);
+    if (!title || !body || !firstDayTask) {
+      throw new AppError("empty_part", `Заполните название, текст и задание первого дня части ${index + 1}`);
+    }
+    return { part: index + 1, title, body, firstDayTask, secondDayTask: optionalText(part.secondDayTask) };
   });
+}
+
+/** «2006-07-04» — настоящая дата; иначе ошибка. */
+function messageDate(input: unknown): string {
+  const value = typeof input === "string" ? input.trim() : "";
+  const valid = /^\d{4}-\d{2}-\d{2}$/.test(value) && new Date(`${value}T00:00:00Z`).toISOString().startsWith(value);
+  if (!valid) throw new AppError("empty_date", "Укажите дату послания");
+  return value;
 }
 
 /** Добавить послание (без id) или заменить существующее целиком: части и типы. */
 export async function saveNavigatorMessage(viewerId: string, input: NavigatorMessageInput): Promise<NavigatorMessage> {
   await assertStaff(viewerId);
+  const title = text(input.title);
   const masterName = text(input.masterName);
+  const intro = text(input.intro);
+  const closing = text(input.closing);
+  if (!title) throw new AppError("empty_title", "Напишите название послания");
   if (!masterName) throw new AppError("empty_master", "Напишите имя Мастера");
+  const givenOn = messageDate(input.givenOn);
+  if (!intro || !closing) throw new AppError("empty_text", "Заполните вступление и завершение");
   const parts = messageParts(input.parts);
-  if (!parts[0].firstDayTask || !parts[0].secondDayTask) {
-    throw new AppError("empty_tasks", "Заполните оба задания первой части — вторая часть и дни старцев их повторяют");
-  }
   const known = new Set(getPersonTypes().map((type) => type.id));
   const typeIds = Array.isArray(input.typeIds) ? [...new Set(input.typeIds.filter((id) => known.has(id)))] : [];
   if (typeIds.length === 0) throw new AppError("empty_types", "Отметьте, каким типам подходит послание");
-  const values = { masterName, position: wholeNumber(input.position, 0, 0), day5Task: optionalText(input.day5Task) };
+  const values = {
+    title,
+    masterName,
+    givenOn,
+    intro,
+    closing,
+    position: wholeNumber(input.position, 0, 0),
+    day7Task: optionalText(input.day7Task),
+  };
 
   const id = await db.transaction(async (tx) => {
     let messageId: string;
@@ -263,70 +288,17 @@ export async function listNavigatorMessagesForStaff(viewerId: string): Promise<N
   ]);
   return messages.map((message) => ({
     id: message.id,
+    title: message.title,
     masterName: message.masterName,
+    givenOn: message.givenOn,
+    intro: message.intro,
+    closing: message.closing,
     position: message.position,
-    day5Task: message.day5Task,
+    day7Task: message.day7Task,
     typeIds: types.filter((type) => type.messageId === message.id).map((type) => type.typeId),
     parts: parts
       .filter((part) => part.messageId === message.id)
       .map(({ part, title, body, firstDayTask, secondDayTask }) => ({ part, title, body, firstDayTask, secondDayTask })),
-  }));
-}
-
-export type ElderMessage = { id: string; title: string; body: string; position: number; typeIds: string[] };
-
-function knownTypeIds(input: unknown): string[] {
-  const known = new Set(getPersonTypes().map((type) => type.id));
-  return Array.isArray(input) ? [...new Set(input.filter((id): id is string => known.has(id)))] : [];
-}
-
-/** Добавить послание старцев (без id) или заменить существующее вместе с типами. */
-export async function saveElderMessage(
-  viewerId: string,
-  input: { id?: unknown; title?: unknown; body?: unknown; position?: unknown; typeIds?: unknown },
-): Promise<ElderMessage> {
-  await assertStaff(viewerId);
-  const title = text(input.title);
-  const body = text(input.body);
-  if (!title || !body) throw new AppError("empty_elder", "Заполните заголовок и текст");
-  const typeIds = knownTypeIds(input.typeIds);
-  if (typeIds.length === 0) throw new AppError("empty_types", "Отметьте, каким типам подходит послание");
-  const values = { title, body, position: wholeNumber(input.position, 0, 0) };
-
-  const id = await db.transaction(async (tx) => {
-    if (typeof input.id === "string") {
-      const [row] = await tx.update(elderMessage).set(values).where(eq(elderMessage.id, input.id)).returning();
-      if (!row) throw new AppError("not_found", "Послание не найдено");
-      await tx.delete(elderMessageType).where(eq(elderMessageType.messageId, row.id));
-      await tx.insert(elderMessageType).values(typeIds.map((typeId) => ({ messageId: row.id, typeId })));
-      return row.id;
-    }
-    const [row] = await tx.insert(elderMessage).values(values).returning();
-    await tx.insert(elderMessageType).values(typeIds.map((typeId) => ({ messageId: row.id, typeId })));
-    return row.id;
-  });
-  return { id, ...values, typeIds };
-}
-
-export async function deleteElderMessage(viewerId: string, id: unknown) {
-  await assertStaff(viewerId);
-  if (typeof id === "string") await db.delete(elderMessage).where(eq(elderMessage.id, id));
-  return { ok: true };
-}
-
-/** Все послания старцев по порядку, с типами. */
-export async function listElderMessagesForStaff(viewerId: string): Promise<ElderMessage[]> {
-  await assertStaff(viewerId);
-  const [messages, types] = await Promise.all([
-    db.select().from(elderMessage).orderBy(asc(elderMessage.position), asc(elderMessage.createdAt)),
-    db.select().from(elderMessageType),
-  ]);
-  return messages.map(({ id, title, body, position }) => ({
-    id,
-    title,
-    body,
-    position,
-    typeIds: types.filter((type) => type.messageId === id).map((type) => type.typeId),
   }));
 }
 
