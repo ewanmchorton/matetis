@@ -1,1 +1,1 @@
-export { InvitePanel } from "./ui/invite-panel";
+export { InviteSheet } from "./ui/invite-sheet";

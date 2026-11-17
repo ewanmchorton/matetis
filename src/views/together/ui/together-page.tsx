@@ -1,159 +1,108 @@
 "use client";
 
-import { useState } from "react";
-import { Check, Heart } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
-import { progressActions } from "@/entities/progress";
-import { feedEvents, getPerson, socialActions, useSocial } from "@/entities/social";
-import { routes } from "@/shared/config/routes";
-import { addDays, toDateKey } from "@/shared/lib/date";
+import type { JointCard } from "@/entities/together/server";
+import { InviteSheet } from "@/features/invite-practice";
 import { typograph } from "@/shared/lib/typograph";
-import { useIsClient } from "@/shared/lib/use-is-client";
-import { cn } from "@/shared/lib/utils";
-import { InvitePanel } from "@/features/invite-practice";
 import { Button } from "@/shared/ui/button";
-import { Logo } from "@/shared/ui/logo";
+import { GlassCard } from "@/shared/ui/glass-card";
+import { ScreenLayout } from "@/widgets/screen-layout";
 
-export function TogetherPage() {
-  const isClient = useIsClient();
+import { useTogether } from "../api/together-api";
+import { JointCardView } from "./joint-card";
+import { TogetherFeed, TogetherPeople } from "./together-feed";
 
-  return (
-    <main className="flex flex-1 flex-col gap-4 px-5 pt-6 pb-8">
-      <header className="space-y-3">
-        <Logo href={routes.program} />
-        <h1 className="text-3xl font-semibold">Вместе</h1>
-      </header>
-      {isClient ? <TogetherContent /> : <div className="h-64 animate-pulse rounded-2xl bg-muted" aria-hidden />}
-    </main>
-  );
+/** Почему сейчас нельзя предложить новую практику. */
+function inviteHint(card: JointCard | null): string | null {
+  if (!card) return null;
+  if (card.kind === "incoming" || (card.kind === "monthly" && !card.iAccepted)) {
+    return "Сначала ответьте на карточку сверху.";
+  }
+  if (card.kind === "outgoing" || (card.kind === "monthly" && card.iAccepted)) {
+    return "Ждём ответа. Новую практику можно предложить после него.";
+  }
+  if (card.kind === "active") return "Новую практику можно предложить, когда эта завершится.";
+  return null;
 }
 
-function TogetherContent() {
-  const { invitations, reactions } = useSocial();
+/** Вкладка «Вместе»: карточка практики, события друзей и предложение новой. */
+export function TogetherPage({ friendId }: { friendId?: string }) {
+  const together = useTogether();
   const [inviteOpen, setInviteOpen] = useState(false);
-  const today = new Date();
-  const todayKey = toDateKey(today);
-  const deadline = addDays(today, 6).toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
-  const active = invitations.filter((item) => item.status === "accepted");
-  const incoming = invitations.filter((item) => item.status === "pending" && item.direction === "incoming");
+  const openedFor = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!friendId || together.state.status !== "ready" || openedFor.current === friendId) return;
+    openedFor.current = friendId;
+    setInviteOpen(true);
+  }, [friendId, together.state.status]);
+
+  const ready = together.state.status === "ready" ? together.state.data : null;
+  const hint = ready && !ready.canInvite ? inviteHint(ready.card) : null;
 
   return (
-    <>
-      {active.map((item) => {
-        const friend = getPerson(item.friendId);
-        return (
-          <section key={item.id} className="space-y-3 rounded-2xl bg-primary/10 p-4 ring-1 ring-primary/15">
-            <div className="space-y-0.5">
-              <p className="text-xs font-medium text-primary">Совместная практика</p>
-              <h2 className="text-lg font-semibold leading-snug">{typograph(item.practiceTitle)}</h2>
-              <p className="text-sm text-muted-foreground">
-                {typograph(`${friend?.name ?? "Друг"} · до ${deadline}`)}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {typograph("Семь дней с того дня, когда вы оба согласились.")}
-              </p>
-            </div>
-            <ul className="space-y-1.5 text-sm">
-              <li className="flex items-center justify-between gap-3">
-                <span>Вы</span>
-                <MarkButton
-                  done={item.myDone}
-                  label={item.myDone ? "Снять свою отметку" : "Отметить у себя"}
-                  onClick={() => {
-                    const done = socialActions.toggleMyPart(item.id);
-                    if (done) progressActions.completePractice(todayKey);
-                  }}
-                />
-              </li>
-              <li className="flex items-center justify-between gap-3">
-                <span>{friend?.name}</span>
-                <span className="text-muted-foreground">{item.theirDone ? "готово" : "–"}</span>
-              </li>
-            </ul>
-          </section>
-        );
-      })}
-
-      <section aria-labelledby="feed-title" className="space-y-2">
-        <h2 id="feed-title" className="text-lg font-semibold">
-          События друзей
-        </h2>
-        <ul className="space-y-2">
-          {feedEvents.map((event) => {
-            const person = getPerson(event.personId);
-            const reacted = Boolean(reactions[event.id]);
-            return (
-              <li key={event.id} className="space-y-2 rounded-2xl border bg-card p-3">
-                <div className="flex gap-2.5">
-                  <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-medium text-primary">
-                    {person?.name.slice(0, 1)}
-                  </span>
-                  <div className="min-w-0 space-y-0.5">
-                    <p className="text-xs font-medium text-primary">{typograph(event.title)}</p>
-                    <p className="text-sm leading-snug">{typograph(event.text)}</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  aria-pressed={reacted}
-                  onClick={() => socialActions.toggleReaction(event.id)}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs",
-                    reacted ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground",
-                  )}
-                >
-                  <Heart className={cn("size-3.5", reacted && "fill-primary")} />
-                  {reacted ? "Вы поддержали" : "Поддержать"}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
-
-      {incoming.map((item) => {
-        const friend = getPerson(item.friendId);
-        return (
-          <section key={item.id} className="space-y-2 rounded-2xl border bg-card p-3">
-            <p className="text-sm font-medium">
-              {typograph(`${friend?.name ?? "Друг"} · ${item.practiceTitle}`)}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {typograph("Семь дней с того дня, когда вы примете.")}
-            </p>
-            <div className="flex gap-2">
-              <Button size="sm" className="flex-1" onClick={() => socialActions.respondInvite(item.id, true)}>
-                Принять
-              </Button>
-              <Button size="sm" variant="outline" className="flex-1" onClick={() => socialActions.respondInvite(item.id, false)}>
-                Отклонить
-              </Button>
-            </div>
-          </section>
-        );
-      })}
-
-      <Button variant="outline" className="w-full" onClick={() => setInviteOpen((value) => !value)}>
-        Предложить практику
-      </Button>
-      {inviteOpen && <InvitePanel onClose={() => setInviteOpen(false)} />}
-    </>
-  );
-}
-
-function MarkButton({ done, label, onClick }: { done: boolean; label: string; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      aria-pressed={done}
-      aria-label={label}
-      onClick={onClick}
-      className={cn(
-        "grid size-9 place-items-center rounded-full border-2",
-        done ? "border-primary bg-primary text-primary-foreground" : "border-input text-transparent",
+    <ScreenLayout variant="page" background="08_together" title="Вместе">
+      {together.state.status === "loading" && <GlassCard aria-hidden className="h-48 animate-pulse" />}
+      {together.state.status === "error" && (
+        <GlassCard>
+          <p role="alert" className="type-secondary text-destructive">
+            {typograph(together.state.message)}
+          </p>
+        </GlassCard>
       )}
-    >
-      <Check className="size-4" />
-    </button>
+      {together.actionError && (
+        <p role="alert" className="type-secondary text-destructive">
+          {typograph(together.actionError)}
+        </p>
+      )}
+
+      {ready?.card && (
+        <JointCardView
+          card={ready.card}
+          asked={together.asked.includes(ready.card.partner.id)}
+          pending={together.pending}
+          onAnswer={(accept) => void together.answer(accept)}
+          onCancel={() => void together.cancel()}
+          onStop={() => void together.stop()}
+          onDismiss={() => void together.dismiss()}
+          onMark={(done) => void together.mark(done)}
+          onAddFriend={() => void together.addFriend(ready.card!.partner.id)}
+        />
+      )}
+
+      {ready &&
+        (ready.hasFriends ? (
+          <TogetherFeed feed={ready.feed} pending={together.pending} onSupport={(id, on) => void together.support(id, on)} />
+        ) : (
+          <TogetherPeople
+            people={ready.people}
+            asked={together.asked}
+            pending={together.pending}
+            onAdd={(id) => void together.addFriend(id)}
+          />
+        ))}
+
+      {ready?.hasFriends && (
+        <div className="space-y-2">
+          {hint && <p className="type-caption text-muted-foreground">{typograph(hint)}</p>}
+          <Button size="cta" disabled={!ready.canInvite || together.pending} onClick={() => setInviteOpen(true)}>
+            Предложить практику
+          </Button>
+        </div>
+      )}
+
+      <InviteSheet
+        open={inviteOpen}
+        friendId={friendId}
+        pending={together.pending}
+        onOpenChange={setInviteOpen}
+        blocked={hint}
+        loadOptions={together.loadOptions}
+        onInvite={async (friend, practice) => {
+          if (await together.invite(friend, practice)) setInviteOpen(false);
+        }}
+      />
+    </ScreenLayout>
   );
 }

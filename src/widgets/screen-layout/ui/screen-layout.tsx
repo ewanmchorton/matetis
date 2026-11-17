@@ -29,6 +29,7 @@ export type ScreenBackground =
   | "07_transition_steps"
   | "07_transition_path"
   | "07_new_period"
+  | "08_together"
   | "09_profile"
   | "09_friend";
 

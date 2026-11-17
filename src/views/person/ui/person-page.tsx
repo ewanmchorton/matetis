@@ -86,7 +86,10 @@ function FriendshipActions({ profile, onAction }: { profile: PersonProfile; onAc
       return (
         <div className="space-y-3">
           <p className="type-secondary text-muted-foreground">Вы друзья.</p>
-          <Link href={routes.together} className={buttonVariants({ size: "cta", variant: "outline" })}>
+          <Link
+            href={`${routes.together}?friend=${profile.person.id}`}
+            className={buttonVariants({ size: "cta", variant: "outline" })}
+          >
             Предложить практику
           </Link>
           <Button size="cta" variant="ghost" className="text-muted-foreground" onClick={() => onAction("remove")}>
