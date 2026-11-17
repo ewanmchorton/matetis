@@ -7,7 +7,7 @@ const clock = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds
 
 /**
  * Плеер аудиозаписи практики. Загрузки аудио в админке ещё нет, поэтому пока он только
- * показывает запись: кнопка неактивна, длительность — заглушка до настоящего файла.
+ * показывает запись: кнопка неактивна, длительность – заглушка до настоящего файла.
  */
 export function AudioPlayer({ durationSeconds }: { durationSeconds: number }) {
   return (

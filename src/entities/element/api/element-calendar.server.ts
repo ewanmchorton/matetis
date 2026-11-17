@@ -46,7 +46,7 @@ export async function getCurrentSeason(now = new Date()): Promise<Season> {
 export type ElementCalendarState = Season & {
   /** Для какой осени задаётся дата Металла. */
   metalYear: number;
-  /** День Металла этой осенью, «2026-10-14». null — не задан, Металл с 1 ноября. */
+  /** День Металла этой осенью, «2026-10-14». null – не задан, Металл с 1 ноября. */
   metalStartsOn: string | null;
   /** Показывать ли настройку дня Металла: с 1 октября до недели после перехода. */
   metalSettingVisible: boolean;

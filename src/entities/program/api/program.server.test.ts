@@ -25,7 +25,7 @@ import {
 
 const HEALER = "t1";
 const IDEALIST = "t2";
-/** Пятница, 25 декабря 2026, полдень по Минску — первый день человека в программе. */
+/** Пятница, 25 декабря 2026, полдень по Минску – первый день человека в программе. */
 const start = new Date("2026-12-25T12:00:00+03:00");
 const DAY_MS = 24 * 60 * 60 * 1000;
 const day = (programDay: number) => new Date(start.getTime() + (programDay - 1) * DAY_MS);
@@ -79,7 +79,7 @@ describe("Наполнение программы", () => {
     await expect(savePractice(anna, { title: "Улыбка", frequency: "weekly" })).rejects.toThrow("только сотрудникам");
   });
 
-  it("послание — три части, у каждой задание первого дня; название, дата, вступление, завершение и тип обязательны", async () => {
+  it("послание – три части, у каждой задание первого дня; название, дата, вступление, завершение и тип обязательны", async () => {
     await expect(saveNavigatorMessage(manager, message("Сурия", { parts: [part(1), part(2)] }))).rejects.toThrow(
       "три части",
     );
@@ -100,7 +100,7 @@ describe("Программа человека", () => {
     await savePractice(manager, { title: "Полный цикл зарядки", frequency: "weekly", position: 1 });
   });
 
-  it("в первый день — первый день программы, практики с 4-го дня ещё нет", async () => {
+  it("в первый день – первый день программы, практики с 4-го дня ещё нет", async () => {
     const program = await getMyProgram(anna, day(1));
     expect(program.programDay).toBe(1);
     expect(program.morning.map((item) => item.title)).toEqual(["Улыбка"]);
@@ -120,7 +120,7 @@ describe("Программа человека", () => {
     await expect(setPracticeDone(anna, sounds.id, true, day(1))).rejects.toThrow("не найдена");
   });
 
-  it("отметка ежедневной практики — на сегодня, назавтра практика снова не отмечена", async () => {
+  it("отметка ежедневной практики – на сегодня, назавтра практика снова не отмечена", async () => {
     const program = await getMyProgram(anna, day(1));
     const smile = program.morning[0];
     await setPracticeDone(anna, smile.id, true, day(1));
@@ -135,7 +135,7 @@ describe("Программа человека", () => {
     await setPracticeDone(anna, weekly[0].id, true, monday);
     await setPracticeDone(anna, weekly[0].id, true, wednesday);
     expect((await getMyProgram(anna, wednesday)).weekly[0].doneOn).toBe("2026-12-28");
-    // Новая неделя — снова не отмечена.
+    // Новая неделя – снова не отмечена.
     expect((await getMyProgram(anna, new Date("2027-01-04T10:00:00+03:00"))).weekly[0].doneOn).toBeNull();
   });
 
@@ -173,14 +173,14 @@ describe("Программа человека", () => {
     expect(program.programDay).toBe(2);
   });
 
-  it("в программе — имя, тип и текст практики, список слабых стихий человеку не отдаётся", async () => {
+  it("в программе – имя, тип и текст практики, список слабых стихий человеку не отдаётся", async () => {
     await saveMyBirthDate(anna, "1988-03-15");
     const program = await getMyProgram(anna, day(1));
     expect(program.person).toEqual({ name: "Анна", typeName: expect.any(String) });
     expect(program.morning[0]).toMatchObject({ title: "Улыбка", body: "", videoUrl: null });
   });
 
-  it("видео по стихии — пока не посмотрено в этот период; в следующую зиму снова не посмотрено", async () => {
+  it("видео по стихии – пока не посмотрено в этот период; в следующую зиму снова не посмотрено", async () => {
     expect((await getMyProgram(anna, day(1))).elementVideo).toBeNull();
     await saveProgramVideo(manager, { slot: "water", videoUrl: "https://youtu.be/water", body: "Про Воду" });
     expect((await getMyProgram(anna, day(1))).elementVideo).toEqual({
@@ -189,7 +189,7 @@ describe("Программа человека", () => {
       seen: false,
     });
     await markElementVideoSeen(anna, day(1));
-    // 25 декабря и 20 января — одна зима.
+    // 25 декабря и 20 января – одна зима.
     expect((await getMyProgram(anna, new Date("2027-01-20T12:00:00+03:00"))).elementVideo?.seen).toBe(true);
     expect((await getMyProgram(anna, new Date("2027-12-20T12:00:00+03:00"))).elementVideo?.seen).toBe(false);
   });
@@ -226,7 +226,7 @@ describe("Варианты практик", () => {
     expect((await getMyProgram(boris, day(1))).weekly).toEqual([]);
   });
 
-  it("«каждую неделю новый» — следующий вариант по порядку, потом по кругу", async () => {
+  it("«каждую неделю новый» – следующий вариант по порядку, потом по кругу", async () => {
     await savePractice(manager, {
       title: "Прогулка без телефона",
       frequency: "weekly",
@@ -245,7 +245,7 @@ describe("Варианты практик", () => {
     expect(bodies).toEqual(["Вопрос 1", "Вопрос 2", "Вопрос 1"]);
   });
 
-  it("с 15-го дня медитации чередуются по неделям, новая медитация — каждый раз, когда она есть", async () => {
+  it("с 15-го дня медитации чередуются по неделям, новая медитация – каждый раз, когда она есть", async () => {
     await savePractice(manager, {
       title: "Медитация на качество силы",
       frequency: "weekly",
@@ -289,7 +289,7 @@ describe("Варианты практик", () => {
     await expect(setPracticeDone(anna, meditation.id, true, day(22))).rejects.toThrow("не найдена");
   });
 
-  it("на слабую стихию — вариант слабой стихии человека; без даты рождения практики нет", async () => {
+  it("на слабую стихию – вариант слабой стихии человека; без даты рождения практики нет", async () => {
     await savePractice(manager, {
       title: "Осознание на слабую стихию",
       frequency: "awareness",
@@ -301,7 +301,7 @@ describe("Варианты практик", () => {
     });
     expect((await getMyProgram(anna, day(1))).awareness).toEqual([]);
 
-    // 15.03.1988: слабые — Металл (1 цифра) и Огонь (0). Первым по кругу от Земли идёт Металл.
+    // 15.03.1988: слабые – Металл (1 цифра) и Огонь (0). Первым по кругу от Земли идёт Металл.
     await saveMyBirthDate(anna, "1988-03-15");
     const [awareness] = (await getMyProgram(anna, day(1))).awareness;
     expect(titles([awareness])).toEqual(["Осознание на слабую стихию"]);
@@ -309,7 +309,7 @@ describe("Варианты практик", () => {
     expect(await shownBody("Осознание на слабую стихию", awareness.variantId)).toBe("Про Металл");
   });
 
-  it("несколько слабых — медитация раз в 2 недели прокачивает их по очереди", async () => {
+  it("несколько слабых – медитация раз в 2 недели прокачивает их по очереди", async () => {
     await savePractice(manager, {
       title: "Медитация на слабую стихию",
       frequency: "weekly",
@@ -328,12 +328,12 @@ describe("Варианты практик", () => {
     const shown = [];
     for (const programDay of [8, 15, 22, 29, 36]) {
       const [meditation] = (await getMyProgram(anna, day(programDay))).weekly;
-      shown.push(meditation ? await shownBody(meditation.title, meditation.variantId) : "—");
+      shown.push(meditation ? await shownBody(meditation.title, meditation.variantId) : "–");
     }
-    expect(shown).toEqual(["Металл", "—", "Огонь", "—", "Металл"]);
+    expect(shown).toEqual(["Металл", "–", "Огонь", "–", "Металл"]);
   });
 
-  it("вариант на стихию года — по текущей стихии, у всех типов один", async () => {
+  it("вариант на стихию года – по текущей стихии, у всех типов один", async () => {
     await savePractice(manager, {
       title: "Полный цикл зарядки",
       frequency: "weekly",
@@ -343,7 +343,7 @@ describe("Варианты практик", () => {
         { body: "Зарядка Воды", seasonElement: "water" },
       ],
     });
-    // 25 декабря — зима, Вода.
+    // 25 декабря – зима, Вода.
     const [charge] = (await getMyProgram(anna, day(1))).weekly;
     expect(await shownBody("Полный цикл зарядки", charge.variantId)).toBe("Зарядка Воды");
   });
@@ -368,7 +368,7 @@ describe("Варианты практик", () => {
 });
 
 describe("Навигатор дня", () => {
-  it("первый день — первая часть первого послания для типа человека", async () => {
+  it("первый день – первая часть первого послания для типа человека", async () => {
     await addMessage("Сурия", 1);
     await getMyProgram(anna, day(1));
     const navigator = await getMyNavigator(anna, day(1));
@@ -376,18 +376,18 @@ describe("Навигатор дня", () => {
     expect(navigator?.parts.map((item) => item.title)).toEqual(["Заголовок 1"]);
   });
 
-  it("второй день — тот же текст и новое задание, третий — вторая часть", async () => {
+  it("второй день – тот же текст и новое задание, третий – вторая часть", async () => {
     await addMessage("Сурия", 1);
     await getMyProgram(anna, day(1));
     expect(await getMyNavigator(anna, day(2))).toMatchObject({ newTask: true, task: "Сурия: задание 2" });
     const third = await getMyNavigator(anna, day(3));
     expect(third).toMatchObject({ title: "Заголовок 2", task: "задание 3", newTask: false });
-    // Своего задания 4-го дня нет — повторяется задание 3-го.
+    // Своего задания 4-го дня нет – повторяется задание 3-го.
     expect(await getMyNavigator(anna, day(4))).toMatchObject({ task: "задание 3", newTask: false });
     expect(await getMyNavigator(anna, day(5))).toMatchObject({ title: "Заголовок 3", task: "задание 5" });
   });
 
-  it("седьмой день — послание полностью с названием, автором и датой, восьмой — следующее послание", async () => {
+  it("седьмой день – послание полностью с названием, автором и датой, восьмой – следующее послание", async () => {
     await addMessage("Сурия", 1);
     await addMessage("Эль Морья", 2);
     await getMyProgram(anna, day(1));
@@ -405,7 +405,7 @@ describe("Навигатор дня", () => {
     expect((await getMyNavigator(anna, day(8)))?.masterName).toBe("Эль Морья");
   });
 
-  it("когда послания закончились — снова с первого", async () => {
+  it("когда послания закончились – снова с первого", async () => {
     await addMessage("Сурия", 1);
     await addMessage("Эль Морья", 2);
     await getMyProgram(anna, day(1));
@@ -437,7 +437,7 @@ describe("Навигатор дня", () => {
 });
 
 describe("Заметки для себя", () => {
-  it("заметка сохраняется на сегодня, пустая — удаляется", async () => {
+  it("заметка сохраняется на сегодня, пустая – удаляется", async () => {
     const thinking = await savePractice(manager, { title: "Мышление по навигатору", frequency: "daily", daypart: "evening", position: 2 });
     await saveMyNote(anna, thinking.id, "  Семь раз поблагодарила  ", day(1));
     expect(await getMyNote(anna, thinking.id, day(1))).toEqual({ text: "Семь раз поблагодарила" });
@@ -457,7 +457,7 @@ describe("Видео библиотеки", () => {
     expect(videos[1].videoUrl).toBeNull();
   });
 
-  it("видео — только ссылка на YouTube", async () => {
+  it("видео – только ссылка на YouTube", async () => {
     await expect(saveProgramVideo(manager, { slot: "welcome", videoUrl: "https://vimeo.com/1" })).rejects.toThrow("YouTube");
   });
 });

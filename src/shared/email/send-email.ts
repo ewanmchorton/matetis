@@ -1,6 +1,6 @@
 // Отправка писем по SMTP. Только серверный код.
 // При разработке письма ловит Mailpit из docker-compose.yml (просмотр: http://localhost:8025),
-// на сервере — сервис рассылок: его адрес и пароль задаются в SMTP_* (см. .env.example).
+// на сервере – сервис рассылок: его адрес и пароль задаются в SMTP_* (см. .env.example).
 import nodemailer from "nodemailer";
 
 import { APP_NAME } from "@/shared/config/brand";

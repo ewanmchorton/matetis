@@ -53,7 +53,7 @@ describe("Поиск людей", () => {
 });
 
 describe("Публичный профиль", () => {
-  it("другой человек видит только имя и аватар — без почты, роли, даты рождения и типа", async () => {
+  it("другой человек видит только имя и аватар – без почты, роли, даты рождения и типа", async () => {
     await db.update(user).set({ image: "https://example.test/boris.png" }).where(eq(user.id, boris));
     const profile = await getPublicProfile(anna, boris);
     expect(profile?.person).toEqual({
@@ -103,7 +103,7 @@ describe("Запрос в друзья", () => {
     expect(await listFriends(boris)).toEqual([]);
   });
 
-  it("получатель видит входящий запрос, а отправитель — нет", async () => {
+  it("получатель видит входящий запрос, а отправитель – нет", async () => {
     await sendFriendRequest(anna, boris);
     expect((await listIncomingRequests(boris)).map((p) => p.name)).toEqual(["Анна"]);
     expect(await listIncomingRequests(anna)).toEqual([]);
@@ -205,7 +205,7 @@ describe("Удаление из друзей", () => {
     expect(await sendFriendRequest(anna, boris)).toBe("outgoing");
   });
 
-  it("нельзя удалить того, кто не друг, — неотвеченный запрос остаётся на месте", async () => {
+  it("нельзя удалить того, кто не друг, – неотвеченный запрос остаётся на месте", async () => {
     await sendFriendRequest(anna, boris);
     await expect(removeFriend(anna, boris)).rejects.toMatchObject({ code: "not_friends" });
     expect(await listIncomingRequests(boris)).toHaveLength(1);

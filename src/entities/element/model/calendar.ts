@@ -1,9 +1,9 @@
 import type { ElementId } from "./types";
 
 // Календарь стихий по временам года, по Минску. Без обращений к базе.
-// Зима — Вода, весна — Дерево, лето — Огонь. Осень начинается Землёй, с 1 ноября — Металл.
+// Зима – Вода, весна – Дерево, лето – Огонь. Осень начинается Землёй, с 1 ноября – Металл.
 // День перехода на Металл каждый год разный: контент-менеджер может задать другой в админке.
-// На границе стихий 5 дней до и 5 дней после смены — переход: для него свои фоны.
+// На границе стихий 5 дней до и 5 дней после смены – переход: для него свои фоны.
 
 /** В Беларуси нет перехода на летнее время: всегда UTC+3. */
 const MINSK_OFFSET_MS = 3 * 60 * 60 * 1000;
@@ -20,7 +20,7 @@ export function defaultMetalStart(year: number): Date {
   return minskMidnight(year, 11, 1);
 }
 
-/** Для какого года задаётся дата Металла: в декабре — уже для следующей осени. */
+/** Для какого года задаётся дата Металла: в декабре – уже для следующей осени. */
 export function metalYearFor(now: Date): number {
   const { year, month } = minskYearMonth(now);
   return month === 12 ? year + 1 : year;
@@ -32,12 +32,12 @@ export function minskYearMonth(now: Date): { year: number; month: number } {
   return { year: minsk.getUTCFullYear(), month: minsk.getUTCMonth() + 1 };
 }
 
-/** Полночь по Минску в этот день. month — 1–12. */
+/** Полночь по Минску в этот день. month – 1–12. */
 export function minskMidnight(year: number, month: number, day: number): Date {
   return new Date(Date.UTC(year, month - 1, day) - MINSK_OFFSET_MS);
 }
 
-/** Стихия в этот момент. metalFrom — с какого момента в этом году Металл. */
+/** Стихия в этот момент. metalFrom – с какого момента в этом году Металл. */
 export function elementAt(now: Date, metalFrom: Date): ElementId {
   const { month } = minskYearMonth(now);
   if (month === 12 || month <= 2) return "water";
@@ -61,8 +61,8 @@ function boundaries(now: Date, metalFrom: (year: number) => Date) {
 }
 
 /**
- * Какой фон показывать в этот момент. Ближе 5 дней к смене стихии — фон перехода,
- * иначе — фон текущей стихии. metalFrom(year) — день Металла в этом году.
+ * Какой фон показывать в этот момент. Ближе 5 дней к смене стихии – фон перехода,
+ * иначе – фон текущей стихии. metalFrom(year) – день Металла в этом году.
  */
 export function backgroundAt(now: Date, metalFrom: (year: number) => Date): SeasonBackground {
   const nearest = boundaries(now, metalFrom)

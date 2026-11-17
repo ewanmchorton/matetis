@@ -50,7 +50,7 @@ export const feedEvents: FeedEvent[] = [
     personId: "svetlana",
     kind: "first",
     title: "Первая практика",
-    text: "Светлана выполнила первую практику — «Коан дня».",
+    text: "Светлана выполнила первую практику – «Коан дня».",
   },
   {
     id: "e-week",

@@ -32,7 +32,7 @@ beforeEach(async () => {
 });
 
 describe("Уведомление о заявке", () => {
-  it("человек без доступа прошёл тест — администратору сразу приходит «Новая заявка»", async () => {
+  it("человек без доступа прошёл тест – администратору сразу приходит «Новая заявка»", async () => {
     const id = await createPerson("Ольга", "user", "olga@example.ru");
     await notifyNewRequest({ id, email: "olga@example.ru", name: "Ольга", role: "user" });
     expect(sent.messages).toEqual([
@@ -40,7 +40,7 @@ describe("Уведомление о заявке", () => {
     ]);
   });
 
-  it("у человека уже есть доступ — это не заявка, уведомления нет", async () => {
+  it("у человека уже есть доступ – это не заявка, уведомления нет", async () => {
     await extendAccess(admin, "olga@example.ru", { months: 1 });
     const id = await createPerson("Ольга", "user", "olga@example.ru");
     await notifyNewRequest({ id, email: "olga@example.ru", name: "Ольга", role: "user" });
@@ -108,7 +108,7 @@ describe("Ежедневная сводка о доступах", () => {
     expect(sent.messages).toHaveLength(1);
   });
 
-  it("человек попадает в сводку один раз за срок, после продления — снова", async () => {
+  it("человек попадает в сводку один раз за срок, после продления – снова", async () => {
     await openAccess("anna@example.ru", startedSep25);
     await sendExpiringDigest(digestTime);
     expect(await sendExpiringDigest(new Date(digestTime.getTime() + DAY))).toBe(0);
@@ -119,7 +119,7 @@ describe("Ежедневная сводка о доступах", () => {
     expect(sent.messages).toHaveLength(2);
   });
 
-  it("если ни у кого доступ скоро не заканчивается — уведомления нет", async () => {
+  it("если ни у кого доступ скоро не заканчивается – уведомления нет", async () => {
     await openAccess("anna@example.ru", digestTime);
     expect(await sendExpiringDigest(digestTime)).toBe(0);
     expect(sent.messages).toEqual([]);

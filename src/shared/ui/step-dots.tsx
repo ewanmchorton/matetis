@@ -1,6 +1,6 @@
 import { cn } from "@/shared/lib/utils";
 
-/** Индикатор шагов: точки 8 px, текущий шаг — вытянутая точка 24 px. */
+/** Индикатор шагов: точки 8 px, текущий шаг – вытянутая точка 24 px. */
 export function StepDots({ count, current, className }: { count: number; current: number; className?: string }) {
   return (
     <div

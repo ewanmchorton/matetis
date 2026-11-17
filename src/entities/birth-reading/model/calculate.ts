@@ -31,7 +31,7 @@ export type ElementLevel =
   | "very_strong"
   | "overload";
 
-/** Оценка по количеству цифр стихии. Индекс — количество, 6 и больше — перегрузка. */
+/** Оценка по количеству цифр стихии. Индекс – количество, 6 и больше – перегрузка. */
 const levelsByCount: readonly ElementLevel[] = [
   "absent",
   "present",
@@ -95,7 +95,7 @@ const sum = (values: number[]) => values.reduce((total, value) => total + value,
 /** Квадрат Пифагора: рабочие числа и сколько раз встречается каждая цифра. */
 export function calculateBirthSquare(birthDate: string, today?: Date): BirthSquare {
   const { day, month, year } = parseBirthDate(birthDate, today);
-  // Дата как пишется — ДД.ММ.ГГГГ: ноль в «06» тоже цифра.
+  // Дата как пишется – ДД.ММ.ГГГГ: ноль в «06» тоже цифра.
   const dateDigits = digitsOf(`${twoDigits(day)}${twoDigits(month)}${year}`);
 
   const first = sum(dateDigits);
@@ -125,9 +125,9 @@ export function scoreElements(digitCounts: DigitCounts): ElementScore[] {
 }
 
 /**
- * Слабые стихии человека — для практик на слабую стихию. Правило Жанны от 31.10.2026, по порядку:
- * 0 или 1 цифра; если таких нет — ровно 3; если и таких нет — 5 и больше; остались только 2 и 4 — берём 2.
- * Порядок — по кругу Усин от Земли. Если слабых несколько, программа прокачивает их по очереди.
+ * Слабые стихии человека – для практик на слабую стихию. Правило Жанны от 31.10.2026, по порядку:
+ * 0 или 1 цифра; если таких нет – ровно 3; если и таких нет – 5 и больше; остались только 2 и 4 – берём 2.
+ * Порядок – по кругу Усин от Земли. Если слабых несколько, программа прокачивает их по очереди.
  */
 export function weakElements(scores: ElementScore[]): ElementId[] {
   const rules: ((count: number) => boolean)[] = [

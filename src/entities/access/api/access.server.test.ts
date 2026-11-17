@@ -48,7 +48,7 @@ describe("Доступ по почте", () => {
     expect(await hasAccess(person, later(jan10, 1))).toBe(true);
   });
 
-  it("прошёл тест без записей о доступе — статус «заявка», доступа нет", async () => {
+  it("прошёл тест без записей о доступе – статус «заявка», доступа нет", async () => {
     const person = await registerAnna();
     await saveMyTypeTest(person.id, { group1: "А", group2: "2" });
     expect((await getMyAccess(person)).status.kind).toBe("request");
@@ -96,7 +96,7 @@ describe("Доступ по нику в Telegram", () => {
     expect((await getAccessCardForAdmin(admin, "oleg_tg", jan10)).name).toBe("Олег");
   });
 
-  it("свой контакт у вошедшего через Telegram — ник с @", async () => {
+  it("свой контакт у вошедшего через Telegram – ник с @", async () => {
     const oleg = await registerByTelegram("111", "oleg_tg");
     expect((await getMyAccess(oleg)).contact).toBe("@oleg_tg");
   });
@@ -139,7 +139,7 @@ describe("Продление", () => {
     expect(card.status).toMatchObject({ kind: "active", until: new Date("2026-06-01T00:00:00Z") });
   });
 
-  it("31 января + 1 месяц — последний день февраля", () => {
+  it("31 января + 1 месяц – последний день февраля", () => {
     expect(addMonths(new Date("2026-01-31T10:00:00Z"), 1)).toEqual(new Date("2026-02-28T10:00:00Z"));
   });
 
@@ -149,7 +149,7 @@ describe("Продление", () => {
 });
 
 describe("Суммы", () => {
-  it("первый месяц — 20 €, дальше месяц — 5 €, три месяца — 10 €", async () => {
+  it("первый месяц – 20 €, дальше месяц – 5 €, три месяца – 10 €", async () => {
     let card = await getAccessCardForAdmin(admin, anna.email, jan10);
     expect(card.suggestedAmounts).toEqual({ 1: 2000, 3: null, 12: null });
     await extendAccess(admin, anna.email, { months: 1 }, jan10);
@@ -191,11 +191,11 @@ describe("Статусы на границах", () => {
   const until = new Date("2026-02-10T12:00:00Z");
   const periods = [{ startsAt: jan10, endsAt: until }];
 
-  it("ровно за 3 дня — «закончится через 3 дня»", () => {
+  it("ровно за 3 дня – «закончится через 3 дня»", () => {
     expect(statusFromPeriods(periods, later(until, -3))).toMatchObject({ kind: "active", daysLeft: 3, expiring: true });
   });
 
-  it("за 3 дня и минуту — ещё обычный доступ", () => {
+  it("за 3 дня и минуту – ещё обычный доступ", () => {
     const now = new Date(until.getTime() - 3 * DAY - 60_000);
     expect(statusFromPeriods(periods, now)).toMatchObject({ kind: "active", expiring: false });
   });
@@ -204,7 +204,7 @@ describe("Статусы на границах", () => {
     expect(statusFromPeriods(periods, new Date(until.getTime() - 60_000))).toMatchObject({ kind: "active", daysLeft: 1 });
   });
 
-  it("в момент окончания и на следующий день — «закончился»", () => {
+  it("в момент окончания и на следующий день – «закончился»", () => {
     expect(statusFromPeriods(periods, until)).toEqual({ kind: "expired", endedAt: until });
     expect(statusFromPeriods(periods, later(until, 1))).toEqual({ kind: "expired", endedAt: until });
   });

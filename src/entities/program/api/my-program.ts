@@ -1,4 +1,4 @@
-// Программа на сегодня — запрос из браузера.
+// Программа на сегодня – запрос из браузера.
 import { request } from "@/shared/api/request";
 import { isStaticPrototype } from "@/shared/config/env";
 

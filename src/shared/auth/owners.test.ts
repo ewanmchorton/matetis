@@ -14,7 +14,7 @@ describe("Владельцы приложения", () => {
     expect(isOwner({ telegramId: "1", telegramUsername: "owner_tg" }, owners)).toBe(true);
   });
 
-  it("другой человек и пустая переменная — не владелец", () => {
+  it("другой человек и пустая переменная – не владелец", () => {
     expect(isOwner({ email: "anna@example.ru", telegramUsername: "anna_k" }, owners)).toBe(false);
     expect(isOwner({ telegramId: "1" }, owners)).toBe(false);
     expect(isOwner({ email: "owner@example.ru" }, parseOwnerContacts(undefined))).toBe(false);

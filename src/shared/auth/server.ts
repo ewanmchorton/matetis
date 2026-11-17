@@ -31,7 +31,7 @@ function isBlank(value: unknown): boolean {
 }
 
 // При локальном запуске приложение открывают и с телефона в той же Wi-Fi-сети: по имени Mac
-// (http://MacBook-Air-Ivan-2.local:4317 — не меняется) или по адресу вида http://192.168.1.6:4317,
+// (http://MacBook-Air-Ivan-2.local:4317 – не меняется) или по адресу вида http://192.168.1.6:4317,
 // и по 127.0.0.1. Без этого вход оттуда отклоняется.
 const localNetworkOrigins =
   process.env.NODE_ENV === "development"
@@ -50,11 +50,11 @@ export const auth = betterAuth({
   session: { expiresIn: SESSION_DAYS * DAY_SECONDS, updateAge: DAY_SECONDS },
   user: {
     additionalFields: {
-      // input: false — поле нельзя передать ни при регистрации, ни при изменении профиля.
+      // input: false – поле нельзя передать ни при регистрации, ни при изменении профиля.
       // Админа назначают только командой на сервере или запросом в базу.
       role: { type: [...personRoles], required: true, defaultValue: "user", input: false },
       // Ставится сервером при создании учётной записи, см. databaseHooks ниже.
-      // required: false — иначе Better Auth требует его ещё до хука. В базе поле обязательное.
+      // required: false – иначе Better Auth требует его ещё до хука. В базе поле обязательное.
       consentedAt: { type: "date", required: false, input: false },
       // Заполняются только при входе через Telegram, см. telegram-plugin.ts.
       telegramId: { type: "string", required: false, input: false },
@@ -66,14 +66,14 @@ export const auth = betterAuth({
       if (ctx.path === "/sign-in/email") {
         const email = typeof ctx.body?.email === "string" ? ctx.body.email.trim().toLowerCase() : "";
         const [person] = await db.select({ role: user.role }).from(user).where(eq(user.email, email));
-        // Не сотруднику — тот же ответ, что при неверном пароле: не выдаём, есть ли такая почта.
+        // Не сотруднику – тот же ответ, что при неверном пароле: не выдаём, есть ли такая почта.
         if (!isStaff(person?.role)) throw new APIError("UNAUTHORIZED", { message: "Неверная почта или пароль" });
       }
       if (ctx.path === "/update-user" && ctx.body && "name" in ctx.body && isBlank(ctx.body.name)) {
         throw new APIError("BAD_REQUEST", { message: "Имя не может быть пустым" });
       }
     }),
-    // Команда остаётся вошедшей 100 дней с последнего открытия админки (люди — 30 дней).
+    // Команда остаётся вошедшей 100 дней с последнего открытия админки (люди – 30 дней).
     // При входе и при каждой проверке входа продлеваем срок, но не чаще раза в сутки.
     after: createAuthMiddleware(async (ctx) => {
       if (ctx.path !== "/sign-in/email" && ctx.path !== "/get-session") return;
@@ -112,7 +112,7 @@ export const auth = betterAuth({
       create: {
         // Роль и время согласия задаёт только сервер, что бы ни пришло в запросе.
         // Согласие человек даёт кнопкой «Получить код»: под ней написано, с чем он соглашается.
-        // Имя при первом входе пустое — его спрашивает тест (шаг «Как вас зовут?»).
+        // Имя при первом входе пустое – его спрашивает тест (шаг «Как вас зовут?»).
         before: async (user) => ({
           data: { ...user, name: user.name.trim(), role: "user", consentedAt: new Date() },
         }),
@@ -134,7 +134,7 @@ export const auth = betterAuth({
       },
     }),
     telegramLogin(),
-    // nextCookies — последним: сохраняет вход в cookie для серверных действий Next.js.
+    // nextCookies – последним: сохраняет вход в cookie для серверных действий Next.js.
     nextCookies(),
   ],
 });

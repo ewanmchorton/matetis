@@ -1,12 +1,12 @@
 // Вход через бота в Telegram. Только серверный код.
 //
-// 1. Экран входа заранее просит ссылку: сервер создаёт запрос входа и привязывает его к метке браузера —
+// 1. Экран входа заранее просит ссылку: сервер создаёт запрос входа и привязывает его к метке браузера –
 //    случайной строке, которую экран придумал сам и никому не показывает. Войти сможет только этот браузер.
 // 2. Человек открывает ссылку t.me/<бот>?start=<токен> и нажимает «Начать».
 // 3. Бот получает /start <токен> и отмечает запрос подтверждённым: записывает номер и ник человека в Telegram.
-// 4. Приложение раз в пару секунд спрашивает сервер; когда запрос подтверждён — человек входит.
+// 4. Приложение раз в пару секунд спрашивает сервер; когда запрос подтверждён – человек входит.
 //
-// Запросы хранятся в таблице verification Better Auth. В базе — не токен и не метка браузера, а их хэши.
+// Запросы хранятся в таблице verification Better Auth. В базе – не токен и не метка браузера, а их хэши.
 import { createHash, randomBytes } from "node:crypto";
 
 import { and, eq, gt } from "drizzle-orm";
@@ -18,8 +18,8 @@ import { contactOf, normalizeTelegramUsername } from "./contact";
 /** Сколько минут действует ссылка для входа. */
 export const TELEGRAM_LOGIN_MINUTES = 10;
 /**
- * Запрос ждёт «Начать» в боте: "pending:<хэш метки браузера>". Подтверждённый — JSON с номером и ником.
- * По нему уже вошли — "used:<номер в Telegram>": до конца срока бот на эту ссылку отвечает «Готово».
+ * Запрос ждёт «Начать» в боте: "pending:<хэш метки браузера>". Подтверждённый – JSON с номером и ником.
+ * По нему уже вошли – "used:<номер в Telegram>": до конца срока бот на эту ссылку отвечает «Готово».
  */
 const PENDING_PREFIX = "pending:";
 const USED_PREFIX = "used:";
@@ -52,15 +52,15 @@ async function readRequest(token: string, now: Date) {
   return row && row.expiresAt > now ? row.value : null;
 }
 
-/** Тот же человек уже подтвердил эту ссылку (или уже вошёл по ней) — например, нажал «Начать» ещё раз. */
+/** Тот же человек уже подтвердил эту ссылку (или уже вошёл по ней) – например, нажал «Начать» ещё раз. */
 function confirmedBy(value: string, telegramId: string) {
   if (value.startsWith(USED_PREFIX)) return value === USED_PREFIX + telegramId;
   return (JSON.parse(value) as ConfirmedValue).telegramId === telegramId;
 }
 
 /**
- * Бот получил /start с токеном. "confirmed" — вход подтверждён, "again" — этот человек уже подтвердил
- * ссылку раньше, "expired" — ссылка устарела, выдумана или подтверждена другим человеком.
+ * Бот получил /start с токеном. "confirmed" – вход подтверждён, "again" – этот человек уже подтвердил
+ * ссылку раньше, "expired" – ссылка устарела, выдумана или подтверждена другим человеком.
  */
 export async function confirmLoginRequest(
   token: string,
@@ -107,7 +107,7 @@ export async function takeLoginRequest(token: string, browserId: string, now = n
 }
 
 /**
- * Человек с этим номером в Telegram или null. Если он сменил ник — ник обновляется,
+ * Человек с этим номером в Telegram или null. Если он сменил ник – ник обновляется,
  * а доступ, открытый по старому нику, переезжает на новый.
  */
 export async function findTelegramPerson(person: TelegramPerson): Promise<string | null> {

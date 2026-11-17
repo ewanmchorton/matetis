@@ -26,7 +26,7 @@ const installSteps = {
   ],
 };
 
-/** «⋯» в тексте шага — заметным кружком, как кнопка меню в Safari. */
+/** «⋯» в тексте шага – заметным кружком, как кнопка меню в Safari. */
 function withMenuButton(text: string): ReactNode {
   const [before, after] = text.split("⋯");
   if (after === undefined) return text;
@@ -43,8 +43,8 @@ function withMenuButton(text: string): ReactNode {
 
 /**
  * Нижнее окно с шагами установки на «Домой».
- * reminder — напоминание: короткая причина сверху и кнопка «Не сейчас»; на Android, если браузер
- * даёт системное окно установки, вместо шагов — кнопка «Установить приложение».
+ * reminder – напоминание: короткая причина сверху и кнопка «Не сейчас»; на Android, если браузер
+ * даёт системное окно установки, вместо шагов – кнопка «Установить приложение».
  */
 export function InstallSheet({
   device,

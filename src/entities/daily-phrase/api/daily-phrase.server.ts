@@ -19,7 +19,7 @@ import { DEFAULT_TIME_ZONE, localDay, localHourToMoment } from "../model/zoned-t
 export type DailyPhrase = {
   id: string;
   text: string;
-  /** Каким типам подходит. Пусто — всем. */
+  /** Каким типам подходит. Пусто – всем. */
   typeIds: string[];
   createdAt: Date;
 };
@@ -37,13 +37,13 @@ export async function listPhrasesForStaff(viewerId: string): Promise<DailyPhrase
   }));
 }
 
-/** Добавить фразу. typeIds — каким типам подходит; пусто — всем. */
+/** Добавить фразу. typeIds – каким типам подходит; пусто – всем. */
 export async function addPhrase(viewerId: string, input: { text?: unknown; typeIds?: unknown }) {
   await assertStaff(viewerId);
   const text = typeof input.text === "string" ? input.text.trim() : "";
   if (!text) throw new AppError("empty_phrase", "Напишите фразу");
   if (text.length > PHRASE_MAX_LENGTH) {
-    throw new AppError("long_phrase", `Фраза длиннее ${PHRASE_MAX_LENGTH} знаков — в уведомлении она не поместится`);
+    throw new AppError("long_phrase", `Фраза длиннее ${PHRASE_MAX_LENGTH} знаков – в уведомлении она не поместится`);
   }
   const known = new Set(getPersonTypes().map((type) => type.id));
   const typeIds = Array.isArray(input.typeIds) ? [...new Set(input.typeIds.filter((id) => known.has(id)))] : [];
@@ -64,8 +64,8 @@ export async function deletePhrase(viewerId: string, phraseId: unknown) {
 }
 
 /**
- * Фраза для человека: из подходящих его типу (или всем) — та, что приходила ему реже всего,
- * среди равных — случайная. Так фразы не повторяются, пока не придут все.
+ * Фраза для человека: из подходящих его типу (или всем) – та, что приходила ему реже всего,
+ * среди равных – случайная. Так фразы не повторяются, пока не придут все.
  */
 async function pickPhrase(userId: string, typeId: string | null, random: () => number) {
   const fitsEveryone = notExists(db.select().from(dailyPhraseType).where(eq(dailyPhraseType.phraseId, dailyPhrase.id)));
@@ -86,7 +86,7 @@ async function pickPhrase(userId: string, typeId: string | null, random: () => n
 /**
  * Назначить и отправить фразы дня. Вызывается по таймеру раз в несколько минут.
  * Человеку с согласием, доступом и хотя бы одним устройством назначается случайный момент
- * внутри его промежутка на сегодня; когда момент наступил — уходит фраза.
+ * внутри его промежутка на сегодня; когда момент наступил – уходит фраза.
  * Возвращает, скольким людям ушла фраза.
  */
 export async function sendDailyPhrases(now = new Date(), random: () => number = Math.random): Promise<number> {
@@ -108,7 +108,7 @@ export async function sendDailyPhrases(now = new Date(), random: () => number = 
 
   let sentCount = 0;
   for (const person of people) {
-    // Нет строки настроек — действуют значения по умолчанию: согласие есть, с 9 до 21 по Минску.
+    // Нет строки настроек – действуют значения по умолчанию: согласие есть, с 9 до 21 по Минску.
     if (person.phraseNotifications === false) continue;
     try {
       if (await sendPhraseTo(person, now, random)) sentCount++;
@@ -141,7 +141,7 @@ async function sendPhraseTo(person: Recipient, now: Date, random: () => number):
     .limit(1);
   if (planned?.sentAt) return false;
 
-  // Момент ещё не назначен или человек сменил промежуток — назначаем заново внутри промежутка.
+  // Момент ещё не назначен или человек сменил промежуток – назначаем заново внутри промежутка.
   let sendAt = planned?.sendAt;
   if (!sendAt || sendAt < windowStart || sendAt >= windowEnd) {
     const from = Math.max(now.getTime(), windowStart.getTime());

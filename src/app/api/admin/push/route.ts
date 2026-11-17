@@ -1,5 +1,5 @@
 // Уведомления администратору на это устройство.
-// GET — ключ для подписки браузера, POST — включить ({ endpoint, keys }), DELETE — выключить ({ endpoint }).
+// GET – ключ для подписки браузера, POST – включить ({ endpoint, keys }), DELETE – выключить ({ endpoint }).
 import { removeMyPushSubscription, saveMyPushSubscription } from "@/entities/access/server";
 import { readJsonObject, withUser } from "@/shared/api/route-helpers";
 import { assertAdmin } from "@/shared/auth/assert-admin";

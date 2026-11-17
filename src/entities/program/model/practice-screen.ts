@@ -1,12 +1,12 @@
 // Какие практики открываются на своём экране и что на нём показать.
 import type { ProgramPractice } from "../api/my-program.server";
 
-/** «Мышление по навигатору дня» — экран с заметками для себя. */
+/** «Мышление по навигатору дня» – экран с заметками для себя. */
 export const isThinkingPractice = (practice: ProgramPractice) => practice.title.startsWith("Мышление по навигатору");
 
 /**
  * Практика с аудиозаписью: плеер и текст. «Внутренняя улыбка» будет в аудио,
- * но загрузки аудио в админке ещё нет — пока её экран показывает плеер без записи.
+ * но загрузки аудио в админке ещё нет – пока её экран показывает плеер без записи.
  */
 export const isAudioPractice = (practice: ProgramPractice) =>
   practice.hasAudio || practice.title === "Внутренняя улыбка";

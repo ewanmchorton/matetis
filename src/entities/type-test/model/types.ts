@@ -8,7 +8,7 @@ export type TestSection = {
 export type TestGroup = {
   id: string;
   title: string;
-  /** Что различает группа — рабочая формулировка для админки */
+  /** Что различает группа – рабочая формулировка для админки */
   hint: string;
   sections: TestSection[];
 };

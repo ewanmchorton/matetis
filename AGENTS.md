@@ -11,7 +11,7 @@
 
 - Объясняй шаг простым языком и называй конкретный результат: какой файл, таблица или настройка появится и что после этого можно проверить.
 - Не используй расплывчатые формулировки вроде «подключить экран». Пиши, что именно создаётся или меняется и зачем.
-- Название приложения пишется **МАТЭТИС** — через «Э» (решение от 16 октября 2026). Не переспрашивай.
+- Название приложения пишется **МАТЭТИС** – через «Э» (решение от 16 октября 2026). Не переспрашивай.
 - В текстах для людей тире только среднее «–», длинное «—» не используй (раздел «Тексты» в [`docs/design-guide.md`](docs/design-guide.md)).
 - Задачи для копирайтера записывай в [`docs/copywriter-brief.md`](docs/copywriter-brief.md) отдельным разделом.
 - Размеры, цвета и отступы интерфейса бери из [`docs/design-guide.md`](docs/design-guide.md), а не с картинок в `design/screens/`.
@@ -19,7 +19,7 @@
 - Финальный дизайн ещё готовится. В первую очередь делай техническую основу, которую не придётся переделывать после макетов. Экраны прототипа не перестраивай под будущий дизайн заранее.
 - Перед предложением следующего шага проверь зависимости. Например, карточка человека в базе нужна до того, как регистрация в приложении начнёт сохранять имя и согласие.
 - Предлагай только ближайший шаг. Не расписывай большую последовательность задач.
-- Если для шага нужно действие во внешнем сервисе (хостинг, GitHub, сервис рассылок и другие), давай пошаговую инструкцию: какой сайт открыть, где зарегистрироваться, куда нажать, что скопировать и куда вставить. Одно действие — один пункт. Пароли и секретные ключи вводит сам человек, не агент. После каждого шага скажи, как проверить, что всё получилось.
+- Если для шага нужно действие во внешнем сервисе (хостинг, GitHub, сервис рассылок и другие), давай пошаговую инструкцию: какой сайт открыть, где зарегистрироваться, куда нажать, что скопировать и куда вставить. Одно действие – один пункт. Пароли и секретные ключи вводит сам человек, не агент. После каждого шага скажи, как проверить, что всё получилось.
 
 # Project rules
 - Before significant changes, inspect the existing code and briefly describe the plan.
@@ -69,7 +69,7 @@
 
 Принятое решение записано в [`docs/architecture.md`](docs/architecture.md). Перед изменениями входа, базы, файлов и публикации читай его и не предлагай другой хостинг, базу или хранилище без явной просьбы.
 
-Кратко: один сервер в России, на нём через Docker Compose работают приложение Next.js с серверной частью и база PostgreSQL. Вход — Better Auth, работа с базой — Drizzle. Книги, картинки и аудио — на диске того же сервера, видео — на YouTube. Каждую ночь копия базы уходит в S3-хранилище. Сейчас всё запускается локально, сервер арендуется перед тестовой группой.
+Кратко: один сервер в России, на нём через Docker Compose работают приложение Next.js с серверной частью и база PostgreSQL. Вход – Better Auth, работа с базой – Drizzle. Книги, картинки и аудио – на диске того же сервера, видео – на YouTube. Каждую ночь копия базы уходит в S3-хранилище. Сейчас всё запускается локально, сервер арендуется перед тестовой группой.
 
 Чат про архитектуру не пишет код приложения. Он фиксирует решение и одно следующее задание. Реализацию этого задания веди в отдельном чате.
 
@@ -79,8 +79,8 @@
 
 # This is NOT the Next.js you know
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+This version has breaking changes – APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
 
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+This block is written and re-added by `next dev` – verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->

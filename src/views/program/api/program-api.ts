@@ -51,7 +51,7 @@ export function useMyProgram() {
       const mark = (list: MyProgram["morning"]) =>
         list.map((item) => (practiceIds.includes(item.id) ? { ...item, doneOn: done ? program.today : null } : item));
       const marked = { morning: mark(program.morning), evening: mark(program.evening), weekly: mark(program.weekly) };
-      // Буква дня закрашивается, если сегодня отмечена хоть одна практика или прочитан навигатор — как на сервере.
+      // Буква дня закрашивается, если сегодня отмечена хоть одна практика или прочитан навигатор – как на сервере.
       const todayDone =
         [...marked.morning, ...marked.evening, ...marked.weekly].some((item) => item.doneOn === program.today) ||
         Boolean(program.navigator?.read);

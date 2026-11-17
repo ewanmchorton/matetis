@@ -43,8 +43,8 @@ describe("Прохождение теста на тип", () => {
     expect((await getMyCurrentType(anna))?.name).toBe("Радикал");
   });
 
-  it("текущий тип — по последнему прохождению, прежние остаются в истории", async () => {
-    // Второе прохождение — как будто после окончания стихии: записываем напрямую, пока нет календаря.
+  it("текущий тип – по последнему прохождению, прежние остаются в истории", async () => {
+    // Второе прохождение – как будто после окончания стихии: записываем напрямую, пока нет календаря.
     await saveMyTypeTest(anna, { group1: "А", group2: "2" });
     await db.insert(typeTestAttempt).values({ userId: anna, group1Code: "С", group2Code: "4" });
     expect((await getMyCurrentType(anna))?.name).toBe("Прагматик");
@@ -56,7 +56,7 @@ describe("Прохождение теста на тип", () => {
     ["латинская A вместо русской А", { group1: "A", group2: "2" }],
     ["нет ответа во второй группе", { group1: "А" }],
     ["несуществующий вариант", { group1: "А", group2: "5" }],
-  ])("%s — не сохраняется", async (_, answers) => {
+  ])("%s – не сохраняется", async (_, answers) => {
     await expect(saveMyTypeTest(anna, answers)).rejects.toThrow("Выберите по одному описанию в каждой группе");
     expect(await getMyCurrentType(anna)).toBeNull();
   });

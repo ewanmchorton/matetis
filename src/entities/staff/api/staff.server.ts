@@ -23,7 +23,7 @@ function normalizedEmail(value: unknown): string {
 
 function checkPassword(value: unknown): string {
   if (typeof value !== "string" || value.length < PASSWORD_MIN_LENGTH) {
-    throw new AppError("short_password", `Пароль — не короче ${PASSWORD_MIN_LENGTH} знаков`);
+    throw new AppError("short_password", `Пароль – не короче ${PASSWORD_MIN_LENGTH} знаков`);
   }
   return value;
 }
@@ -73,7 +73,7 @@ export async function listStaffForAdmin(adminId: string): Promise<StaffMember[]>
 
 /**
  * Назначить зарегистрированному человеку роль: администратор, контент-менеджер или обычный пользователь.
- * Новому сотруднику нужен пароль. Вернуть в пользователи — пароль удаляется, в админку он больше не войдёт.
+ * Новому сотруднику нужен пароль. Вернуть в пользователи – пароль удаляется, в админку он больше не войдёт.
  */
 export async function setStaffRole(adminId: string, input: { email?: unknown; role?: unknown; password?: unknown }) {
   await assertAdmin(adminId);

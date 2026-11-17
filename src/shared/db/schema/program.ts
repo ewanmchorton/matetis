@@ -17,12 +17,12 @@ import {
 import { user } from "./auth";
 
 /**
- * Ежедневная практика — каждый день, еженедельная — один раз в неделю, в любой день.
- * Осознание — отдельный блок программы («2 жизни», на слабую стихию).
+ * Ежедневная практика – каждый день, еженедельная – один раз в неделю, в любой день.
+ * Осознание – отдельный блок программы («2 жизни», на слабую стихию).
  */
 export const practiceFrequency = pgEnum("practice_frequency", ["daily", "weekly", "awareness"]);
 /**
- * Чередование с 15-го дня: «first» — в 3-ю, 5-ю… неделю программы, «second» — в 4-ю, 6-ю…
+ * Чередование с 15-го дня: «first» – в 3-ю, 5-ю… неделю программы, «second» – в 4-ю, 6-ю…
  * Так чередуются медитация на качество силы и медитация на слабую стихию.
  */
 export const practiceAlternation = pgEnum("practice_alternation", ["first", "second"]);
@@ -36,20 +36,20 @@ export const practice = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     title: text("title").notNull(),
     frequency: practiceFrequency("frequency").notNull(),
-    /** Утро или вечер — только у ежедневной. */
+    /** Утро или вечер – только у ежедневной. */
     daypart: practiceDaypart("daypart"),
     /** Место в своём списке, по возрастанию. */
     position: smallint("position").notNull(),
     body: text("body").notNull().default(""),
     /** Аудио на диске сервера: путь к файлу. */
     audioPath: text("audio_path"),
-    /** Видео — ссылка на YouTube. */
+    /** Видео – ссылка на YouTube. */
     videoUrl: text("video_url"),
     /** С какого дня программы появляется у нового человека. */
     opensOnDay: smallint("opens_on_day").notNull().default(1),
-    /** Каждую неделю, когда практика есть в программе, — следующий вариант по порядку, потом по кругу. */
+    /** Каждую неделю, когда практика есть в программе, – следующий вариант по порядку, потом по кругу. */
     newEachWeek: boolean("new_each_week").notNull().default(false),
-    /** Пусто — без чередования. */
+    /** Пусто – без чередования. */
     alternation: practiceAlternation("alternation"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -64,8 +64,8 @@ export const practice = pgTable(
 
 /**
  * Вариант практики: свой текст, аудио или видео для типа, слабой стихии или стихии года.
- * Если у практики есть варианты, человек видит подходящий ему; не подошёл ни один — практики у него нет.
- * Без вариантов — текст самой практики, для всех.
+ * Если у практики есть варианты, человек видит подходящий ему; не подошёл ни один – практики у него нет.
+ * Без вариантов – текст самой практики, для всех.
  */
 export const practiceVariant = pgTable(
   "practice_variant",
@@ -79,9 +79,9 @@ export const practiceVariant = pgTable(
     body: text("body").notNull().default(""),
     audioPath: text("audio_path"),
     videoUrl: text("video_url"),
-    /** Для какой слабой стихии человека. Пусто — для любой. */
+    /** Для какой слабой стихии человека. Пусто – для любой. */
     weakElement: text("weak_element"),
-    /** На какую стихию года. Пусто — на любую. */
+    /** На какую стихию года. Пусто – на любую. */
     seasonElement: text("season_element"),
   },
   (table) => [
@@ -94,7 +94,7 @@ export const practiceVariant = pgTable(
   ],
 );
 
-/** Каким типам подходит вариант (t1–t12). Ни одного — всем. */
+/** Каким типам подходит вариант (t1–t12). Ни одного – всем. */
 export const practiceVariantType = pgTable(
   "practice_variant_type",
   {
@@ -107,7 +107,7 @@ export const practiceVariantType = pgTable(
 );
 
 /**
- * Послание Мастера для навигатора дня на неделю: три части по два дня, на 7-й день — полностью,
+ * Послание Мастера для навигатора дня на неделю: три части по два дня, на 7-й день – полностью,
  * с заголовком, автором, датой, вступлением и завершением.
  */
 export const navigatorMessage = pgTable("navigator_message", {
@@ -120,7 +120,7 @@ export const navigatorMessage = pgTable("navigator_message", {
   closing: text("closing").notNull(),
   /** Порядок, в котором послания приходят. */
   position: smallint("position").notNull(),
-  /** Задание 7-го дня, когда читают послание полностью. Пусто — без задания. */
+  /** Задание 7-го дня, когда читают послание полностью. Пусто – без задания. */
   day7Task: text("day7_task"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -167,7 +167,7 @@ export const programStart = pgTable("program_start", {
   startedOn: date("started_on").notNull(),
 });
 
-/** Отметка выполнения практики. Одна в день; у еженедельной — одна в неделю, это проверяет сервер. */
+/** Отметка выполнения практики. Одна в день; у еженедельной – одна в неделю, это проверяет сервер. */
 export const practiceMark = pgTable(
   "practice_mark",
   {
@@ -213,7 +213,7 @@ export const practiceNote = pgTable(
   (table) => [primaryKey({ columns: [table.userId, table.practiceId, table.day] })],
 );
 
-/** Человек нажал «Просмотрено» у приветственного видео — больше оно не открывается. */
+/** Человек нажал «Просмотрено» у приветственного видео – больше оно не открывается. */
 export const welcomeVideoSeen = pgTable("welcome_video_seen", {
   userId: text("user_id")
     .primaryKey()

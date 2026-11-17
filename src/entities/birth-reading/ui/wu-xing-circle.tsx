@@ -20,7 +20,7 @@ function point(angle: number, radius = RADIUS) {
 
 const angleOf = (index: number) => -90 + index * 72;
 
-/** Круг Усин: пять стихий и стрелки порождения по часовой стрелке. В кружке — количество цифр стихии. */
+/** Круг Усин: пять стихий и стрелки порождения по часовой стрелке. В кружке – количество цифр стихии. */
 export function WuXingCircle({ scores }: { scores: ElementScore[] }) {
   const countOf = (element: ElementId) => scores.find((score) => score.element === element)?.count ?? 0;
 

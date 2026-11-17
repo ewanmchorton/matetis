@@ -21,8 +21,8 @@ export const friendRequestStatus = pgEnum("friend_request_status", [
   "declined",
 ]);
 
-// Запрос в друзья. Дружба — это принятый запрос, отдельной таблицы друзей нет.
-// На одну пару людей — одна запись, в каком бы направлении ни шёл запрос.
+// Запрос в друзья. Дружба – это принятый запрос, отдельной таблицы друзей нет.
+// На одну пару людей – одна запись, в каком бы направлении ни шёл запрос.
 export const friendRequest = pgTable(
   "friend_request",
   {
@@ -63,7 +63,7 @@ export const personSettings = pgTable(
     /** Промежуток, когда может прийти фраза: с какого часа (включительно) и до какого (не включительно). */
     phraseFromHour: smallint("phrase_from_hour").notNull().default(9),
     phraseToHour: smallint("phrase_to_hour").notNull().default(21),
-    /** Часовой пояс телефона, например «Europe/Minsk». Пусто — считаем по Минску. */
+    /** Часовой пояс телефона, например «Europe/Minsk». Пусто – считаем по Минску. */
     timeZone: text("time_zone"),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()

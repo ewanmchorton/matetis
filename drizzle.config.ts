@@ -4,7 +4,7 @@ import { defineConfig } from "drizzle-kit";
 try {
   process.loadEnvFile(".env.local");
 } catch {
-  // Файла нет — берём DATABASE_URL из окружения.
+  // Файла нет – берём DATABASE_URL из окружения.
 }
 
 export default defineConfig({

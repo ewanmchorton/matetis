@@ -1,5 +1,5 @@
 // Карточка человека в разделе «Доступы»: { contact } → статус, история оплат, суммы для продления.
-// contact — почта или ник в Telegram.
+// contact – почта или ник в Telegram.
 import { getAccessCardForAdmin } from "@/entities/access/server";
 import { readJsonObject, withUser } from "@/shared/api/route-helpers";
 

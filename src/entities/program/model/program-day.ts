@@ -1,5 +1,5 @@
 // Дни программы и цикл навигатора. Без обращений к базе.
-// Дни считаются от первого дня человека в программе: первый день — 1.
+// Дни считаются от первого дня человека в программе: первый день – 1.
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -12,7 +12,7 @@ function dayNumber(day: string): number {
   return Math.round(Date.UTC(year, month - 1, date) / DAY_MS);
 }
 
-/** Какой сегодня день программы: в первый день — 1. */
+/** Какой сегодня день программы: в первый день – 1. */
 export function programDayNumber(startedOn: string, today: string): number {
   return Math.max(1, dayNumber(today) - dayNumber(startedOn) + 1);
 }
@@ -20,7 +20,7 @@ export function programDayNumber(startedOn: string, today: string): number {
 /** Понедельник недели, в которую входит день: «2026-12-25» → «2026-12-21». */
 export function weekStart(day: string): string {
   const number = dayNumber(day);
-  // 1 января 1970 — четверг: сдвигаем так, чтобы понедельник был 0.
+  // 1 января 1970 – четверг: сдвигаем так, чтобы понедельник был 0.
   const monday = number - ((number + 3) % 7);
   return new Date(monday * DAY_MS).toISOString().slice(0, 10);
 }
@@ -61,14 +61,14 @@ export type NavigatorDayKind = "part" | "full";
 export type NavigatorDay = {
   cycleDay: number;
   kind: NavigatorDayKind;
-  /** Заголовок на карточке программы: части, а на 7-й день — всего послания. */
+  /** Заголовок на карточке программы: части, а на 7-й день – всего послания. */
   title: string;
-  /** Какие части показать: в дни 1–6 одна, на 7-й день — все три. */
+  /** Какие части показать: в дни 1–6 одна, на 7-й день – все три. */
   parts: { title: string; body: string }[];
-  /** Вступление и завершение послания — только на 7-й день. */
+  /** Вступление и завершение послания – только на 7-й день. */
   intro: string | null;
   closing: string | null;
-  /** Задание на сегодня. null — задания нет. */
+  /** Задание на сегодня. null – задания нет. */
   task: string | null;
   /** Второй день части со своим заданием: тот же текст, новое задание. */
   newTask: boolean;
@@ -76,9 +76,9 @@ export type NavigatorDay = {
 
 /**
  * Что показывает навигатор в этот день недели послания.
- * Дни 1–2 — часть 1, 3–4 — часть 2, 5–6 — часть 3: в первый день части её задание первого дня,
- * во второй — задание второго дня; пока его нет — то же, что в первый.
- * День 7 — послание полностью: заголовок, вступление, все части, завершение и задание 7-го дня.
+ * Дни 1–2 – часть 1, 3–4 – часть 2, 5–6 – часть 3: в первый день части её задание первого дня,
+ * во второй – задание второго дня; пока его нет – то же, что в первый.
+ * День 7 – послание полностью: заголовок, вступление, все части, завершение и задание 7-го дня.
  */
 export function navigatorDay(whole: NavigatorWhole, parts: NavigatorPart[], cycleDay: number): NavigatorDay {
   const sorted = [...parts].sort((a, b) => a.part - b.part);
@@ -113,14 +113,14 @@ export const ALTERNATION_FROM_DAY = 15;
 
 export type Alternation = "first" | "second" | null;
 
-/** Неделя программы: дни 1–7 — первая. */
+/** Неделя программы: дни 1–7 – первая. */
 export function programWeek(programDay: number): number {
   return Math.floor((programDay - 1) / 7) + 1;
 }
 
 /**
- * Есть ли практика в программе в эту неделю. До 15-го дня — с недели, где она появляется.
- * С 15-го дня «first» стоит в 3-ю, 5-ю… неделю, «second» — в 4-ю, 6-ю…
+ * Есть ли практика в программе в эту неделю. До 15-го дня – с недели, где она появляется.
+ * С 15-го дня «first» стоит в 3-ю, 5-ю… неделю, «second» – в 4-ю, 6-ю…
  */
 export function shownInWeek(week: number, opensOnDay: number, alternation: Alternation): boolean {
   if (week < programWeek(opensOnDay)) return false;

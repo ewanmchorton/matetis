@@ -3,11 +3,11 @@ import { describe, expect, it } from "vitest";
 import { contactOf, isTelegramContact, normalizeContact, normalizeTelegramUsername } from "./contact";
 
 describe("Контакт человека", () => {
-  it("у вошедшего по почте — почта строчными", () => {
+  it("у вошедшего по почте – почта строчными", () => {
     expect(contactOf({ email: " Anna@Example.ru " })).toBe("anna@example.ru");
   });
 
-  it("у вошедшего через Telegram — ник с @, без ника — номер", () => {
+  it("у вошедшего через Telegram – ник с @, без ника – номер", () => {
     expect(contactOf({ telegramId: "111", telegramUsername: "Oleg_Tg" })).toBe("@oleg_tg");
     expect(contactOf({ telegramId: "222", telegramUsername: null })).toBe("tg:222");
   });

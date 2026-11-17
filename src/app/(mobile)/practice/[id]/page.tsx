@@ -3,7 +3,7 @@ import { PracticePage } from "@/views/practice";
 import { AccessGate } from "@/widgets/access-gate";
 
 // На GitHub Pages нет сервера: страницы собираются заранее, а практики хранятся в базе.
-// Там собираются страницы примеров («Мышление», «Внутренняя улыбка»), в приложении — любая практика по её номеру.
+// Там собираются страницы примеров («Мышление», «Внутренняя улыбка»), в приложении – любая практика по её номеру.
 export function generateStaticParams() {
   return isStaticPrototype ? [{ id: "example" }, { id: "smile" }] : [];
 }

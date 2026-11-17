@@ -32,7 +32,7 @@ export function ContactAdminText({ access, purpose }: { access: MyAccess; purpos
 export function ContactAdminButtons({ access, purpose }: { access: MyAccess; purpose: Purpose }) {
   const [copied, setCopied] = useState(false);
   const message = messageFor(purpose, access.contact);
-  // Telegram подставляет готовый текст только в чат по нику. По телефону — просто открывает чат.
+  // Telegram подставляет готовый текст только в чат по нику. По телефону – просто открывает чат.
   const telegramHref = access.adminTelegram
     ? `https://t.me/${access.adminTelegram}?text=${encodeURIComponent(message)}`
     : `https://t.me/${access.adminPhone}`;
@@ -73,7 +73,7 @@ export function ContactAdminButtons({ access, purpose }: { access: MyAccess; pur
       </div>
       {copied && (
         <p role="status" className="type-caption font-normal text-muted-foreground">
-          {typograph("Текст сообщения скопирован — вставьте его в чат")}
+          {typograph("Текст сообщения скопирован – вставьте его в чат")}
         </p>
       )}
     </div>

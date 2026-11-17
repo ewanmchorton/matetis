@@ -1,5 +1,5 @@
 // Уведомления на этом устройстве для человека (фраза дня).
-// GET — ключ для подписки браузера и согласие на фразу дня, POST — включить ({ endpoint, keys, timeZone }), DELETE — выключить ({ endpoint }).
+// GET – ключ для подписки браузера и согласие на фразу дня, POST – включить ({ endpoint, keys, timeZone }), DELETE – выключить ({ endpoint }).
 import { getMySettings, updateMySettings } from "@/entities/person-settings/server";
 import { readJsonObject, withPaidUser, withUser } from "@/shared/api/route-helpers";
 import { getPushPublicKey } from "@/shared/push/send-push";

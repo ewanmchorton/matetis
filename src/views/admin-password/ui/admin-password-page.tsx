@@ -22,7 +22,7 @@ export function AdminPasswordPage() {
     event.preventDefault();
     setError(null);
     setDone(false);
-    if (next.length < MIN_LENGTH) return setError(`Новый пароль — не короче ${MIN_LENGTH} знаков`);
+    if (next.length < MIN_LENGTH) return setError(`Новый пароль – не короче ${MIN_LENGTH} знаков`);
     if (next !== repeat) return setError("Новые пароли не совпадают");
     setPending(true);
     const { error: changeError } = await authClient.changePassword({ currentPassword: current, newPassword: next });

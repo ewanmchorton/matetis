@@ -1,5 +1,5 @@
 // Время по часам телефона человека. Без обращений к базе.
-// Часовой пояс — название из базы часовых поясов («Europe/Minsk»), его сообщает телефон.
+// Часовой пояс – название из базы часовых поясов («Europe/Minsk»), его сообщает телефон.
 
 export const DEFAULT_TIME_ZONE = "Europe/Minsk";
 
@@ -42,7 +42,7 @@ function offsetMs(moment: Date, timeZone: string): number {
 
 /**
  * Момент, когда у человека на часах наступает hour:00 в день day («2026-12-25»).
- * hour = 24 — полночь следующего дня.
+ * hour = 24 – полночь следующего дня.
  */
 export function localHourToMoment(day: string, hour: number, timeZone: string): Date {
   const [year, month, date] = day.split("-").map(Number);

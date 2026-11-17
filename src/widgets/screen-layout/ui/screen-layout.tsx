@@ -7,7 +7,7 @@ import { StepDots } from "@/shared/ui/step-dots";
 
 /**
  * Фоны из design/backgrounds, уменьшенные до 780 px в ширину (2× от 390). Лежат в public/backgrounds.
- * 04_earth_* — фоны экранов программы для стихии Земля; у других стихий будут свои.
+ * 04_earth_* – фоны экранов программы для стихии Земля; у других стихий будут свои.
  */
 export type ScreenBackground =
   | "01_reg"
@@ -29,7 +29,7 @@ export type ScreenBackground =
 
 /**
  * Для экранов с картинкой: на какой высоте картинки (в ширинах экрана) должен оказаться
- * верх заголовка. Выше этой точки — пейзаж, ниже — светлая часть, на которой лежит текст.
+ * верх заголовка. Выше этой точки – пейзаж, ниже – светлая часть, на которой лежит текст.
  */
 const heroTextLine: Partial<Record<ScreenBackground, number>> = {
   "01_reg": 1.15,
@@ -37,8 +37,8 @@ const heroTextLine: Partial<Record<ScreenBackground, number>> = {
 };
 
 /**
- * Экраны fullImage: на какой высоте картинки (в ширинах экрана) начинается текст — строка «Шаг N из M».
- * Выше — арка, ниже текста картинка продолжается до кнопок.
+ * Экраны fullImage: на какой высоте картинки (в ширинах экрана) начинается текст – строка «Шаг N из M».
+ * Выше – арка, ниже текста картинка продолжается до кнопок.
  */
 const fullImageTextTop: Partial<Record<ScreenBackground, number>> = {
   "03_name": 0.92,
@@ -46,14 +46,14 @@ const fullImageTextTop: Partial<Record<ScreenBackground, number>> = {
 };
 
 /**
- * Картинки, у которых главное — вверху (онбординг 02_1, 02_2): на коротком телефоне
+ * Картинки, у которых главное – вверху (онбординг 02_1, 02_2): на коротком телефоне
  * верх не уходит за край экрана, картинка прижимается к верху, а текст ложится на светлый низ.
  */
 const keepImageTop: ScreenBackground[] = ["02_1_onboard", "02_2_onboard"];
 
 /**
- * Экраны page: картинка прижата к верху. Здесь — насколько её поднять, если она выше экрана
- * (0 % — верх, 100 % — низ). 02_3: шар у воды должен оказаться между карточками и кнопкой.
+ * Экраны page: картинка прижата к верху. Здесь – насколько её поднять, если она выше экрана
+ * (0 % – верх, 100 % – низ). 02_3: шар у воды должен оказаться между карточками и кнопкой.
  */
 const pageImageY: Partial<Record<ScreenBackground, string>> = {
   "02_3_onboard": "60%",
@@ -73,8 +73,8 @@ const BACKGROUND_RATIO = 1690 / 780;
 
 type ScreenLayoutProps = {
   /**
-   * hero — картинка сверху, текст и кнопка прижаты к низу экрана (вход, онбординг).
-   * page — заголовок сразу под логотипом, длинная прокрутка (вкладки приложения, шаги теста).
+   * hero – картинка сверху, текст и кнопка прижаты к низу экрана (вход, онбординг).
+   * page – заголовок сразу под логотипом, длинная прокрутка (вкладки приложения, шаги теста).
    */
   variant: "hero" | "page";
   background?: ScreenBackground;
@@ -84,15 +84,15 @@ type ScreenLayoutProps = {
    */
   titleGlow?: boolean;
   /**
-   * Текст по центру, содержимое под заголовком — узкой колонкой (hero): вписано в просвет картинки,
+   * Текст по центру, содержимое под заголовком – узкой колонкой (hero): вписано в просвет картинки,
    * например во врата на первом экране онбординга.
    */
   centered?: boolean;
   /** Шире поля по бокам: по краям картинки графика (листья), на ней текст плохо читается. */
   narrow?: boolean;
   /**
-   * Картинка на весь экран (hero), как в макетах шагов «Имя» и «Дата рождения»: текст — в светлой середине
-   * картинки, кнопки — внизу поверх неё. Без fullImage картинка только над текстом.
+   * Картинка на весь экран (hero), как в макетах шагов «Имя» и «Дата рождения»: текст – в светлой середине
+   * картинки, кнопки – внизу поверх неё. Без fullImage картинка только над текстом.
    */
   fullImage?: boolean;
   /** Плотнее: подзаголовок 15 px и меньше промежутки. Для экранов с длинной формой. */
@@ -116,7 +116,7 @@ type ScreenLayoutProps = {
   title: ReactNode;
   subtitle?: ReactNode;
   children?: ReactNode;
-  /** Кнопки внизу экрана. В page — после содержимого, прижаты к низу экрана. */
+  /** Кнопки внизу экрана. В page – после содержимого, прижаты к низу экрана. */
   actions?: ReactNode;
   /** Индикатор шагов над кнопками. */
   steps?: { count: number; current: number };
@@ -150,7 +150,7 @@ function pageBackgroundStyle(background: ScreenBackground) {
       backgroundPosition: `0 0, 0 0, center calc(-1 * ${liftLength})`,
       backgroundImage: [
         topFade(110),
-        // Картинка поднята — её низ растворяется в Ivory до того, как она закончится.
+        // Картинка поднята – её низ растворяется в Ivory до того, как она закончится.
         `linear-gradient(to bottom, ${ivory(0)} calc(100% - ${liftLength} - 120px), ${ivory(1)} calc(100% - ${liftLength}))`,
         imageUrl(background),
       ].join(", "),
@@ -170,7 +170,7 @@ function pageBackgroundStyle(background: ScreenBackground) {
 
 /**
  * Общий каркас экрана. Положение логотипа, заголовка, индикатора шагов и кнопок
- * задаётся только здесь — цифры в docs/design-guide.md, раздел «Расположение».
+ * задаётся только здесь – цифры в docs/design-guide.md, раздел «Расположение».
  */
 export function ScreenLayout({
   variant,
@@ -215,7 +215,7 @@ export function ScreenLayout({
       )}
 
       {background && variant === "page" && !titleGlow && (
-        // Светлое пятно под заголовком экрана, как в макетах: заголовок читается, картинка вокруг — нет.
+        // Светлое пятно под заголовком экрана, как в макетах: заголовок читается, картинка вокруг – нет.
         <div
           aria-hidden
           className="pointer-events-none absolute top-[calc(var(--safe-top)+var(--header-top)+var(--header-height)+var(--page-title-gap)-30px)] left-0 -z-10 h-[100px] w-[260px] blur-xl"
@@ -245,7 +245,7 @@ export function ScreenLayout({
         </>
       ) : variant === "hero" ? (
         // Верхняя часть растягивается и опускает текст к низу экрана.
-        // Картинка привязана к заголовку: над ним — пейзаж, под ним — светлая часть.
+        // Картинка привязана к заголовку: над ним – пейзаж, под ним – светлая часть.
         <div className="relative flex flex-1 flex-col">
           {background && (
             <div
@@ -254,7 +254,7 @@ export function ScreenLayout({
               style={{
                 bottom: `calc(-1 * ${belowTitle})`,
                 // keepImageTop: верх картинки не уходит за край экрана (max(0px, …)).
-                // Второй переход — вместе с картинкой, остальные слои на весь блок.
+                // Второй переход – вместе с картинкой, остальные слои на весь блок.
                 backgroundPosition: keepImageTop.includes(background)
                   ? "center, center max(0px, 100%), center, center max(0px, 100%)"
                   : undefined,
@@ -285,7 +285,7 @@ export function ScreenLayout({
         style={narrow ? ({ "--screen-gutter": "var(--narrow-gutter)" } as CSSProperties) : undefined}
         className={cn(
           "flex flex-col px-(--screen-gutter)",
-          // Отступ под нижним меню добавляет раскладка вкладок, здесь — только 24 px.
+          // Отступ под нижним меню добавляет раскладка вкладок, здесь – только 24 px.
           variant === "hero" || actions ? "pb-[calc(var(--safe-bottom)+var(--action-bottom))]" : "pb-6",
           (variant === "page" || fullImage) && "flex-1",
         )}
@@ -306,7 +306,7 @@ export function ScreenLayout({
               aria-hidden
               className="pointer-events-none absolute -inset-x-(--screen-gutter) -top-10 -bottom-6 -z-10 bg-background/60 backdrop-blur-[6px]"
               style={{
-                // Края дымки растворяются: сверху за 40 px, снизу — в промежутке до следующего блока.
+                // Края дымки растворяются: сверху за 40 px, снизу – в промежутке до следующего блока.
                 maskImage: "linear-gradient(to bottom, transparent 0, black 40px, black calc(100% - 48px), transparent 100%)",
               }}
             />
@@ -317,8 +317,8 @@ export function ScreenLayout({
                 aria-hidden
                 className="pointer-events-none absolute -inset-x-(--screen-gutter) -top-[140px] -bottom-12 -z-10"
                 style={{
-                  // Центр эллипса — посередине текста (область выше текста на 140 px, ниже на 48 px),
-                  // высота — по тексту: чем больше строк, тем выше засветление. К краям — до нуля.
+                  // Центр эллипса – посередине текста (область выше текста на 140 px, ниже на 48 px),
+                  // высота – по тексту: чем больше строк, тем выше засветление. К краям – до нуля.
                   background: `radial-gradient(ellipse 110% 50% at 0% calc(50% + 46px), ${ivory(0.88)} 0%, ${ivory(0.8)} 55%, ${ivory(0.4)} 80%, ${ivory(0)} 100%)`,
                 }}
               />

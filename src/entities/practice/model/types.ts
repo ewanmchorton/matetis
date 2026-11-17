@@ -17,7 +17,7 @@ export type DailyPractice = {
   allowTogether?: boolean;
 };
 
-/** Практика не сезона, а «слабой» стихии — дополнение к основной программе. */
+/** Практика не сезона, а «слабой» стихии – дополнение к основной программе. */
 export type SupportPractice = {
   id: string;
   elementId: ElementId;
@@ -26,7 +26,7 @@ export type SupportPractice = {
   note: string;
 };
 
-/** «daily» — можно отмечать каждый день; «once_per_week» — одна отметка на неделю */
+/** «daily» – можно отмечать каждый день; «once_per_week» – одна отметка на неделю */
 export type WeeklyRitualSchedule = "daily" | "once_per_week";
 
 export type WeeklyRitual = {

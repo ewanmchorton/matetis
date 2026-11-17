@@ -1,5 +1,5 @@
 // Запросы к Telegram Bot API. Используется только в серверном коде.
-// Токен бота — в TELEGRAM_BOT_TOKEN (выдаёт @BotFather).
+// Токен бота – в TELEGRAM_BOT_TOKEN (выдаёт @BotFather).
 
 function botToken(): string {
   const token = process.env.TELEGRAM_BOT_TOKEN;

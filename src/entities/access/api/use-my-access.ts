@@ -9,7 +9,7 @@ import type { MyAccess } from "../model/types";
 
 /**
  * Демо для GitHub Pages и разработки без входа: доступ открыт, экраны проходятся целиком.
- * ?demo=expired — «Срок подписки истёк», ?demo=request — тест пройден, доступа ещё нет.
+ * ?demo=expired – «Срок подписки истёк», ?demo=request – тест пройден, доступа ещё нет.
  */
 function demoAccess(): MyAccess {
   const demo = new URLSearchParams(window.location.search).get("demo");

@@ -1,4 +1,4 @@
-// Заметка для себя к практике на сегодня. GET — прочитать, PUT { text } — сохранить (пустая удаляется).
+// Заметка для себя к практике на сегодня. GET – прочитать, PUT { text } – сохранить (пустая удаляется).
 import { getMyNote, saveMyNote } from "@/entities/program/server";
 import { readJsonObject, withPaidUser } from "@/shared/api/route-helpers";
 

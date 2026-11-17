@@ -18,12 +18,12 @@ vi.mock("@/shared/push/send-push", () => ({
 }));
 
 const PLATO_1 =
-  "Быть обманутым самим собой — хуже всего, потому что в таком случае обманщик постоянно присутствует при обманываемом (Платон)";
+  "Быть обманутым самим собой – хуже всего, потому что в таком случае обманщик постоянно присутствует при обманываемом (Платон)";
 const PLATO_2 = "Стараясь осчастливить других, мы находим своё собственное (Платон)";
 const HEALER = "t1";
 const IDEALIST = "t2";
 
-/** 25 декабря 2026: 8:00 по Минску — промежуток 9–21 ещё не начался. */
+/** 25 декабря 2026: 8:00 по Минску – промежуток 9–21 ещё не начался. */
 const morning = new Date("2026-12-25T05:00:00Z");
 /** Середина промежутка 9–21 по Минску (random = 0.5): 15:00 по Минску. */
 const middle = new Date("2026-12-25T12:00:00Z");
@@ -107,7 +107,7 @@ describe("Отправка фразы дня", () => {
 
   it("считает время по часам телефона человека", async () => {
     await updateMySettings(anna, { timeZone: "Asia/Vladivostok" });
-    // 00:00 UTC — во Владивостоке 10 утра, в Минске 3 ночи.
+    // 00:00 UTC – во Владивостоке 10 утра, в Минске 3 ночи.
     await createHealer("Борис");
     expect(await sendDailyPhrases(new Date("2026-12-25T00:00:00Z"), first)).toBe(1);
     expect(sent.messages.map((message) => message.endpoint)).toEqual([`https://push.example/${anna}`]);
@@ -126,7 +126,7 @@ describe("Отправка фразы дня", () => {
     expect(sent.messages.map((message) => message.endpoint)).not.toContain("https://push.example/oleg");
   });
 
-  it("фраза для другого типа не приходит, общая — приходит", async () => {
+  it("фраза для другого типа не приходит, общая – приходит", async () => {
     await clearPhrases();
     await addPhrase(admin, { text: PLATO_2, typeIds: [IDEALIST] });
     expect(await sendDailyPhrases(middle, first)).toBe(0);

@@ -12,7 +12,7 @@ function initial(name: string): string {
   return trimmed ? trimmed.charAt(0).toUpperCase() : "?";
 }
 
-/** Под аватаром — только имя: фамилия не помещается. */
+/** Под аватаром – только имя: фамилия не помещается. */
 function firstName(name: string): string {
   return name.trim().split(/\s+/)[0] ?? name;
 }

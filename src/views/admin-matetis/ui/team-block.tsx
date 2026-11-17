@@ -11,8 +11,8 @@ import { NativeSelect } from "@/shared/ui/native-select";
 type Role = "user" | "content_manager" | "admin";
 
 /**
- * Роль в команде в карточке Матэтиса. Ученика можно сделать контент-менеджером или админом —
- * с паролем для входа в админку. Члену команды — сменить роль или задать новый пароль.
+ * Роль в команде в карточке Матэтиса. Ученика можно сделать контент-менеджером или админом –
+ * с паролем для входа в админку. Члену команды – сменить роль или задать новый пароль.
  */
 export function TeamBlock({ email, role, onChanged }: { email: string; role: Role; onChanged: () => void }) {
   const [nextRole, setNextRole] = useState<Role>(role);

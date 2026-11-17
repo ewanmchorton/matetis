@@ -4,7 +4,7 @@ import { APP_NAME } from "@/shared/config/brand";
 import { cn } from "@/shared/lib/utils";
 
 /**
- * Текстовый логотип. Размер и цвет — из docs/design-guide.md, раздел «Логотип».
+ * Текстовый логотип. Размер и цвет – из docs/design-guide.md, раздел «Логотип».
  * Положение на экране задаёт ScreenLayout, а не сам логотип.
  */
 export function Logo({ href, className }: { href?: string; className?: string }) {

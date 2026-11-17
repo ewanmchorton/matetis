@@ -10,7 +10,7 @@ export type TestCodes = { group1: string; group2: string };
 /**
  * Сохраняет имя, тест и дату рождения. Без сервера (GitHub Pages) и при разработке без входа
  * результат остаётся только в браузере, чтобы экраны можно было пройти целиком.
- * Не вошёл на настоящем сервере — ошибка со status 401.
+ * Не вошёл на настоящем сервере – ошибка со status 401.
  */
 export async function saveTestResult(codes: TestCodes, name: string, birthDate: string, type: PersonType) {
   const saveLocally = () => {

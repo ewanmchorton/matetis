@@ -63,7 +63,7 @@ export async function getMyBirthReading(viewerId: string): Promise<BirthReading 
   return findReading(viewerId);
 }
 
-/** Расчёт любого человека — только для администратора. */
+/** Расчёт любого человека – только для администратора. */
 export async function getBirthReadingForAdmin(
   adminId: string,
   personId: string,

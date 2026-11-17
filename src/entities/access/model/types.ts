@@ -1,5 +1,5 @@
-// Доступ так, как он приходит с сервера в браузер: даты — строками.
-// Серверные типы — в ../api/access.server.ts.
+// Доступ так, как он приходит с сервера в браузер: даты – строками.
+// Серверные типы – в ../api/access.server.ts.
 
 export type AccessStatusDto =
   | { kind: "staff" }
@@ -11,7 +11,7 @@ export type AccessStatusDto =
 /** Ответ GET /api/access. */
 export type MyAccess = {
   status: AccessStatusDto;
-  /** Почта, @ник или tg:номер в Telegram — для готового сообщения администратору. */
+  /** Почта, @ник или tg:номер в Telegram – для готового сообщения администратору. */
   contact: string | null;
   adminPhone: string;
   adminTelegram: string;
@@ -26,7 +26,7 @@ export type AccessPeriodDto = {
   createdAt: string;
 };
 
-/** contact — почта, @ник или tg:номер в Telegram. */
+/** contact – почта, @ник или tg:номер в Telegram. */
 export type AccessListItemDto = { contact: string; name: string | null; status: AccessStatusDto };
 
 export type AccessCardDto = AccessListItemDto & {

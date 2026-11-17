@@ -55,7 +55,7 @@ async function attemptsOf(personId: string, limit?: number): Promise<TypeTestAtt
   return rows.map((row) => ({ takenAt: row.takenAt, type: typeFor(row.group1Code, row.group2Code) }));
 }
 
-/** Текущий тип — по последнему прохождению. null, если тест ещё не пройден. */
+/** Текущий тип – по последнему прохождению. null, если тест ещё не пройден. */
 export async function getMyCurrentType(viewerId: string): Promise<PersonType | null> {
   const [latest] = await attemptsOf(viewerId, 1);
   return latest?.type ?? null;

@@ -1,5 +1,5 @@
 // Открыть или продлить доступ: { contact, months: 1 | 3 | 12 } или { contact, until }, по желанию amountCents.
-// contact — почта или ник в Telegram.
+// contact – почта или ник в Telegram.
 import { extendAccess } from "@/entities/access/server";
 import { readJsonObject, withUser } from "@/shared/api/route-helpers";
 

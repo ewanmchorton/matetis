@@ -45,7 +45,7 @@ function browserSecret(): string {
     localStorage.setItem(TELEGRAM_SECRET_KEY, secret);
     return secret;
   } catch {
-    // Хранилище недоступно (например, частный режим) — метка живёт, пока открыт экран.
+    // Хранилище недоступно (например, частный режим) – метка живёт, пока открыт экран.
     return (fallbackSecret ??= randomSecret());
   }
 }
@@ -69,7 +69,7 @@ function errorText(error: { code?: string; message?: string; status?: number }):
 
 /**
  * Вход по коду из письма или через бота в Telegram. Первый вход создаёт учётную запись и ведёт на онбординг,
- * дальше — в тест, если он не пройден, иначе в программу.
+ * дальше – в тест, если он не пройден, иначе в программу.
  */
 export function AuthPage() {
   const router = useRouter();
@@ -132,9 +132,9 @@ export function AuthPage() {
   }
 
   async function goAfterSignIn(name: string) {
-    // Имя спрашивает тест, поэтому пустое имя — первый вход: сначала знакомство с приложением.
+    // Имя спрашивает тест, поэтому пустое имя – первый вход: сначала знакомство с приложением.
     if (!name) return router.push(routes.onboarding);
-    // Не удалось узнать, пройден ли тест, — открываем программу.
+    // Не удалось узнать, пройден ли тест, – открываем программу.
     const current = await request<{ type: unknown }>("/api/type-test").catch(() => null);
     router.push(current && !current.type ? routes.typeTest : routes.program);
   }
@@ -155,7 +155,7 @@ export function AuthPage() {
   }, [telegramLinkVersion, telegramWaiting]);
 
   // Пока человек в Telegram, спрашиваем сервер, подтвердил ли он вход.
-  // Вернулся в приложение — спрашиваем сразу, не дожидаясь следующего раза.
+  // Вернулся в приложение – спрашиваем сразу, не дожидаясь следующего раза.
   useEffect(() => {
     if (!telegramWaiting) return;
     const waitingToken = telegramWaiting;
@@ -215,7 +215,7 @@ export function AuthPage() {
         </a>
       );
     }
-    // Ссылка ещё готовится или сервер не смог её дать — скажем об этом по нажатию.
+    // Ссылка ещё готовится или сервер не смог её дать – скажем об этом по нажатию.
     return (
       <Button
         variant="outline"

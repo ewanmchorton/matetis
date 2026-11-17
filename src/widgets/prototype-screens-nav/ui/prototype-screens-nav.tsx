@@ -17,7 +17,7 @@ import {
 } from "@/shared/ui/sheet";
 
 /** Для разработки прототипа: быстрый переход между экранами. */
-// ?demo=… показывает экраны без доступа, без входа — см. entities/access/api/use-my-access.ts.
+// ?demo=… показывает экраны без доступа, без входа – см. entities/access/api/use-my-access.ts.
 const prototypeScreens: { href: string; label: string; note?: string }[] = [
   { href: routes.auth, label: "Регистрация и вход" },
   { href: routes.onboarding, label: "Онбординг" },
@@ -33,7 +33,7 @@ const prototypeScreens: { href: string; label: string; note?: string }[] = [
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
-/** reload — обычная ссылка: страница загрузится заново. Иначе — быстрый переход Next.js. */
+/** reload – обычная ссылка: страница загрузится заново. Иначе – быстрый переход Next.js. */
 function ScreenLink({ href, reload, ...props }: ComponentProps<"a"> & { href: string; reload: boolean }) {
   if (reload) return <a href={`${basePath}${href}`} {...props} />;
   return <Link href={href} {...props} />;
@@ -41,7 +41,7 @@ function ScreenLink({ href, reload, ...props }: ComponentProps<"a"> & { href: st
 
 function isActive(pathname: string, search: string, href: string): boolean {
   const [path, query = ""] = href.split("?");
-  // Экран «без доступа» и обычный — на одном адресе, различаются только ?demo=…
+  // Экран «без доступа» и обычный – на одном адресе, различаются только ?demo=…
   if (search.includes("demo=") !== query.includes("demo=")) return false;
   return pathname === path || (path !== "/" && pathname.startsWith(`${path}/`));
 }
@@ -49,7 +49,7 @@ function isActive(pathname: string, search: string, href: string): boolean {
 export function PrototypeScreensNav() {
   const pathname = usePathname();
   // Список рисуется только в открытом меню, то есть в браузере: адрес уже известен.
-  // useSearchParams не берём — на сайте-прототипе он требует отдельной обёртки для сборки.
+  // useSearchParams не берём – на сайте-прототипе он требует отдельной обёртки для сборки.
   const search = typeof window === "undefined" ? "" : window.location.search;
   const [open, setOpen] = useState(false);
 
@@ -78,7 +78,7 @@ export function PrototypeScreensNav() {
               const active = isActive(pathname, search, screen.href);
               return (
                 <li key={screen.href}>
-                  {/* Вход в демо ?demo=… и выход из него — с загрузкой страницы заново:
+                  {/* Вход в демо ?demo=… и выход из него – с загрузкой страницы заново:
                       иначе приложение не перечитает демо-данные доступа. */}
                   <ScreenLink
                     href={screen.href}
@@ -90,7 +90,7 @@ export function PrototypeScreensNav() {
                         : "hover:bg-muted",
                     )}
                     aria-current={active ? "page" : undefined}
-                    // Выбрал экран — меню закрывается, экран сразу виден.
+                    // Выбрал экран – меню закрывается, экран сразу виден.
                     onClick={() => setOpen(false)}
                   >
                     <span>{screen.label}</span>

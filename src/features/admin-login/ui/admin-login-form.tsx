@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 
-/** Вход в админку по почте и паролю. signedInEmail — человек уже вошёл, но он не сотрудник. */
+/** Вход в админку по почте и паролю. signedInEmail – человек уже вошёл, но он не сотрудник. */
 export function AdminLoginForm({ signedInEmail }: { signedInEmail: string | null }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -23,7 +23,7 @@ export function AdminLoginForm({ signedInEmail }: { signedInEmail: string | null
     event.preventDefault();
     setPending(true);
     setError(null);
-    // rememberMe — устройство запоминается: вход держится 30 дней с последнего открытия.
+    // rememberMe – устройство запоминается: вход держится 30 дней с последнего открытия.
     const { error: signInError } = await authClient.signIn.email({ email, password, rememberMe: true });
     setPending(false);
     if (signInError) return setError("Неверная почта или пароль");
@@ -42,7 +42,7 @@ export function AdminLoginForm({ signedInEmail }: { signedInEmail: string | null
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
-        <CardTitle>{APP_NAME} — админка</CardTitle>
+        <CardTitle>{APP_NAME} – админка</CardTitle>
         <CardDescription>Вход для администратора и контент-менеджера</CardDescription>
       </CardHeader>
       <CardContent>

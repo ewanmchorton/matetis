@@ -18,14 +18,14 @@ beforeEach(async () => {
 });
 
 describe("Платная часть приложения", () => {
-  it("без доступа — 403 «no_access», бесплатная часть открыта", async () => {
+  it("без доступа – 403 «no_access», бесплатная часть открыта", async () => {
     const paid = await withPaidUser(ok);
     expect(paid.status).toBe(403);
     expect(await paid.json()).toMatchObject({ code: "no_access" });
     expect((await withUser(ok)).status).toBe(200);
   });
 
-  it("с доступом — запрос проходит", async () => {
+  it("с доступом – запрос проходит", async () => {
     const admin = await createPerson("Татьяна Валерьевна", "admin");
     await extendAccess(admin, "anna@example.ru", { months: 1 });
     expect((await withPaidUser(ok)).status).toBe(200);
@@ -37,7 +37,7 @@ describe("Платная часть приложения", () => {
     expect((await withPaidUser(ok)).status).toBe(200);
   });
 
-  it("не вошёл — 401", async () => {
+  it("не вошёл – 401", async () => {
     signedIn.user = null;
     expect((await withPaidUser(ok)).status).toBe(401);
   });

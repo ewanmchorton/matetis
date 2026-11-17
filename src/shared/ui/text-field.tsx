@@ -8,11 +8,11 @@ type TextFieldProps = ComponentProps<"input"> & {
   label: string;
   /** Текст ошибки под полем. */
   error?: string;
-  /** Плотнее: подпись 13 px, поле 40 px — для длинных форм вроде регистрации. */
+  /** Плотнее: подпись 13 px, поле 40 px – для длинных форм вроде регистрации. */
   compact?: boolean;
 };
 
-/** Поле ввода с подписью. Высота 44 px — минимум для нажатия пальцем. */
+/** Поле ввода с подписью. Высота 44 px – минимум для нажатия пальцем. */
 export function TextField({ id, label, error, compact = false, className, ...props }: TextFieldProps) {
   return (
     <div className={cn("grid", compact ? "gap-0.5" : "gap-1")}>

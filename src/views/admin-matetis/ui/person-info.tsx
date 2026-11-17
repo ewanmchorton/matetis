@@ -70,7 +70,7 @@ export function PersonInfo({ userId }: { userId: string }) {
           {data.birthReading
             ? `Дата рождения ${formatBirthDate(data.birthReading.birthDate)}. Слабые: ${weakElements(data.birthReading.elements)
                 .map((element) => elementNames[element])
-                .join(", ")} — прокачиваются по очереди.`
+                .join(", ")} – прокачиваются по очереди.`
             : "Дату рождения пока не указал(а)."}
         </p>
         {data.birthReading && (

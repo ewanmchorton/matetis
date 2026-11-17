@@ -7,11 +7,11 @@ describe("Время по часам телефона", () => {
     expect(localDay(new Date("2026-12-24T22:30:00Z"), "Europe/Minsk")).toBe("2026-12-25");
   });
 
-  it("9:00 по Минску — это 6:00 по UTC", () => {
+  it("9:00 по Минску – это 6:00 по UTC", () => {
     expect(localHourToMoment("2026-12-25", 9, "Europe/Minsk").toISOString()).toBe("2026-12-25T06:00:00.000Z");
   });
 
-  it("24:00 — это полночь следующего дня", () => {
+  it("24:00 – это полночь следующего дня", () => {
     expect(localHourToMoment("2026-12-25", 24, "Europe/Minsk").toISOString()).toBe("2026-12-25T21:00:00.000Z");
   });
 

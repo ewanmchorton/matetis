@@ -30,7 +30,7 @@ type TeamMember = { email: string; name: string };
 type ListState = { status: "loading" } | { status: "error"; message: string } | { status: "ready"; items: AccessListItemDto[] };
 
 /**
- * Раздел «Матэтисы»: все люди — ученики с доступами и команда. Удобен с телефона.
+ * Раздел «Матэтисы»: все люди – ученики с доступами и команда. Удобен с телефона.
  * Добавить почту, найти человека, открыть его карточку.
  */
 export function AdminMatetisPage() {
@@ -59,7 +59,7 @@ export function AdminMatetisPage() {
 
   useEffect(load, [load]);
 
-  // Из уведомления: ?filter=request — заявки, ?filter=expiring — скоро закончится.
+  // Из уведомления: ?filter=request – заявки, ?filter=expiring – скоро закончится.
   useEffect(() => {
     const fromLink = new URLSearchParams(window.location.search).get("filter");
     // eslint-disable-next-line react-hooks/set-state-in-effect

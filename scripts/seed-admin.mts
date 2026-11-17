@@ -1,6 +1,6 @@
 // Тестовый администратор и данные для карточки ученика в админке.
 // Создаёт администратора «Админ Тестовый», а Анне Тестовой (из pnpm db:seed-friends)
-// добавляет пройденный тест (Радикал) и дату рождения 15.03.1988 — в карточке видны стихии и круг Усин.
+// добавляет пройденный тест (Радикал) и дату рождения 15.03.1988 – в карточке видны стихии и круг Усин.
 // Запуск: pnpm db:seed-admin
 // Повторный запуск ничего не дублирует. Только для локальной базы.
 import { randomUUID } from "node:crypto";
@@ -11,7 +11,7 @@ import pg from "pg";
 try {
   process.loadEnvFile(".env.local");
 } catch {
-  // Файла нет — берём DATABASE_URL из окружения.
+  // Файла нет – берём DATABASE_URL из окружения.
 }
 
 const databaseUrl = process.env.DATABASE_URL;
@@ -25,7 +25,7 @@ if (process.env.NODE_ENV === "production") {
 }
 
 const ADMIN = { name: "Админ Тестовый", email: "admin.test@matetis.local" };
-/** Пароль тестового администратора — только для локальной базы. */
+/** Пароль тестового администратора – только для локальной базы. */
 const ADMIN_PASSWORD = "matetis-local-admin";
 const STUDENT = { name: "Анна Тестовая", email: "anna.test@matetis.local" };
 
@@ -84,8 +84,8 @@ try {
     [studentId, BIRTH_DATE, ...DIGIT_COUNTS],
   );
   await client.query("commit");
-  console.log(`Готово. Вход в админку: ${ADMIN.email}, пароль — ADMIN_PASSWORD в scripts/seed-admin.mts.`);
-  console.log(`У ученицы ${STUDENT.name} есть тест и дата рождения — откройте её в разделе «Ученики».`);
+  console.log(`Готово. Вход в админку: ${ADMIN.email}, пароль – ADMIN_PASSWORD в scripts/seed-admin.mts.`);
+  console.log(`У ученицы ${STUDENT.name} есть тест и дата рождения – откройте её в разделе «Ученики».`);
 } catch (error) {
   await client.query("rollback");
   throw error;

@@ -5,7 +5,7 @@
 try {
   process.loadEnvFile(".env.local");
 } catch {
-  // Файла нет — настройки берутся из окружения.
+  // Файла нет – настройки берутся из окружения.
 }
 
 const token = process.env.TELEGRAM_BOT_TOKEN;

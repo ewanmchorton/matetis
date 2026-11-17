@@ -1,6 +1,6 @@
-// Ссылки на видео YouTube: из обычной ссылки — ссылка для встраивания на страницу.
+// Ссылки на видео YouTube: из обычной ссылки – ссылка для встраивания на страницу.
 
-/** «https://youtu.be/abc» или «https://www.youtube.com/watch?v=abc» → адрес плеера. null — не YouTube. */
+/** «https://youtu.be/abc» или «https://www.youtube.com/watch?v=abc» → адрес плеера. null – не YouTube. */
 export function youTubeEmbedUrl(url: string): string | null {
   try {
     const parsed = new URL(url);

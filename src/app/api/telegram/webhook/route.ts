@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   if (update && typeof update === "object") {
     const reply = await handleTelegramUpdate(update);
     if (reply) {
-      // Не ответили — не страшно: вход всё равно подтверждён. Telegram не должен повторять сообщение.
+      // Не ответили – не страшно: вход всё равно подтверждён. Telegram не должен повторять сообщение.
       await sendTelegramMessage(reply.chatId, reply.text).catch((error) => console.error("Бот не ответил", error));
     }
   }

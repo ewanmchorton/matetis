@@ -5,8 +5,8 @@ import { currentSubscription, pushSupported, subscribeDevice } from "@/shared/pu
 
 /**
  * Можно ли прислать фразу дня на этот телефон.
- * unsupported — браузер не умеет (на iPhone — пока приложение не добавлено на «Домой»),
- * denied — человек запретил уведомления в настройках телефона, off — ещё не разрешал, on — подписан.
+ * unsupported – браузер не умеет (на iPhone – пока приложение не добавлено на «Домой»),
+ * denied – человек запретил уведомления в настройках телефона, off – ещё не разрешал, on – подписан.
  */
 export type DeviceState = "checking" | "unsupported" | "denied" | "off" | "on";
 

@@ -78,7 +78,7 @@ export function PhrasesEditor() {
     <div className="space-y-5">
       <div className="space-y-1">
         <p className="text-sm text-muted-foreground">
-          Раз в день в случайное время фраза приходит человеку уведомлением — в промежутке, который он выбрал в профиле.
+          Раз в день в случайное время фраза приходит человеку уведомлением – в промежутке, который он выбрал в профиле.
           В приложении фразы не показываются.
         </p>
       </div>
@@ -93,7 +93,7 @@ export function PhrasesEditor() {
           onChange={(event) => setText(event.target.value)}
         />
         <fieldset className="space-y-2">
-          <legend className="text-sm text-muted-foreground">Каким типам подходит. Не отмечено ничего — всем.</legend>
+          <legend className="text-sm text-muted-foreground">Каким типам подходит. Не отмечено ничего – всем.</legend>
           <div className="flex flex-wrap gap-2">
             {types.map((type) => (
               <button

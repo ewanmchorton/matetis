@@ -17,7 +17,7 @@ export type ProgressState = {
   completedPractices: string[];
   /**
    * Отметки ритуалов.
-   * Для ежедневных — ключи дней; для «раз в неделю» — ключ понедельника недели.
+   * Для ежедневных – ключи дней; для «раз в неделю» – ключ понедельника недели.
    */
   ritualMarks: Record<string, string[]>;
   /** «ГГГГ-ММ-ДД» или null, если человек дату не указал */
@@ -39,7 +39,7 @@ const initialState: ProgressState = {
 
 /**
  * Выдуманная история за прошлые дни, чтобы статистика не была пустой.
- * Сегодняшний день не отмечен — его можно отметить вживую.
+ * Сегодняшний день не отмечен – его можно отметить вживую.
  */
 function createDemoState(): ProgressState {
   const today = new Date();
@@ -96,7 +96,7 @@ function setState(next: ProgressState) {
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch {
-    // Хранилище браузера недоступно — работаем только в памяти.
+    // Хранилище браузера недоступно – работаем только в памяти.
   }
   listeners.forEach((l) => l());
 }
@@ -120,7 +120,7 @@ function toggleDay(days: string[], day: string): string[] {
   return days.includes(day) ? days.filter((d) => d !== day) : [...days, day];
 }
 
-/** Действие может прийти с экрана, который сам прогресс не показывает — сначала читаем сохранённое. */
+/** Действие может прийти с экрана, который сам прогресс не показывает – сначала читаем сохранённое. */
 function edit(updater: (current: ProgressState) => ProgressState) {
   load();
   setState(updater(state));

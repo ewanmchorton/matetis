@@ -9,7 +9,7 @@ import pg from "pg";
 try {
   process.loadEnvFile(".env.local");
 } catch {
-  // Файла нет — берём DATABASE_URL из окружения.
+  // Файла нет – берём DATABASE_URL из окружения.
 }
 
 const databaseUrl = process.env.DATABASE_URL;
@@ -27,7 +27,7 @@ type Seed = {
   alternation?: "first" | "second";
 };
 
-// Порядок и дни — из docs/data-model.md, раздел «3а. Программа».
+// Порядок и дни – из docs/data-model.md, раздел «3а. Программа».
 const practices: Seed[] = [
   { title: "Внутренняя улыбка", frequency: "daily", daypart: "morning", opensOnDay: 1 },
   { title: "Линия души", frequency: "daily", daypart: "morning", opensOnDay: 8 },

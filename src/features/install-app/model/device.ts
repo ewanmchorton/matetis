@@ -1,6 +1,6 @@
 /**
- * Какое устройство у человека — от этого зависит инструкция по установке.
- * inApp — браузер внутри Telegram, Instagram и других приложений: установить оттуда нельзя.
+ * Какое устройство у человека – от этого зависит инструкция по установке.
+ * inApp – браузер внутри Telegram, Instagram и других приложений: установить оттуда нельзя.
  */
 export type Device = "iphone" | "android" | "inApp" | "other";
 
@@ -19,7 +19,7 @@ export function detectDevice(userAgent: string, maxTouchPoints = 0): Device {
 
 /**
  * Ссылка, которая открывает текущую страницу в обычном браузере из встроенного.
- * Android понимает intent-ссылку на Chrome, iPhone — схему Safari. Не везде срабатывает,
+ * Android понимает intent-ссылку на Chrome, iPhone – схему Safari. Не везде срабатывает,
  * поэтому рядом всегда есть инструкция «меню → Открыть в браузере».
  */
 export function openInBrowserUrl(device: "android" | "iphone", url: URL): string {

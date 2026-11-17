@@ -106,7 +106,7 @@ export function LibraryPage() {
               <li key={b.id} className="flex flex-wrap items-center justify-between gap-2 py-1">
                 <span>
                   {b.title}
-                  {b.author && <span className="text-muted-foreground"> — {b.author}</span>}
+                  {b.author && <span className="text-muted-foreground"> – {b.author}</span>}
                 </span>
                 <ElementTag elementId={b.elementId} />
               </li>

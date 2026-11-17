@@ -1,5 +1,5 @@
 // Вход через бота в Telegram как часть Better Auth: адреса /api/auth/telegram/start и /api/auth/telegram/complete.
-// Как устроен вход — в telegram-login.ts.
+// Как устроен вход – в telegram-login.ts.
 import { randomBytes } from "node:crypto";
 
 import type { BetterAuthPlugin, StandardSchemaV1 } from "better-auth";
@@ -15,7 +15,7 @@ const isText = (value: unknown, min: number): value is string =>
   typeof value === "string" && value.length >= min && value.length <= 64;
 
 /**
- * secret — метка браузера, её придумывает экран входа и не показывает никому.
+ * secret – метка браузера, её придумывает экран входа и не показывает никому.
  * Войти по подтверждённой ссылке может только тот, кто знает и ссылку, и метку.
  */
 const startBody: StandardSchemaV1<{ secret: string }> = {
@@ -29,7 +29,7 @@ const startBody: StandardSchemaV1<{ secret: string }> = {
   },
 };
 
-/** token — из ссылки на бота, которую нажал человек. */
+/** token – из ссылки на бота, которую нажал человек. */
 const completeBody: StandardSchemaV1<{ secret: string; token: string }> = {
   "~standard": {
     version: 1,
@@ -58,7 +58,7 @@ export function telegramLogin() {
       }),
 
       /**
-       * Проверить, подтвердил ли человек вход в боте. Подтвердил — входит:
+       * Проверить, подтвердил ли человек вход в боте. Подтвердил – входит:
        * первый вход создаёт учётную запись без почты и без имени (имя спросит тест).
        */
       telegramComplete: createAuthEndpoint("/telegram/complete", { method: "POST", body: completeBody }, async (ctx) => {

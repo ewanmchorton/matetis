@@ -8,8 +8,8 @@ import { request, type RequestError } from "@/shared/api/request";
 import { isDevelopment, isStaticPrototype } from "@/shared/config/env";
 
 /**
- * Пройден ли уже тест: по серверу, а без сервера (GitHub Pages) и при разработке без входа — по браузеру.
- * null — ещё проверяем.
+ * Пройден ли уже тест: по серверу, а без сервера (GitHub Pages) и при разработке без входа – по браузеру.
+ * null – ещё проверяем.
  */
 export function useTestTaken(): boolean | null {
   const { testTaken: takenLocally } = useProgress();

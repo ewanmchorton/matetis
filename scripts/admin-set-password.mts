@@ -1,6 +1,6 @@
 // Задаёт пароль для входа в админку. Нужен, чтобы первый администратор мог войти;
 // дальше пароли задаёт администратор в разделе «Команда».
-// Запуск: pnpm admin:set-password <email> — пароль спросит в терминале, на экране он не виден.
+// Запуск: pnpm admin:set-password <email> – пароль спросит в терминале, на экране он не виден.
 // Работает только там, где есть доступ к базе (переменная DATABASE_URL).
 import { randomUUID } from "node:crypto";
 import { createInterface } from "node:readline";
@@ -11,7 +11,7 @@ import pg from "pg";
 try {
   process.loadEnvFile(".env.local");
 } catch {
-  // Файла нет — на сервере DATABASE_URL задаётся в окружении.
+  // Файла нет – на сервере DATABASE_URL задаётся в окружении.
 }
 
 const MIN_LENGTH = 8;
@@ -58,7 +58,7 @@ try {
     const password = await askHidden("Новый пароль: ");
     const repeat = await askHidden("Ещё раз: ");
     if (password.length < MIN_LENGTH) {
-      console.error(`Пароль — не короче ${MIN_LENGTH} знаков.`);
+      console.error(`Пароль – не короче ${MIN_LENGTH} знаков.`);
       process.exitCode = 1;
     } else if (password !== repeat) {
       console.error("Пароли не совпадают.");

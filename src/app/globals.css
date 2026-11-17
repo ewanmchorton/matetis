@@ -51,7 +51,7 @@
 }
 
 :root {
-  /* Палитра МАТЭТИС — docs/design-guide.md, раздел «Цвета». */
+  /* Палитра МАТЭТИС – docs/design-guide.md, раздел «Цвета». */
   --forest-sage: #355846;
   --soft-sage: #a7b5a3;
   --ivory: #faf7f2;
@@ -92,7 +92,7 @@
   --sidebar-border: var(--border);
   --sidebar-ring: var(--forest-sage);
 
-  /* Единое расположение элементов экрана — docs/design-guide.md, раздел «Расположение». */
+  /* Единое расположение элементов экрана – docs/design-guide.md, раздел «Расположение». */
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --screen-gutter: 24px;
@@ -158,7 +158,7 @@
   }
 }
 
-/* Типографика — docs/design-guide.md, раздел «Шрифты». */
+/* Типографика – docs/design-guide.md, раздел «Шрифты». */
 @utility type-title {
   font-family: var(--font-display);
   font-weight: 500;

@@ -14,7 +14,7 @@ const tabs = [
   { href: routes.profile, label: "Профиль", icon: UserRound },
 ];
 
-/** Нижнее меню: плавающая панель, положение — docs/design-guide.md, раздел «Расположение». */
+/** Нижнее меню: плавающая панель, положение – docs/design-guide.md, раздел «Расположение». */
 export function BottomNav() {
   const pathname = usePathname();
 

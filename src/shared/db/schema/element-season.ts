@@ -4,7 +4,7 @@ import { date, pgTable, smallint, text, timestamp } from "drizzle-orm/pg-core";
 
 import { user } from "./auth";
 
-/** С какого дня в этом году Металл. Нет строки за год — вся осень в Земле, пока дату не зададут. */
+/** С какого дня в этом году Металл. Нет строки за год – вся осень в Земле, пока дату не зададут. */
 export const metalStart = pgTable("metal_start", {
   year: smallint("year").primaryKey(),
   /** День по Минску, с полуночи которого идёт Металл. */

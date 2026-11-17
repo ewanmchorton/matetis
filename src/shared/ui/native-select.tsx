@@ -2,7 +2,7 @@ import * as React from "react";
 
 import { cn } from "@/shared/lib/utils";
 
-/** Обычный выпадающий список браузера в стиле полей ввода — для форм админки. */
+/** Обычный выпадающий список браузера в стиле полей ввода – для форм админки. */
 function NativeSelect({ className, ...props }: React.ComponentProps<"select">) {
   return (
     <select

@@ -1,6 +1,6 @@
 // Программа человека на сегодня: открытые практики, отметки, навигатор. Только серверный код.
-// Доступ к программе проверяет вызывающий код. Дни — по часам телефона человека (его часовой пояс
-// в настройках); пока телефон его не сообщил — по Минску.
+// Доступ к программе проверяет вызывающий код. Дни – по часам телефона человека (его часовой пояс
+// в настройках); пока телефон его не сообщил – по Минску.
 import { and, asc, eq, gte, inArray, lte } from "drizzle-orm";
 
 import { getMyBirthReading, weakElements } from "@/entities/birth-reading/server";
@@ -46,7 +46,7 @@ async function todayFor(userId: string, now: Date): Promise<string> {
   return localDay(now, row?.timeZone ?? DEFAULT_TIME_ZONE);
 }
 
-/** Первый день человека в программе. В первый раз — сегодня. */
+/** Первый день человека в программе. В первый раз – сегодня. */
 async function startedOn(userId: string, today: string): Promise<string> {
   await db.insert(programStart).values({ userId, startedOn: today }).onConflictDoNothing();
   const [row] = await db.select().from(programStart).where(eq(programStart.userId, userId));
@@ -63,7 +63,7 @@ export type NavigatorToday = NavigatorDay & {
 
 /**
  * Послание человека на этот день программы: по порядку для его типа, по кругу.
- * null — нет типа или посланий для него.
+ * null – нет типа или посланий для него.
  */
 async function navigatorFor(userId: string, programDay: number, today: string): Promise<NavigatorToday | null> {
   const type = await getMyCurrentType(userId);
@@ -140,11 +140,11 @@ function fits(variant: PracticeVariant, person: Person, weakElement: ElementId |
 type VisiblePractice = { item: Practice; variant: PracticeVariant | null };
 
 /**
- * Практики человека в этот день программы. Без вариантов — текст самой практики для всех.
- * С вариантами — подходящий человеку; если каждую неделю новый — следующий по порядку, по кругу.
- * Варианты на слабую стихию: при каждом появлении практики — следующая слабая стихия по очереди
- * (медитация раз в 2 недели — стихия меняется раз в 2 недели).
- * Не подошёл ни один вариант — практики у человека нет.
+ * Практики человека в этот день программы. Без вариантов – текст самой практики для всех.
+ * С вариантами – подходящий человеку; если каждую неделю новый – следующий по порядку, по кругу.
+ * Варианты на слабую стихию: при каждом появлении практики – следующая слабая стихия по очереди
+ * (медитация раз в 2 недели – стихия меняется раз в 2 недели).
+ * Не подошёл ни один вариант – практики у человека нет.
  */
 function visiblePractices(practices: Practice[], person: Person, programDay: number): VisiblePractice[] {
   const week = programWeek(programDay);
@@ -163,7 +163,7 @@ function visiblePractices(practices: Practice[], person: Person, programDay: num
 
 export type ProgramPractice = {
   id: string;
-  /** Какой вариант текста видит человек. null — текст самой практики. */
+  /** Какой вариант текста видит человек. null – текст самой практики. */
   variantId: string | null;
   title: string;
   daypart: "morning" | "evening" | null;
@@ -172,9 +172,9 @@ export type ProgramPractice = {
   /** Текст и видео практики или её варианта для человека. */
   body: string;
   videoUrl: string | null;
-  /** Вариант на слабую стихию — какую стихию он прокачивает сейчас (подпись «Слабая стихия: …»). */
+  /** Вариант на слабую стихию – какую стихию он прокачивает сейчас (подпись «Слабая стихия: …»). */
   weakElement: ElementId | null;
-  /** Ежедневная — отмечена сегодня; еженедельная — день отметки на этой неделе. */
+  /** Ежедневная – отмечена сегодня; еженедельная – день отметки на этой неделе. */
   doneOn: string | null;
 };
 
@@ -189,7 +189,7 @@ export type MyProgram = {
   awareness: ProgramPractice[];
   /** Семь дней недели с понедельника: был ли в этот день хоть одна выполненная практика. */
   week: { day: string; done: boolean }[];
-  /** Приветственное видео ещё не просмотрено — показать перед программой. */
+  /** Приветственное видео ещё не просмотрено – показать перед программой. */
   showWelcomeVideo: boolean;
   /** Приветственное видео, если админ его добавил. */
   welcomeVideo: LibraryVideo | null;
@@ -281,7 +281,7 @@ export async function getMyNavigator(userId: string, now = new Date()) {
 
 /**
  * Отметить практику выполненной сегодня или снять отметку.
- * Ежедневная — одна отметка в день, еженедельная — одна в неделю. Закрытую практику отметить нельзя.
+ * Ежедневная – одна отметка в день, еженедельная – одна в неделю. Закрытую практику отметить нельзя.
  */
 export async function setPracticeDone(userId: string, practiceId: unknown, done: boolean, now = new Date()) {
   if (typeof practiceId !== "string") throw new AppError("not_found", "Практика не найдена");
@@ -316,7 +316,7 @@ export async function markNavigatorRead(userId: string, now = new Date()) {
   return { ok: true };
 }
 
-/** Заметка для себя к практике на сегодня. Пустая — удаляется. */
+/** Заметка для себя к практике на сегодня. Пустая – удаляется. */
 export async function saveMyNote(userId: string, practiceId: unknown, rawText: unknown, now = new Date()) {
   if (typeof practiceId !== "string") throw new AppError("not_found", "Практика не найдена");
   const today = await todayFor(userId, now);
@@ -345,7 +345,7 @@ export async function getMyNote(userId: string, practiceId: string, now = new Da
   return { text: row?.text ?? "" };
 }
 
-/** Человек посмотрел видео по текущей стихии — в этот период оно уходит из «На этой неделе». */
+/** Человек посмотрел видео по текущей стихии – в этот период оно уходит из «На этой неделе». */
 export async function markElementVideoSeen(userId: string, now = new Date()) {
   const [today, season] = await Promise.all([todayFor(userId, now), getCurrentSeason(now)]);
   await db

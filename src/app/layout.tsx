@@ -21,18 +21,18 @@ const cormorant = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
-  title: `${APP_NAME} — практики по типу и стихии`,
+  title: `${APP_NAME} – практики по типу и стихии`,
   description:
     "Ежедневные практики, ритуалы и рекомендации по вашему типу и текущей стихии.",
   applicationName: APP_NAME,
-  // Адреса — с префиксом сайта-прототипа (/matetis на GitHub Pages), иначе иконки там не находятся.
+  // Адреса – с префиксом сайта-прототипа (/matetis на GitHub Pages), иначе иконки там не находятся.
   manifest: `${basePath}/manifest.webmanifest`,
   appleWebApp: {
     capable: true,
     title: APP_NAME,
     statusBarStyle: "default",
   },
-  // Логотип: вкладка браузера, экран «Домой» на iPhone. Для Android — иконки в manifest.webmanifest.
+  // Логотип: вкладка браузера, экран «Домой» на iPhone. Для Android – иконки в manifest.webmanifest.
   icons: {
     icon: [
       { url: `${basePath}/favicon.ico`, sizes: "16x16 32x32 48x48" },

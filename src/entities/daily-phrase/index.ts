@@ -4,7 +4,7 @@ export { DEFAULT_TIME_ZONE, localDay, localHourToMoment } from "./model/zoned-ti
 export type DailyPhraseDto = {
   id: string;
   text: string;
-  /** Каким типам подходит. Пусто — всем. */
+  /** Каким типам подходит. Пусто – всем. */
   typeIds: string[];
   createdAt: string;
 };

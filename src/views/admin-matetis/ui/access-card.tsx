@@ -34,7 +34,7 @@ function centsToInput(cents: number | null | undefined) {
 }
 
 /** Карточка Матэтиса: доступ и оплаты, тип и стихии, роль в команде. */
-/** contact — почта или ник в Telegram, как ввёл администратор или как пришло в списке. */
+/** contact – почта или ник в Telegram, как ввёл администратор или как пришло в списке. */
 export function AccessCard({ contact, onBack, onChanged }: { contact: string; onBack: () => void; onChanged: () => void }) {
   const [card, setCard] = useState<AccessCardDto | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -188,7 +188,7 @@ export function AccessCard({ contact, onBack, onChanged }: { contact: string; on
                 {card.periods.map((period) => (
                   <li key={`${period.startsAt}-${period.createdAt}`} className="flex justify-between gap-3">
                     <span>
-                      {formatDay(period.startsAt)} — {formatDay(period.endsAt)}
+                      {formatDay(period.startsAt)} – {formatDay(period.endsAt)}
                     </span>
                     <span className="text-muted-foreground">{formatEuro(period.amountCents)}</span>
                   </li>

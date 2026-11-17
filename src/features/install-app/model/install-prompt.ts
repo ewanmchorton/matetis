@@ -9,7 +9,7 @@ type BeforeInstallPromptEvent = Event & {
 };
 
 // Chrome присылает событие один раз, сразу после загрузки страницы. Ловим его при загрузке модуля,
-// а не когда человек дошёл до экрана установки, — иначе оно уже пролетело.
+// а не когда человек дошёл до экрана установки, – иначе оно уже пролетело.
 let deferred: BeforeInstallPromptEvent | null = null;
 let installed = false;
 const listeners = new Set<() => void>();
@@ -33,7 +33,7 @@ function subscribe(listener: () => void) {
   return () => listeners.delete(listener);
 }
 
-/** Открыт ли сайт с иконки на «Домой» — то есть приложение уже установлено. */
+/** Открыт ли сайт с иконки на «Домой» – то есть приложение уже установлено. */
 export function openedFromHomeScreen(): boolean {
   const nav = navigator as Navigator & { standalone?: boolean };
   return window.matchMedia("(display-mode: standalone)").matches || nav.standalone === true;
@@ -43,7 +43,7 @@ export function useInstallPrompt() {
   const canPrompt = useSyncExternalStore(subscribe, () => deferred !== null, () => false);
   const isInstalled = useSyncExternalStore(subscribe, () => installed, () => false);
 
-  /** Показывает системное окно установки. false — браузер такого окна не даёт (iPhone и другие). */
+  /** Показывает системное окно установки. false – браузер такого окна не даёт (iPhone и другие). */
   async function prompt() {
     const event = deferred;
     if (!event) return false;

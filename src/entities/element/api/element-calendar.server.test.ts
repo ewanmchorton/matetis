@@ -21,7 +21,7 @@ describe("День перехода с Земли на Металл", () => {
     expect((await getCurrentSeason(new Date("2026-11-02T12:00:00+03:00"))).elementId).toBe("metal");
   });
 
-  it("контент-менеджер задаёт день заранее — с него идёт Металл", async () => {
+  it("контент-менеджер задаёт день заранее – с него идёт Металл", async () => {
     await setMetalStart(manager, "2026-10-14", august);
     expect((await getCurrentSeason(new Date("2026-10-13T23:00:00+03:00"))).elementId).toBe("earth");
     expect((await getCurrentSeason(lateOctober)).elementId).toBe("metal");

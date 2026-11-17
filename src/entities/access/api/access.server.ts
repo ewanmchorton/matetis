@@ -16,7 +16,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export type AccessStatus =
   /** Администратор или контент-менеджер: доступ есть всегда. */
   | { kind: "staff" }
-  /** Доступ идёт до until. expiring — осталось EXPIRING_DAYS дней или меньше. */
+  /** Доступ идёт до until. expiring – осталось EXPIRING_DAYS дней или меньше. */
   | { kind: "active"; until: Date; daysLeft: number; expiring: boolean }
   | { kind: "expired"; endedAt: Date }
   /** Зарегистрирован и прошёл тест, а доступ ещё не открывали. */
@@ -35,7 +35,7 @@ export type AccessPeriod = PeriodDates & {
 
 export type AccessSettings = {
   adminPhone: string;
-  /** Ник в Telegram без @. Пустой — Telegram открывается по телефону. */
+  /** Ник в Telegram без @. Пустой – Telegram открывается по телефону. */
   adminTelegram: string;
   firstMonthCents: number;
   monthCents: number;
@@ -46,7 +46,7 @@ export type AccessSettings = {
 export const ACCESS_TERMS = [1, 3, 12] as const;
 export type AccessTerm = (typeof ACCESS_TERMS)[number];
 
-/** Подставленная сумма для каждого срока. null — цены нет, сумму вводит админ. */
+/** Подставленная сумма для каждого срока. null – цены нет, сумму вводит админ. */
 export type SuggestedAmounts = Record<AccessTerm, number | null>;
 
 /** Статус по периодам одного человека. Без теста и роли: их учитывает вызывающий код. */
@@ -84,7 +84,7 @@ export function addMonths(date: Date, months: number): Date {
 }
 
 function suggestAmounts(settings: AccessSettings, isFirst: boolean): SuggestedAmounts {
-  // Первый период — цена первого месяца. На 3 и 12 месяцев сразу цены нет.
+  // Первый период – цена первого месяца. На 3 и 12 месяцев сразу цены нет.
   if (isFirst) return { 1: settings.firstMonthCents, 3: null, 12: null };
   return { 1: settings.monthCents, 3: settings.threeMonthsCents, 12: null };
 }
@@ -144,7 +144,7 @@ export async function hasAccess(viewer: Viewer, now = new Date()): Promise<boole
   return status.kind === "staff" || status.kind === "active";
 }
 
-/** Свой статус, свой контакт (почта или ник в Telegram) и контакт администратора — для экранов без доступа и готового сообщения. */
+/** Свой статус, свой контакт (почта или ник в Telegram) и контакт администратора – для экранов без доступа и готового сообщения. */
 export async function getMyAccess(viewer: Viewer, now = new Date()) {
   const [status, settings] = await Promise.all([statusOf(viewer, now), readSettings()]);
   return {
@@ -158,7 +158,7 @@ export async function getMyAccess(viewer: Viewer, now = new Date()) {
 export type AccessListItem = {
   /** Почта, @ник или tg:номер в Telegram. */
   contact: string;
-  /** null — контакт добавили заранее, человек ещё не зарегистрировался. */
+  /** null – контакт добавили заранее, человек ещё не зарегистрировался. */
   name: string | null;
   status: AccessStatus;
 };
@@ -179,14 +179,14 @@ function statusTime(status: AccessStatus): number {
 
 /**
  * Все ученики для раздела «Матэтисы»: зарегистрированные (кроме команды) и контакты, добавленные заранее.
- * search — часть почты, ника или имени.
+ * search – часть почты, ника или имени.
  */
 export async function listAccessForAdmin(adminId: string, search = "", now = new Date()): Promise<AccessListItem[]> {
   await assertAdmin(adminId);
   return listAccessItems(search, now);
 }
 
-/** То же без проверки роли — для серверных задач (ежедневная сводка). */
+/** То же без проверки роли – для серверных задач (ежедневная сводка). */
 export async function listAccessItems(search = "", now = new Date()): Promise<AccessListItem[]> {
   const [people, testTakers, periods] = await Promise.all([
     db
@@ -227,7 +227,7 @@ export async function listAccessItems(search = "", now = new Date()): Promise<Ac
 }
 
 export type AccessCard = AccessListItem & {
-  /** Зарегистрированный человек с этим контактом: id и роль. null — ещё не зарегистрировался. */
+  /** Зарегистрированный человек с этим контактом: id и роль. null – ещё не зарегистрировался. */
   userId: string | null;
   role: string | null;
   /** Новые сверху. */
@@ -276,7 +276,7 @@ export type ExtendAccessInput = {
   months?: unknown;
   /** «До даты»: дата окончания вместо срока. */
   until?: unknown;
-  /** Сумма в евроцентах. Не передана — подставляется по ценам из настроек. */
+  /** Сумма в евроцентах. Не передана – подставляется по ценам из настроек. */
   amountCents?: unknown;
 };
 
@@ -288,7 +288,7 @@ function parseDate(value: unknown): Date | null {
 
 /**
  * Открыть или продлить доступ. Идущий доступ продлевается с даты окончания,
- * закончившийся или новый — с текущего момента. Почту или ник можно добавить до регистрации.
+ * закончившийся или новый – с текущего момента. Почту или ник можно добавить до регистрации.
  */
 export async function extendAccess(adminId: string, rawContact: unknown, input: ExtendAccessInput, now = new Date()) {
   await assertAdmin(adminId);
@@ -314,7 +314,7 @@ export async function extendAccess(adminId: string, rawContact: unknown, input: 
   let amountCents: number | null = term ? card.suggestedAmounts[term] : null;
   if (input.amountCents !== undefined && input.amountCents !== null) {
     if (typeof input.amountCents !== "number" || !Number.isInteger(input.amountCents) || input.amountCents < 0) {
-      throw new AppError("invalid_amount", "Сумма — целое число не меньше нуля");
+      throw new AppError("invalid_amount", "Сумма – целое число не меньше нуля");
     }
     amountCents = input.amountCents;
   }
@@ -344,7 +344,7 @@ export async function getAccessSettingsForAdmin(adminId: string): Promise<Access
 function priceOf(value: unknown, fallback: number): number {
   if (value === undefined) return fallback;
   if (typeof value !== "number" || !Number.isInteger(value) || value < 0) {
-    throw new AppError("invalid_price", "Цена — целое число не меньше нуля");
+    throw new AppError("invalid_price", "Цена – целое число не меньше нуля");
   }
   return value;
 }
@@ -356,13 +356,13 @@ export async function updateAccessSettings(adminId: string, changes: Partial<Rec
   let adminPhone = current.adminPhone;
   if (changes.adminPhone !== undefined) {
     adminPhone = typeof changes.adminPhone === "string" ? changes.adminPhone.replace(/[^\d+]/g, "") : "";
-    if (!/^\+\d{7,15}$/.test(adminPhone)) throw new AppError("invalid_phone", "Телефон — в формате +375291234567");
+    if (!/^\+\d{7,15}$/.test(adminPhone)) throw new AppError("invalid_phone", "Телефон – в формате +375291234567");
   }
   let adminTelegram = current.adminTelegram;
   if (changes.adminTelegram !== undefined) {
     adminTelegram = typeof changes.adminTelegram === "string" ? changes.adminTelegram.trim().replace(/^@/, "") : "";
     if (adminTelegram && !/^[A-Za-z0-9_]{5,32}$/.test(adminTelegram)) {
-      throw new AppError("invalid_telegram", "Ник в Telegram — латинские буквы, цифры и _, от 5 символов");
+      throw new AppError("invalid_telegram", "Ник в Telegram – латинские буквы, цифры и _, от 5 символов");
     }
   }
   const next: AccessSettings = {

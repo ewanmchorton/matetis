@@ -1,4 +1,4 @@
-// Раздел «Доступы»: все люди со статусами. ?q= — поиск по почте или имени. Только администратор.
+// Раздел «Доступы»: все люди со статусами. ?q= – поиск по почте или имени. Только администратор.
 import { listAccessForAdmin } from "@/entities/access/server";
 import { withUser } from "@/shared/api/route-helpers";
 

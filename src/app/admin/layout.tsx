@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { APP_NAME } from "@/shared/config/brand";
 
 export const metadata: Metadata = {
-  title: `${APP_NAME} — админка`,
+  title: `${APP_NAME} – админка`,
   // Свой значок на главном экране: открывает сразу админку, а не часть для учеников.
   // Установить его можно только со страниц админки.
   manifest: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/admin-manifest.webmanifest`,

@@ -16,7 +16,7 @@ export function ElementResultPage({ earned }: { earned: boolean }) {
     <main className="flex flex-1 flex-col gap-6 px-5 py-8">
       <Logo href={routes.program} />
       <p className="text-sm text-muted-foreground">
-        Так выглядит конец периода стихии. Сейчас период ещё идёт — живой процент есть в профиле.
+        Так выглядит конец периода стихии. Сейчас период ещё идёт – живой процент есть в профиле.
       </p>
       <section className="space-y-4 rounded-3xl border bg-card p-6 text-center">
         {earned ? (

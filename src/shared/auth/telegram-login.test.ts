@@ -25,7 +25,7 @@ function startMessage(text: string, from: { id: number; username?: string } = { 
 beforeEach(clearDatabase);
 
 describe("Вход через бота", () => {
-  it("пока человек не нажал «Начать» — вход ждёт", async () => {
+  it("пока человек не нажал «Начать» – вход ждёт", async () => {
     const token = await createLoginRequest(browser, now);
     expect(await takeLoginRequest(token, browser, now)).toEqual({ status: "pending" });
   });
@@ -50,7 +50,7 @@ describe("Вход через бота", () => {
     expect(await takeLoginRequest(token, browser, now)).toEqual({ status: "expired" });
   });
 
-  it("повторное «Начать» тем же человеком — снова «Готово», и до входа, и после", async () => {
+  it("повторное «Начать» тем же человеком – снова «Готово», и до входа, и после", async () => {
     const token = await createLoginRequest(browser, now);
     await handleTelegramUpdate(startMessage(`/start ${token}`), now);
     expect((await handleTelegramUpdate(startMessage(`/start ${token}`), now))?.text).toBe(botReplies.confirmed);
@@ -102,7 +102,7 @@ describe("Вход через бота", () => {
     expect((await handleTelegramUpdate(startMessage("/start abc123"), now))?.text).toBe(botReplies.expired);
   });
 
-  it("/start без ссылки — подсказка, как войти; группы и боты не обрабатываются", async () => {
+  it("/start без ссылки – подсказка, как войти; группы и боты не обрабатываются", async () => {
     expect((await handleTelegramUpdate(startMessage("/start"), now))?.text).toBe(botReplies.hello);
     expect((await handleTelegramUpdate(startMessage("привет"), now))?.text).toBe(botReplies.hello);
     const group = { message: { chat: { id: -5, type: "group" }, from: { id: 111 }, text: "/start" } };
@@ -113,11 +113,11 @@ describe("Вход через бота", () => {
 });
 
 describe("Человек из Telegram", () => {
-  it("новый номер — человека ещё нет", async () => {
+  it("новый номер – человека ещё нет", async () => {
     expect(await findTelegramPerson({ telegramId: "111", telegramUsername: "oleg_tg" })).toBeNull();
   });
 
-  it("сменил ник — ник обновляется, доступ переезжает на новый", async () => {
+  it("сменил ник – ник обновляется, доступ переезжает на новый", async () => {
     const admin = await createPerson("Татьяна Валерьевна", "admin");
     const id = await createTelegramPerson("Олег", "111", "oleg_old");
     await extendAccess(admin, "@oleg_old", { months: 1 }, now);
@@ -126,7 +126,7 @@ describe("Человек из Telegram", () => {
     expect(await hasAccess({ id, telegramId: "111", telegramUsername: "oleg_new" }, minutesLater(60))).toBe(true);
   });
 
-  it("убрал ник — доступ остаётся за номером", async () => {
+  it("убрал ник – доступ остаётся за номером", async () => {
     const admin = await createPerson("Татьяна Валерьевна", "admin");
     const id = await createTelegramPerson("Олег", "111", "oleg_tg");
     await extendAccess(admin, "@oleg_tg", { months: 1 }, now);

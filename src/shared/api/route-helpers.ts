@@ -12,8 +12,8 @@ const forbiddenCodes = new Set(["forbidden", "no_access"]);
 
 /**
  * Выполняет обработчик от имени вошедшего человека.
- * Не вошёл — 401. Нет прав (AppError «forbidden») — 403.
- * Нарушено правило приложения (AppError) — 400 с понятным текстом.
+ * Не вошёл – 401. Нет прав (AppError «forbidden») – 403.
+ * Нарушено правило приложения (AppError) – 400 с понятным текстом.
  */
 export async function withUser(handler: (user: SignedInUser) => Promise<unknown>) {
   const user = await getCurrentUser();
@@ -32,8 +32,8 @@ export async function withUser(handler: (user: SignedInUser) => Promise<unknown>
 }
 
 /**
- * То же, что withUser, но для платной части приложения: без доступа по подписке — 403 «no_access».
- * Бесплатны вход, тест, дата рождения и смена имени — там используется withUser.
+ * То же, что withUser, но для платной части приложения: без доступа по подписке – 403 «no_access».
+ * Бесплатны вход, тест, дата рождения и смена имени – там используется withUser.
  */
 export async function withPaidUser(handler: (user: SignedInUser) => Promise<unknown>) {
   return withUser(async (user) => {

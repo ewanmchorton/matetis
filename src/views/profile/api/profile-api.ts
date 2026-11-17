@@ -55,7 +55,7 @@ export function useProfile() {
     } catch (error) {
       const status = (error as { status?: number }).status;
       if (status === 401) {
-        // При разработке экран открывается и без входа — через меню «Экраны».
+        // При разработке экран открывается и без входа – через меню «Экраны».
         setState(isDevelopment ? { status: "ready", data: demoProfile, demo: true } : { status: "signed-out" });
       } else {
         setState({ status: "error", message: (error as Error).message });

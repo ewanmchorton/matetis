@@ -11,7 +11,7 @@ import { routes } from "@/shared/config/routes";
 import { cn } from "@/shared/lib/utils";
 import { buttonVariants } from "@/shared/ui/button";
 
-// adminOnly — раздел не виден контент-менеджеру.
+// adminOnly – раздел не виден контент-менеджеру.
 const allNav = [
   { href: routes.admin, label: "Обзор", icon: LayoutDashboard },
   { href: routes.adminNavigator, label: "Навигатор", icon: Compass },

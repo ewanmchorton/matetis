@@ -2,7 +2,7 @@
 
 import { CurrentElementCard } from "@/features/metal-switch";
 
-/** Обзор: текущая стихия. Осенью — день перехода на Металл. */
+/** Обзор: текущая стихия. Осенью – день перехода на Металл. */
 export function AdminOverviewPage() {
   return (
     <>

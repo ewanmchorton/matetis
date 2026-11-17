@@ -1,21 +1,21 @@
 // Отправка уведомления на устройство через службу уведомлений браузера (web-push). Только серверный код.
-// Ключи — VAPID_* в .env.local (см. .env.example).
+// Ключи – VAPID_* в .env.local (см. .env.example).
 import webpush from "web-push";
 
 export type PushTarget = { endpoint: string; p256dh: string; auth: string };
 
-/** Что покажет телефон. url — что открыть по нажатию. */
+/** Что покажет телефон. url – что открыть по нажатию. */
 export type PushMessage = { title: string; body: string; url: string };
 
 let configured = false;
 
-/** Ключи для браузера: им он подписывается на уведомления. null — ключи не заданы. */
+/** Ключи для браузера: им он подписывается на уведомления. null – ключи не заданы. */
 export function getPushPublicKey(): string | null {
   return process.env.VAPID_PUBLIC_KEY || null;
 }
 
 /**
- * Отправить уведомление. "gone" — устройство отписалось или подписка устарела: её надо удалить.
+ * Отправить уведомление. "gone" – устройство отписалось или подписка устарела: её надо удалить.
  * Без ключей ничего не отправляет.
  */
 export async function sendPush(target: PushTarget, message: PushMessage): Promise<"sent" | "gone" | "skipped"> {

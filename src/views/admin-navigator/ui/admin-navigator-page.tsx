@@ -216,7 +216,7 @@ export function AdminNavigatorPage() {
       </fieldset>
 
       <div className="space-y-1.5">
-        <Label htmlFor="message-intro">Вступление — его читают на 7-й день</Label>
+        <Label htmlFor="message-intro">Вступление – его читают на 7-й день</Label>
         <Textarea
           id="message-intro"
           className="min-h-28"
@@ -232,7 +232,7 @@ export function AdminNavigatorPage() {
             Часть {index + 1} · дни {index * 2 + 1} и {index * 2 + 2}
           </legend>
           <div className="space-y-1.5">
-            <Label htmlFor={`part-${index}-title`}>Название части — его видно на карточке программы</Label>
+            <Label htmlFor={`part-${index}-title`}>Название части – его видно на карточке программы</Label>
             <Input
               id={`part-${index}-title`}
               className="h-11"
@@ -265,7 +265,7 @@ export function AdminNavigatorPage() {
               <Label htmlFor={`part-${index}-task2`}>Задание {index * 2 + 2}-го дня</Label>
               <Textarea
                 id={`part-${index}-task2`}
-                placeholder={`Пусто — как в ${index * 2 + 1}-й день`}
+                placeholder={`Пусто – как в ${index * 2 + 1}-й день`}
                 value={part.secondDayTask}
                 onChange={(event) => setPart(index, { secondDayTask: event.target.value })}
               />
@@ -275,7 +275,7 @@ export function AdminNavigatorPage() {
       ))}
 
       <div className="space-y-1.5">
-        <Label htmlFor="message-closing">Завершение — его читают на 7-й день</Label>
+        <Label htmlFor="message-closing">Завершение – его читают на 7-й день</Label>
         <Textarea
           id="message-closing"
           required
@@ -311,7 +311,7 @@ export function AdminNavigatorPage() {
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold">Навигатор</h1>
         <p className="text-sm text-muted-foreground">
-          Одно послание — на неделю: по два дня на каждую из трёх частей, на 7-й день — послание полностью, с
+          Одно послание – на неделю: по два дня на каждую из трёх частей, на 7-й день – послание полностью, с
           названием, автором, датой, вступлением и завершением. Послания идут по порядку для своих типов, потом
           сначала.
         </p>

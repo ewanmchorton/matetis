@@ -1,5 +1,5 @@
 // Уведомления администратору о доступах. Только серверный код.
-// Заявка — сразу, на каждую. Доступ скоро закончится — одна сводка в день в 10:00 по Минску,
+// Заявка – сразу, на каждую. Доступ скоро закончится – одна сводка в день в 10:00 по Минску,
 // если есть кого упомянуть; каждый человек попадает в сводку один раз за срок доступа.
 import { eq, gte, inArray } from "drizzle-orm";
 
@@ -49,7 +49,7 @@ async function notifyAdmins(message: PushMessage) {
   if (gone.length) await db.delete(pushSubscription).where(inArray(pushSubscription.endpoint, gone));
 }
 
-/** Человек прошёл тест: если доступа нет — это заявка, сразу сообщаем администратору. */
+/** Человек прошёл тест: если доступа нет – это заявка, сразу сообщаем администратору. */
 export async function notifyNewRequest(person: ContactPerson & { id: string; name: string; role?: string | null }) {
   if (await hasAccess(person)) return;
   await notifyAdmins({

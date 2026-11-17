@@ -16,7 +16,7 @@ describe("экран практики", () => {
     expect(numberedSteps("1. Первый шаг.\nИ просто строка.")).toBeNull();
   });
 
-  it("внутренняя улыбка открывается с плеером, мини-зарядка — не открывается", () => {
+  it("внутренняя улыбка открывается с плеером, мини-зарядка – не открывается", () => {
     const [smile, exercise] = demoProgram().morning;
     expect(isAudioPractice(smile)).toBe(true);
     expect(opensPracticeScreen(exercise)).toBe(false);

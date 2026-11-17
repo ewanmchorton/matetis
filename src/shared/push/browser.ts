@@ -1,6 +1,6 @@
 // Уведомления в браузере: поддержка, разрешение и подписка этого устройства. Только для экранов.
 
-/** Ключ из base64url в байты — так его принимает pushManager.subscribe. */
+/** Ключ из base64url в байты – так его принимает pushManager.subscribe. */
 export function keyBytes(base64: string): Uint8Array<ArrayBuffer> {
   const normalized = (base64 + "=".repeat((4 - (base64.length % 4)) % 4)).replace(/-/g, "+").replace(/_/g, "/");
   const binary = atob(normalized);
@@ -9,7 +9,7 @@ export function keyBytes(base64: string): Uint8Array<ArrayBuffer> {
   return bytes;
 }
 
-/** Умеет ли браузер получать уведомления. На iPhone — только приложение, добавленное на экран «Домой». */
+/** Умеет ли браузер получать уведомления. На iPhone – только приложение, добавленное на экран «Домой». */
 export function pushSupported() {
   return typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
 }

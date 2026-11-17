@@ -1,5 +1,5 @@
 // Доступ к приложению по подписке. Раздел «Доступ» в docs/data-model.md.
-// Каждое открытие и продление — отдельный период. Связь с человеком — по контакту (почта или @ник в Telegram):
+// Каждое открытие и продление – отдельный период. Связь с человеком – по контакту (почта или @ник в Telegram):
 // админ может открыть доступ до того, как человек зарегистрировался.
 import { sql } from "drizzle-orm";
 import { boolean, check, index, integer, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
@@ -16,7 +16,7 @@ export const accessPeriod = pgTable(
   "access_period",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    /** Почта, @ник или tg:номер в Telegram — строчными, см. src/shared/auth/contact.ts. */
+    /** Почта, @ник или tg:номер в Telegram – строчными, см. src/shared/auth/contact.ts. */
     contact: text("contact").notNull(),
     startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
     endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),

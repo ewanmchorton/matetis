@@ -21,26 +21,26 @@ const ua = {
 };
 
 describe("Устройство для инструкции по установке", () => {
-  it("Safari и Chrome на iPhone — iphone", () => {
+  it("Safari и Chrome на iPhone – iphone", () => {
     expect(detectDevice(ua.iphoneSafari, 5)).toBe("iphone");
     expect(detectDevice(ua.iphoneChrome, 5)).toBe("iphone");
   });
 
-  it("iPad, который представляется Mac, — iphone", () => {
+  it("iPad, который представляется Mac, – iphone", () => {
     expect(detectDevice(ua.ipad, 5)).toBe("iphone");
   });
 
-  it("Chrome на Android — android", () => {
+  it("Chrome на Android – android", () => {
     expect(detectDevice(ua.androidChrome, 5)).toBe("android");
   });
 
-  it("браузер внутри Telegram и Instagram — inApp", () => {
+  it("браузер внутри Telegram и Instagram – inApp", () => {
     expect(detectDevice(ua.iphoneTelegram, 5)).toBe("inApp");
     expect(detectDevice(ua.iphoneInstagram, 5)).toBe("inApp");
     expect(detectDevice(ua.androidTelegram, 5)).toBe("inApp");
   });
 
-  it("компьютер — other", () => {
+  it("компьютер – other", () => {
     expect(detectDevice(ua.macChrome, 0)).toBe("other");
   });
 });
@@ -48,13 +48,13 @@ describe("Устройство для инструкции по установк
 describe("Ссылка «Открыть в браузере»", () => {
   const url = new URL("https://example.com/matetis/onboarding/?a=1");
 
-  it("Android — intent-ссылка на Chrome", () => {
+  it("Android – intent-ссылка на Chrome", () => {
     expect(openInBrowserUrl("android", url)).toBe(
       "intent://example.com/matetis/onboarding/?a=1#Intent;scheme=https;package=com.android.chrome;end",
     );
   });
 
-  it("iPhone — схема Safari", () => {
+  it("iPhone – схема Safari", () => {
     expect(openInBrowserUrl("iphone", url)).toBe("x-safari-https://example.com/matetis/onboarding/?a=1");
   });
 });

@@ -1,7 +1,7 @@
 import { formatDay, type AccessStatusDto } from "@/entities/access";
 import { cn } from "@/shared/lib/utils";
 
-/** Цвет и текст статуса: зелёный — идёт, жёлтый — скоро закончится, красный — закончился, синий — заявка. */
+/** Цвет и текст статуса: зелёный – идёт, жёлтый – скоро закончится, красный – закончился, синий – заявка. */
 export function statusView(status: AccessStatusDto): { label: string; className: string } {
   switch (status.kind) {
     case "active":

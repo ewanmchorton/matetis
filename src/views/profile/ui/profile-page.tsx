@@ -52,7 +52,7 @@ export function ProfilePage() {
         <GlassCard aria-label="Вы и друзья" className="space-y-4">
           <h2 className="type-section">{state.data.me.name}</h2>
           {state.demo && !isStaticPrototype && (
-            <p className="type-caption text-muted-foreground">{typograph("Вы не вошли — показаны демо-данные.")}</p>
+            <p className="type-caption text-muted-foreground">{typograph("Вы не вошли – показаны демо-данные.")}</p>
           )}
           <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3">
             <span className="type-secondary text-muted-foreground">{typograph("Делиться прогрессом с друзьями")}</span>
@@ -118,7 +118,7 @@ function SettingRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-// Ниже — разделы, которые пока работают на данных прототипа в браузере.
+// Ниже – разделы, которые пока работают на данных прототипа в браузере.
 // Их подключат к серверу на этапах 5–7 (тест и тип, программа, статистика).
 
 function ProgressSections() {
@@ -247,7 +247,7 @@ function ProfileRituals({ ritualMarks }: { ritualMarks: Record<string, string[]>
   );
 }
 
-/** children — пункты, которые хранятся на сервере (фраза дня). */
+/** children – пункты, которые хранятся на сервере (фраза дня). */
 function Reminders({ children }: { children?: ReactNode }) {
   const [morning, setMorning] = useState(true);
   const [evening, setEvening] = useState(false);
@@ -259,11 +259,11 @@ function Reminders({ children }: { children?: ReactNode }) {
       </h2>
       <label className="flex min-h-11 cursor-pointer items-center gap-3">
         <Checkbox className={checkboxClass} aria-label="Утреннее напоминание" checked={morning} onCheckedChange={(v) => setMorning(v === true)} />
-        <span className="type-secondary text-foreground">{typograph("Утром — напоминание о практике дня")}</span>
+        <span className="type-secondary text-foreground">{typograph("Утром – напоминание о практике дня")}</span>
       </label>
       <label className="flex min-h-11 cursor-pointer items-center gap-3">
         <Checkbox className={checkboxClass} aria-label="Вечернее напоминание" checked={evening} onCheckedChange={(v) => setEvening(v === true)} />
-        <span className="type-secondary text-foreground">{typograph("Вечером — размышление или медитация")}</span>
+        <span className="type-secondary text-foreground">{typograph("Вечером – размышление или медитация")}</span>
       </label>
       {children}
     </GlassCard>

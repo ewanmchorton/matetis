@@ -5,7 +5,7 @@ import { useSyncExternalStore } from "react";
 /**
  * Простое хранилище в localStorage с подпиской для React.
  * На сервере и при первой отрисовке возвращает исходные данные (seed),
- * в браузере — сохранённые. Открытые вкладки синхронизируются через событие storage.
+ * в браузере – сохранённые. Открытые вкладки синхронизируются через событие storage.
  */
 export function createLocalStore<T>(storageKey: string, seed: T) {
   let state: T = seed;
@@ -37,7 +37,7 @@ export function createLocalStore<T>(storageKey: string, seed: T) {
     try {
       window.localStorage.setItem(storageKey, JSON.stringify(state));
     } catch {
-      // Хранилище браузера недоступно — работаем только в памяти.
+      // Хранилище браузера недоступно – работаем только в памяти.
     }
     listeners.forEach((l) => l());
   }

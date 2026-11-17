@@ -63,7 +63,7 @@ function TogetherContent() {
               </li>
               <li className="flex items-center justify-between gap-3">
                 <span>{friend?.name}</span>
-                <span className="text-muted-foreground">{item.theirDone ? "готово" : "—"}</span>
+                <span className="text-muted-foreground">{item.theirDone ? "готово" : "–"}</span>
               </li>
             </ul>
           </section>

@@ -24,8 +24,8 @@ const daypartNames = { morning: "Утро", evening: "Вечер" } as const;
 const PLACEHOLDER_AUDIO_SECONDS = 5 * 60;
 
 /**
- * Экран практики. «Мышление по навигатору дня» — текст и заметки для себя;
- * практика с аудио («Внутренняя улыбка») — плеер и текст, без заметок.
+ * Экран практики. «Мышление по навигатору дня» – текст и заметки для себя;
+ * практика с аудио («Внутренняя улыбка») – плеер и текст, без заметок.
  */
 export function PracticePage({ practiceId }: { practiceId: string }) {
   const router = useRouter();
@@ -136,7 +136,7 @@ export function PracticePage({ practiceId }: { practiceId: string }) {
   );
 }
 
-/** Пронумерованные шаги — списком с отступом под номером, остальное — абзацем. */
+/** Пронумерованные шаги – списком с отступом под номером, остальное – абзацем. */
 function PracticeText({ body }: { body: string }) {
   const steps = numberedSteps(body);
   if (!steps) return <p className="type-body whitespace-pre-line text-foreground">{typograph(body)}</p>;

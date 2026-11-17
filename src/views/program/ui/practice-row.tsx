@@ -9,7 +9,7 @@ import { Checkbox } from "@/shared/ui/checkbox";
 const checkboxClass = "size-6 rounded-md border-primary/40 bg-background/70 [&_svg]:size-4!";
 
 /**
- * Строка практики: галочка «сделано», название, подпись. Стрелка — если у практики свой экран (href).
+ * Строка практики: галочка «сделано», название, подпись. Стрелка – если у практики свой экран (href).
  * Без onDone галочку нажать нельзя: отметка ставится на экране практики.
  */
 export function PracticeRow({

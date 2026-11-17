@@ -1,6 +1,6 @@
 // Создаёт тестовых людей: Анна и Борис дружат, Ольга прислала Анне запрос в друзья.
 // Чтобы посмотреть данные в pnpm db:studio или войти Анной и открыть профиль.
-// Всем троим открыт доступ на месяц от запуска. Вход — по коду, письмо приходит в Mailpit: http://localhost:8025.
+// Всем троим открыт доступ на месяц от запуска. Вход – по коду, письмо приходит в Mailpit: http://localhost:8025.
 // Запуск: pnpm db:seed-friends
 // Повторный запуск ничего не дублирует. Только для локальной базы.
 import { randomUUID } from "node:crypto";
@@ -10,7 +10,7 @@ import pg from "pg";
 try {
   process.loadEnvFile(".env.local");
 } catch {
-  // Файла нет — берём DATABASE_URL из окружения.
+  // Файла нет – берём DATABASE_URL из окружения.
 }
 
 const databaseUrl = process.env.DATABASE_URL;
@@ -77,7 +77,7 @@ try {
   }
   await client.query("commit");
   console.log("Готово: Анна Тестовая и Борис Тестовый дружат, Ольга Тестовая прислала Анне запрос.");
-  console.log(`Почты: ${people.map((p) => p.email).join(", ")}. Вход по коду, письма — в http://localhost:8025.`);
+  console.log(`Почты: ${people.map((p) => p.email).join(", ")}. Вход по коду, письма – в http://localhost:8025.`);
 } catch (error) {
   await client.query("rollback");
   throw error;

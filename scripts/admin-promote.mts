@@ -1,13 +1,13 @@
 // Назначает роль сотрудника существующему человеку.
-// Запуск: pnpm admin:promote <email> — администратор,
-//         pnpm admin:promote <email> content_manager — контент-менеджер.
+// Запуск: pnpm admin:promote <email> – администратор,
+//         pnpm admin:promote <email> content_manager – контент-менеджер.
 // Работает только там, где есть доступ к базе (переменная DATABASE_URL).
 import pg from "pg";
 
 try {
   process.loadEnvFile(".env.local");
 } catch {
-  // Файла нет — на сервере DATABASE_URL задаётся в окружении.
+  // Файла нет – на сервере DATABASE_URL задаётся в окружении.
 }
 
 const email = process.argv[2]?.trim().toLowerCase();

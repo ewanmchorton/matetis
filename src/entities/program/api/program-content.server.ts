@@ -25,7 +25,7 @@ export type PracticeVariant = {
   body: string;
   audioPath: string | null;
   videoUrl: string | null;
-  /** Ни одного — всем типам. */
+  /** Ни одного – всем типам. */
   typeIds: string[];
   weakElement: ElementId | null;
   seasonElement: ElementId | null;
@@ -62,7 +62,7 @@ function wholeNumber(value: unknown, min: number, fallback: number): number {
 function youTubeUrl(value: unknown): string | null {
   const videoUrl = optionalText(value);
   if (videoUrl && !/^https:\/\/(www\.)?(youtube\.com|youtu\.be)\//.test(videoUrl)) {
-    throw new AppError("invalid_video", "Видео — ссылка на YouTube");
+    throw new AppError("invalid_video", "Видео – ссылка на YouTube");
   }
   return videoUrl;
 }
@@ -220,7 +220,7 @@ function messageParts(input: unknown) {
   });
 }
 
-/** «2006-07-04» — настоящая дата; иначе ошибка. */
+/** «2006-07-04» – настоящая дата; иначе ошибка. */
 function messageDate(input: unknown): string {
   const value = typeof input === "string" ? input.trim() : "";
   const valid = /^\d{4}-\d{2}-\d{2}$/.test(value) && new Date(`${value}T00:00:00Z`).toISOString().startsWith(value);
@@ -307,7 +307,7 @@ export const programVideoSlots = ["welcome", "water", "wood", "fire", "earth", "
 export type ProgramVideoSlot = (typeof programVideoSlots)[number];
 export type ProgramVideo = { slot: ProgramVideoSlot; videoUrl: string | null; body: string };
 
-/** Все видео библиотеки по порядку; незаполненные — пустые. */
+/** Все видео библиотеки по порядку; незаполненные – пустые. */
 export async function listProgramVideosForStaff(viewerId: string): Promise<ProgramVideo[]> {
   await assertStaff(viewerId);
   const rows = await db.select().from(programVideo);

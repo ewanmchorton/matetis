@@ -45,7 +45,7 @@ function Paragraphs({ text }: { text: string }) {
 
 const partTitleClass = "font-display text-[26px] leading-[1.2] font-medium text-foreground";
 
-/** Экран навигатора дня: часть послания (на 7-й день — послание полностью), источник, задание, «Прочитано». */
+/** Экран навигатора дня: часть послания (на 7-й день – послание полностью), источник, задание, «Прочитано». */
 export function NavigatorPage() {
   const router = useRouter();
   const [state, setState] = useState<State>({ status: "loading" });
@@ -54,7 +54,7 @@ export function NavigatorPage() {
 
   useEffect(() => {
     if (isStaticPrototype) {
-      // На GitHub Pages сервера нет — показываем послание-пример.
+      // На GitHub Pages сервера нет – показываем послание-пример.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setState({ status: "ready", navigator: demoProgram().navigator });
       return;

@@ -1,13 +1,13 @@
 import type { Element, ElementGuide, ElementId } from "../model/types";
 
-// Демо-данные. Прототип собран под стихию Воды (запуск программы — 1 декабря).
+// Демо-данные. Прототип собран под стихию Воды (запуск программы – 1 декабря).
 const elements: Element[] = [
   {
     id: "wood",
     name: "Дерево",
     genitive: "Дерева",
     season: "Весна",
-    period: "март — май",
+    period: "март – май",
     tone: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200",
     hasContent: false,
   },
@@ -16,7 +16,7 @@ const elements: Element[] = [
     name: "Огонь",
     genitive: "Огня",
     season: "Лето",
-    period: "июнь — август",
+    period: "июнь – август",
     tone: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-200",
     hasContent: false,
   },
@@ -43,7 +43,7 @@ const elements: Element[] = [
     name: "Вода",
     genitive: "Воды",
     season: "Зима",
-    period: "декабрь — февраль",
+    period: "декабрь – февраль",
     tone: "bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-200",
     hasContent: true,
   },
@@ -53,10 +53,10 @@ const guides: ElementGuide[] = [
   {
     elementId: "water",
     title: "Вода: покой, почки и внутренняя опора",
-    summary: "Зима, глубина и бережное отношение к почкам — без форсирования себя.",
+    summary: "Зима, глубина и бережное отношение к почкам – без форсирования себя.",
     videoTitle: "Вводное слово о даосской стихии Воды",
     videoDuration: "20 мин",
-    text: "В даосской пятёрке стихий Вода — зима, Север, глубина и сила почек. Её эмоция — страх, которому на смену приходит мудрость, если мы не форсируем себя. Сейчас полезны тишина, согревание, мягкое движение и практики вроде внутренней улыбки.",
+    text: "В даосской пятёрке стихий Вода – зима, Север, глубина и сила почек. Её эмоция – страх, которому на смену приходит мудрость, если мы не форсируем себя. Сейчас полезны тишина, согревание, мягкое движение и практики вроде внутренней улыбки.",
     books: [
       { title: "Дао дэ цзин", author: "Лао-цзы" },
       { title: "Цигун для начинающих", author: "Мантак Чиа" },
@@ -69,7 +69,7 @@ const guides: ElementGuide[] = [
   },
 ];
 
-/** Активная стихия в прототипе. С 1 декабря — Вода (см. period у элемента). */
+/** Активная стихия в прототипе. С 1 декабря – Вода (см. period у элемента). */
 export const currentElementId: ElementId = "water";
 
 export function getElements(): Element[] {

@@ -65,7 +65,7 @@ function emptyDraft(frequency: Frequency, position: number): Draft {
   };
 }
 
-/** Кому достаётся вариант — коротко для заголовка. */
+/** Кому достаётся вариант – коротко для заголовка. */
 function variantAudience(variant: Variant) {
   const parts = [
     variant.typeIds.length > 0
@@ -89,8 +89,8 @@ function VariantsEditor({ variants, onChange }: { variants: Variant[]; onChange:
     <fieldset className="space-y-3">
       <legend className="text-sm font-medium">Варианты</legend>
       <p className="text-xs text-muted-foreground">
-        Нет вариантов — текст выше видят все. Есть варианты — человек видит подходящий ему, а если не подошёл ни
-        один, практики у него нет. Типы не отмечены — вариант для всех типов.
+        Нет вариантов – текст выше видят все. Есть варианты – человек видит подходящий ему, а если не подошёл ни
+        один, практики у него нет. Типы не отмечены – вариант для всех типов.
       </p>
       {variants.map((variant, index) => (
         <div key={index} className="space-y-3 rounded-xl border bg-background p-4">
@@ -177,7 +177,7 @@ function VariantsEditor({ variants, onChange }: { variants: Variant[]; onChange:
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor={`variant-${index}-video`}>Видео — ссылка на YouTube</Label>
+            <Label htmlFor={`variant-${index}-video`}>Видео – ссылка на YouTube</Label>
             <Input
               id={`variant-${index}-video`}
               className="h-11"
@@ -327,7 +327,7 @@ export function PracticesEditor({ frequency }: { frequency: Frequency }) {
         />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="practice-video">Видео — ссылка на YouTube</Label>
+        <Label htmlFor="practice-video">Видео – ссылка на YouTube</Label>
         <Input
           id="practice-video"
           className="h-11"
@@ -344,7 +344,7 @@ export function PracticesEditor({ frequency }: { frequency: Frequency }) {
           checked={draft.newEachWeek}
           onChange={(event) => setDraft({ ...draft, newEachWeek: event.target.checked })}
         />
-        Каждую неделю новый вариант — по порядку, потом по кругу
+        Каждую неделю новый вариант – по порядку, потом по кругу
       </label>
       {frequency === "weekly" && (
         <div className="space-y-1.5">

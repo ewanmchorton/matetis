@@ -19,12 +19,12 @@ import { ScreenLayout } from "@/widgets/screen-layout";
 
 type ResultState = { status: "loading" } | { status: "error"; message: string } | { status: "ready"; type: PersonType };
 
-/** Тип с сервера. Без сервера и при разработке без входа — из браузера. */
+/** Тип с сервера. Без сервера и при разработке без входа – из браузера. */
 function useMyType(): ResultState {
   const router = useRouter();
   const isClient = useIsClient();
   const { typeId } = useProgress();
-  // Из меню экранов (?demo=request) результат показывается и без пройденного теста — на примере первого типа.
+  // Из меню экранов (?demo=request) результат показывается и без пройденного теста – на примере первого типа.
   const isDemo = isClient && new URLSearchParams(window.location.search).has("demo");
   const localType = typeId ? getPersonType(typeId) : isDemo ? getPersonTypes()[0] : undefined;
   const [state, setState] = useState<ResultState | { status: "local" }>({ status: "loading" });
@@ -58,7 +58,7 @@ export function TypeResultPage() {
   const accessState = useMyAccess();
   const element = getCurrentElement();
   const access = accessState.status === "ready" ? accessState.access : null;
-  // Без доступа вместо кнопки — контакт администратора в карточке программы.
+  // Без доступа вместо кнопки – контакт администратора в карточке программы.
   const withAccess = access ? hasAccessNow(access.status) : null;
 
   return (

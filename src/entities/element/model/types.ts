@@ -15,7 +15,7 @@ export type Element = {
 export type ElementGuide = {
   elementId: ElementId;
   title: string;
-  /** Одна-две строки на главной, полный текст — в карточке */
+  /** Одна-две строки на главной, полный текст – в карточке */
   summary: string;
   videoTitle: string;
   videoDuration: string;

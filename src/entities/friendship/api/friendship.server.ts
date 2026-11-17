@@ -10,7 +10,7 @@ import { AppError } from "@/shared/lib/app-error";
 export type PublicPerson = {
   id: string;
   name: string;
-  /** Адрес картинки или null — тогда экран показывает первую букву имени. */
+  /** Адрес картинки или null – тогда экран показывает первую букву имени. */
   avatar: string | null;
 };
 
@@ -66,7 +66,7 @@ export async function searchPeople(viewerId: string, query: string): Promise<Pub
     .limit(SEARCH_LIMIT);
 }
 
-/** Публичный профиль: имя, аватар и отношение к смотрящему. null — такого человека нет. */
+/** Публичный профиль: имя, аватар и отношение к смотрящему. null – такого человека нет. */
 export async function getPublicProfile(
   viewerId: string,
   personId: string,
@@ -92,7 +92,7 @@ export async function getPublicProfile(
 
 /**
  * Отправить запрос в друзья.
- * Если этот человек уже прислал запрос мне — запрос сразу принимается.
+ * Если этот человек уже прислал запрос мне – запрос сразу принимается.
  * После отклонения запрос можно отправить снова.
  */
 export async function sendFriendRequest(viewerId: string, personId: string): Promise<FriendshipStatus> {

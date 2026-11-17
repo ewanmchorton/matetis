@@ -24,7 +24,7 @@ import { GlassCard } from "@/shared/ui/glass-card";
 import { backgroundSrc, ScreenLayout, type ScreenBackground } from "@/widgets/screen-layout";
 
 type Slide = {
-  /** page — заголовок сверху, картинка видна целиком под карточками (как в макете 02_3). */
+  /** page – заголовок сверху, картинка видна целиком под карточками (как в макете 02_3). */
   variant?: "hero" | "page";
   background: ScreenBackground;
   /** Текст узкой колонкой по центру, вписан в картинку. */
@@ -109,7 +109,7 @@ const slides: Slide[] = [
         </p>
         <p>
           {typograph(
-            "Матэтис — тот, кто обладает таким способом мышления, который может делить всё сложное на простые элементы, классифицировать их, выстраивая в чёткую схему, а затем синтезировать.",
+            "Матэтис – тот, кто обладает таким способом мышления, который может делить всё сложное на простые элементы, классифицировать их, выстраивая в чёткую схему, а затем синтезировать.",
           )}
         </p>
       </div>
@@ -123,7 +123,7 @@ const slides: Slide[] = [
   },
   {
     background: "02_2_onboard",
-    title: "5 стихий — 5 сезонов",
+    title: "5 стихий – 5 сезонов",
     textGlow: true,
     subtitle: "Стихии сменяются вместе со временем года, а с ними обновляется и ваша программа.",
     after: <ElementsList />,
@@ -166,7 +166,7 @@ function InstallScreen() {
   const [help, setHelp] = useState(false);
   const device = detectDevice(navigator.userAgent, navigator.maxTouchPoints);
 
-  // Экран установки считается показом напоминания: следующее — не раньше чем через 3 дня.
+  // Экран установки считается показом напоминания: следующее – не раньше чем через 3 дня.
   useEffect(() => saveReminderState(markShown("onboarding", readReminderState(), Date.now())), []);
   const cards =
     device === "iphone"
@@ -181,7 +181,7 @@ function InstallScreen() {
     if (!(await install.prompt())) setHelp(true);
   }
 
-  // Встроенный браузер: на iPhone пробуем открыть Safari, на Android — Chrome.
+  // Встроенный браузер: на iPhone пробуем открыть Safari, на Android – Chrome.
   const inAppPhone = /Android/.test(navigator.userAgent) ? "android" : "iphone";
   const mainAction =
     device === "inApp" ? (
@@ -236,7 +236,7 @@ function InstallScreen() {
 }
 
 /**
- * Листание касанием, как в сторис: правая половина экрана — вперёд, левая — назад.
+ * Листание касанием, как в сторис: правая половина экрана – вперёд, левая – назад.
  * Свайп влево и вправо тоже листает. Кнопки и ссылки работают как обычно.
  */
 function TapNavigation({ onNext, onBack, children }: { onNext?: () => void; onBack?: () => void; children: ReactNode }) {
@@ -263,7 +263,7 @@ function TapNavigation({ onNext, onBack, children }: { onNext?: () => void; onBa
 
   return (
     <div
-      // Safari на iPhone подсвечивает нажатый блок серым — здесь блок на весь экран, подсветка не нужна.
+      // Safari на iPhone подсвечивает нажатый блок серым – здесь блок на весь экран, подсветка не нужна.
       className="flex flex-1 flex-col [-webkit-tap-highlight-color:transparent]"
       onClick={onClick}
       onTouchStart={(event) => {
@@ -278,7 +278,7 @@ function TapNavigation({ onNext, onBack, children }: { onNext?: () => void; onBa
 
 /**
  * Онбординг: показывается один раз, сразу после регистрации.
- * Последний экран — установка на «Домой», без точек шагов.
+ * Последний экран – установка на «Домой», без точек шагов.
  * После входа (в том числе в установленном приложении) человек попадает в тест или программу, а не сюда.
  */
 export function OnboardingPage() {
@@ -329,7 +329,7 @@ export function OnboardingPage() {
         }
         title={slide.title}
         subtitle={slide.subtitle}
-        // Последняя точка — экран установки: на нём самом точек нет.
+        // Последняя точка – экран установки: на нём самом точек нет.
         steps={{ count: slides.length + 1, current: index }}
         actions={
           <Button size="cta" onClick={next}>

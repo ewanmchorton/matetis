@@ -13,7 +13,7 @@ export function countInLastDays(days: string[], today: Date, n = WINDOW_DAYS): n
 }
 
 /**
- * Отметки ритуалов за последние n дней. У недельных ритуалов ключ — понедельник
+ * Отметки ритуалов за последние n дней. У недельных ритуалов ключ – понедельник
  * текущей недели, он всегда попадает в окно из 7 дней.
  */
 export function countRitualMarksInLastDays(
@@ -33,10 +33,10 @@ export function pluralRu(n: number, one: string, few: string, many: string): str
 }
 
 function encouragement(practices: number): string {
-  if (practices === 0) return "Когда будет удобно — отметьте практику дня.";
-  if (practices === 1) return "Вы уже нашли время для себя — это хорошее начало.";
-  if (practices <= 3) return "Спокойный, хороший ритм — так держать.";
-  return "Вы уделяете практике много внимания — это заметно.";
+  if (practices === 0) return "Когда будет удобно – отметьте практику дня.";
+  if (practices === 1) return "Вы уже нашли время для себя – это хорошее начало.";
+  if (practices <= 3) return "Спокойный, хороший ритм – так держать.";
+  return "Вы уделяете практике много внимания – это заметно.";
 }
 
 const BADGE_THRESHOLD = 0.7;

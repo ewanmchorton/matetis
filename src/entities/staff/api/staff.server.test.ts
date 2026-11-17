@@ -65,7 +65,7 @@ describe("Назначение сотрудников", () => {
     ).rejects.toThrow("не зарегистрирован");
   });
 
-  it("вернуть в ученики — пароль удаляется", async () => {
+  it("вернуть в ученики – пароль удаляется", async () => {
     await setStaffRole(admin, { email: "maria@example.ru", role: "content_manager", password: "секретный1" });
     await setStaffRole(admin, { email: "maria@example.ru", role: "user" });
     expect(await roleOf(maria)).toBe("user");

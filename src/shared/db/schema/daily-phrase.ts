@@ -13,7 +13,7 @@ export const dailyPhrase = pgTable("daily_phrase", {
 
 /**
  * Каким типам подходит фраза (id типа: t1–t12, src/entities/person-type).
- * Нет ни одной строки — фраза подходит всем.
+ * Нет ни одной строки – фраза подходит всем.
  */
 export const dailyPhraseType = pgTable(
   "daily_phrase_type",
@@ -28,7 +28,7 @@ export const dailyPhraseType = pgTable(
 
 /**
  * Фраза дня человеку: на какой день по его часам, когда отправить и что ушло.
- * Одна строка на человека в день — так фраза не придёт дважды.
+ * Одна строка на человека в день – так фраза не придёт дважды.
  */
 export const dailyPhraseDelivery = pgTable(
   "daily_phrase_delivery",

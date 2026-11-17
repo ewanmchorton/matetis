@@ -46,7 +46,7 @@ export function PhraseSettings({
 
   async function toggle(on: boolean) {
     await onChange({ phraseNotifications: on });
-    // Включили фразу, а телефон ещё не разрешал уведомления — сразу спрашиваем: нажатие уже было.
+    // Включили фразу, а телефон ещё не разрешал уведомления – сразу спрашиваем: нажатие уже было.
     if (on && device === "off" && !demo) await allowOnDevice();
   }
 
