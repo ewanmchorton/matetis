@@ -16,7 +16,7 @@ PNG, 1290 × 2796 px, без элементов интерфейса. Один �
 | `03_birth bg.png` | `03_birth` – шаг теста «Дата рождения» |
 | `03_result.png` | `03_5_res` – результат теста |
 | `04_expired bg.PNG` | `04_expired` – «Срок подписки истёк» |
-| `05_together.png` | `05_vmeste` – «Вместе» |
+| `08_together.png` | `08_together-design` – «Вместе» и панель «Предложить практику». Вынут из HTML дизайнера, 852 × 1846 px |
 | `09_01_profile bg.png` | `07_profile upd` – профиль со спутником |
 | `09_02_friend profile.png` | `09_friend` – профиль друга |
 | `07_harmony transition 2.PNG` | `07_transition` – превращение спутника (занавеси) |
