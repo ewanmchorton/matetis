@@ -11,7 +11,7 @@ const seedPractices: DailyPractice[] = [
   {
     id: "water-koan-day",
     elementId: "water",
-    title: "Коан дня",
+    title: "Медитация на качество «Верность»",
     duration: "5 мин",
     summary: "Одна короткая формула для размышления.",
     steps: [
@@ -95,7 +95,7 @@ type PracticeCatalog = {
   support: SupportPractice[];
 };
 
-const store = createLocalStore<PracticeCatalog>("matetis-demo-practices-v4", {
+const store = createLocalStore<PracticeCatalog>("matetis-demo-practices-v5", {
   practices: seedPractices,
   rituals: seedRituals,
   support: seedSupport,

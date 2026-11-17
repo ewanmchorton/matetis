@@ -45,7 +45,7 @@ function TogetherContent() {
           <section key={item.id} className="space-y-3 rounded-2xl bg-primary/10 p-4 ring-1 ring-primary/15">
             <div className="space-y-0.5">
               <p className="text-xs font-medium text-primary">Совместная практика</p>
-              <h2 className="text-lg font-semibold leading-snug">{item.practiceTitle}</h2>
+              <h2 className="text-lg font-semibold leading-snug">{typograph(item.practiceTitle)}</h2>
               <p className="text-sm text-muted-foreground">
                 {typograph(`${friend?.name ?? "Друг"} · до ${deadline}`)}
               </p>
@@ -116,7 +116,7 @@ function TogetherContent() {
         return (
           <section key={item.id} className="space-y-2 rounded-2xl border bg-card p-3">
             <p className="text-sm font-medium">
-              {friend?.name} · «{item.practiceTitle}»
+              {typograph(`${friend?.name ?? "Друг"} · ${item.practiceTitle}`)}
             </p>
             <p className="text-xs text-muted-foreground">
               {typograph("Семь дней с того дня, когда вы примете.")}

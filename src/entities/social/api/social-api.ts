@@ -20,7 +20,7 @@ const seed: SocialState = {
     {
       id: "inv-marina",
       practiceId: "water-koan-day",
-      practiceTitle: "Коан дня",
+      practiceTitle: "Медитация на качество «Верность»",
       friendId: "marina",
       direction: "outgoing",
       status: "accepted",
@@ -30,7 +30,7 @@ const seed: SocialState = {
     {
       id: "inv-igor",
       practiceId: "water-koan-day",
-      practiceTitle: "Коан дня",
+      practiceTitle: "Медитация на качество «Верность»",
       friendId: "igor",
       direction: "incoming",
       status: "pending",
@@ -40,7 +40,7 @@ const seed: SocialState = {
   ],
 };
 
-const store = createLocalStore<SocialState>("matetis-demo-social-v2", seed);
+const store = createLocalStore<SocialState>("matetis-demo-social-v3", seed);
 
 export function useSocial(): SocialState {
   return store.useStore();
