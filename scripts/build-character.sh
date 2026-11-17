@@ -1,8 +1,8 @@
 #!/bin/bash
 # Картинки спутника для приложения: из design/character в public/character. Нужен macOS (sips).
 #   stage N.PNG  → stage-N.png – в полный рост, 800 px;
-#   avatar N.PNG → avatar-N.png – кружок, 256 px. Пока кружков от дизайнера нет,
-#   кружок вырезается из stage N: голова и плечи, как в макете профиля.
+#   ava N.PNG (или avatar N.PNG) → avatar-N.png – кружок, 256 px.
+#   Пока кружка нет, он вырезается из stage N: голова и плечи, как в макете профиля.
 # Запуск: bash scripts/build-character.sh
 set -euo pipefail
 
@@ -24,7 +24,8 @@ for n in 1 2 3 4 5 6; do
   [ -n "$stage" ] || { echo "Нет $src/stage $n.PNG" >&2; exit 1; }
   sips -Z 800 "$stage" --out "$out/stage-$n.png" >/dev/null
 
-  avatar=$(find_file avatar "$n")
+  avatar=$(find_file ava "$n")
+  [ -n "$avatar" ] || avatar=$(find_file avatar "$n")
   if [ -n "$avatar" ]; then
     sips -Z 256 "$avatar" --out "$out/avatar-$n.png" >/dev/null
   else

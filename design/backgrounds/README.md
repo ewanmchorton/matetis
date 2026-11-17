@@ -28,7 +28,7 @@ PNG, 1290 × 2796 px, без элементов интерфейса. Один �
 
 ## Спутник
 
-Картинки персонажа – в `design/character`: `stage 1–6.PNG` в полный рост, позже `avatar 1–6.PNG` для кружков. В приложение их переносит `bash scripts/build-character.sh` (в `public/character`). Пока кружков нет, скрипт вырезает их из `stage N`.
+Картинки персонажа – в `design/character`: `stage 1–6.PNG` в полный рост и `ava 1–6.PNG` для кружков. В приложение их переносит `bash scripts/build-character.sh` (в `public/character`). Если кружка нет, скрипт вырезает его из `stage N`.
 
 ## Стихия Земля
 
