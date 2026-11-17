@@ -5,7 +5,9 @@
 // Всем открыт доступ на месяц, программа начата 20 дней назад.
 // Нужны практики программы: сначала pnpm db:seed-program.
 // Запуск: pnpm db:seed-together
-// Повторный запуск пересоздаёт совместные практики и события только этих тестовых людей. Только для локальной базы.
+// Если в базе есть Ваня с Telegram @ivanmahortov, он тоже становится другом этих людей
+// и получает приглашение от Ольги. Повторный запуск пересоздаёт совместные практики и события
+// только этих тестовых людей. Только для локальной базы.
 // Вход – по коду, письмо приходит в Mailpit: http://localhost:8025.
 import { randomUUID } from "node:crypto";
 
@@ -186,10 +188,39 @@ try {
   // Вера уже поддержала Дину.
   await client.query("insert into feed_reaction (event_id, user_id) values ($1, $2)", [together, id.vera]);
 
+  // Аккаунт Вани (вход через Telegram @ivanmahortov): те же друзья и события,
+  // плюс приглашение от Ольги, чтобы вкладка «Вместе» была заполнена.
+  const vanya = await client.query<{ id: string }>(
+    `select id from "user" where telegram_username = 'ivanmahortov'`,
+  );
+  if (vanya.rowCount) {
+    const vanyaId = vanya.rows[0].id;
+    for (const key of ["anna", "boris", "olga", "dina"] as const) {
+      await client.query(
+        `insert into friend_request (from_user_id, to_user_id, status, responded_at)
+         values ($1, $2, 'accepted', now())
+         on conflict (least(from_user_id, to_user_id), greatest(from_user_id, to_user_id))
+         do update set status = 'accepted', responded_at = now()`,
+        [vanyaId, id[key]],
+      );
+    }
+    const forVanya = await client.query<{ id: string }>(
+      `insert into joint_practice (practice_id, source, invited_by, created_at)
+       values ($1, 'invite', $2, now() - interval '1 hour') returning id`,
+      [smile, id.olga],
+    );
+    await client.query(
+      `insert into joint_practice_member (joint_id, user_id, accepted_at)
+       values ($1, $2, now() - interval '1 hour'), ($1, $3, null)`,
+      [forVanya.rows[0].id, id.olga, vanyaId],
+    );
+  }
+
   await client.query("commit");
   console.log("Готово.");
   console.log(`Вера (${people.vera.email}) – приглашение от Анны на «Внутреннюю улыбку».`);
   console.log(`Глеб (${people.gleb.email}) – совместная «Мини-зарядка» с Борисом, Борис уже отметил.`);
+  if (vanya.rowCount) console.log("Ваня (@ivanmahortov) – друзья с событиями и приглашение от Ольги.");
   console.log("Вход по коду, письма – в http://localhost:8025.");
 } catch (error) {
   await client.query("rollback");
