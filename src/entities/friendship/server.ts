@@ -2,6 +2,7 @@
 export type { FriendshipStatus, PublicPerson, PublicProfile } from "./api/friendship.server";
 export {
   acceptFriendRequest,
+  cancelFriendRequest,
   declineFriendRequest,
   getPublicProfile,
   listFriends,

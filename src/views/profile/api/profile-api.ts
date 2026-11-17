@@ -8,15 +8,15 @@ import type { ProfileData } from "../model/types";
 
 /** Демо-данные: на GitHub Pages (там нет сервера) и при локальной разработке без входа. */
 const demoProfile: ProfileData = {
-  me: { name: "Анна", contact: "anna@example.ru" },
+  me: { name: "Анна", contact: "anna@example.ru", companionStage: 5 },
   settings: { publishEvents: true, autoMatchConsent: true, phraseNotifications: true, phraseFromHour: 9, phraseToHour: 21 },
   friends: [
-    { id: "marina", name: "Марина", avatar: null },
-    { id: "igor", name: "Игорь", avatar: null },
-    { id: "svetlana", name: "Светлана", avatar: null },
-    { id: "denis", name: "Денис", avatar: null },
+    { id: "marina", name: "Марина", companionStage: 1 },
+    { id: "igor", name: "Игорь", companionStage: 3 },
+    { id: "svetlana", name: "Светлана", companionStage: 4 },
+    { id: "denis", name: "Денис", companionStage: 6 },
   ],
-  incoming: [{ id: "olga", name: "Ольга", avatar: null }],
+  incoming: [{ id: "olga", name: "Ольга" }],
 };
 
 export type ProfileState =
@@ -118,7 +118,7 @@ export function useProfile() {
         return {
           ...data,
           incoming: data.incoming.filter((p) => p.id !== personId),
-          friends: action === "accept" && person ? [...data.friends, person] : data.friends,
+          friends: action === "accept" && person ? [...data.friends, { ...person, companionStage: 2 }] : data.friends,
         };
       });
     }

@@ -1,69 +1,98 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
 
-import { getPerson, socialActions, useFriendship } from "@/entities/social";
+import { CompanionImage } from "@/entities/companion";
 import { routes } from "@/shared/config/routes";
-import { buttonVariants } from "@/shared/ui/button";
-import { Button } from "@/shared/ui/button";
-import { Logo } from "@/shared/ui/logo";
+import { typograph } from "@/shared/lib/typograph";
+import { Button, buttonVariants } from "@/shared/ui/button";
+import { GlassCard } from "@/shared/ui/glass-card";
+import { ScreenLayout } from "@/widgets/screen-layout";
 
-export function PersonPage() {
-  const params = useParams<{ id: string }>();
-  const person = getPerson(params.id);
-  const friendship = useFriendship(params.id);
+import { usePerson, type FriendAction, type PersonProfile } from "../api/person-api";
+
+/** Профиль другого человека: его спутник, имя и дружба. */
+export function PersonPage({ personId }: { personId: string }) {
+  const { state, actionError, act } = usePerson(personId);
+  const title = state.status === "ready" ? state.profile.person.name : "Профиль";
 
   return (
-    <main className="flex flex-1 flex-col gap-6 px-5 pt-6 pb-8">
-      <Logo href={routes.profile} />
-      {!person ? (
-        <p className="text-muted-foreground">Такого профиля нет.</p>
-      ) : (
-        <section className="space-y-4 rounded-3xl border bg-card p-6">
-          <span className="grid size-14 place-items-center rounded-full bg-primary/10 text-xl font-semibold text-primary">
-            {person.name.slice(0, 1)}
-          </span>
-          <div className="space-y-1">
-            <h1 className="text-3xl font-semibold">{person.name}</h1>
-            <p className="text-sm text-muted-foreground">{person.about}</p>
-          </div>
-          {friendship === "none" && (
-            <Button className="w-full" onClick={() => socialActions.sendRequest(person.id)}>
-              Добавить в друзья
-            </Button>
-          )}
-          {friendship === "outgoing" && (
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Запрос отправлен.</p>
-              <Button variant="outline" className="w-full" onClick={() => socialActions.declineRequest(person.id)}>
-                Отменить запрос
-              </Button>
-            </div>
-          )}
-          {friendship === "incoming" && (
-            <div className="flex gap-2">
-              <Button className="flex-1" onClick={() => socialActions.acceptRequest(person.id)}>
-                Принять
-              </Button>
-              <Button variant="outline" className="flex-1" onClick={() => socialActions.declineRequest(person.id)}>
-                Отклонить
-              </Button>
-            </div>
-          )}
-          {friendship === "friend" && (
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Вы друзья.</p>
-              <Link href={routes.together} className={buttonVariants({ variant: "outline", className: "w-full" })}>
-                Предложить практику
-              </Link>
-              <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => socialActions.removeFriend(person.id)}>
-                Удалить из друзей
-              </Button>
-            </div>
-          )}
-        </section>
+    <ScreenLayout variant="page" background="09_friend" title={title}>
+      {state.status === "loading" && <GlassCard aria-hidden className="h-[480px] animate-pulse" />}
+      {state.status === "not-found" && (
+        <GlassCard>
+          <p className="type-secondary text-muted-foreground">Такого профиля нет.</p>
+        </GlassCard>
       )}
-    </main>
+      {state.status === "error" && (
+        <GlassCard>
+          <p role="alert" className="type-secondary text-destructive">
+            {typograph(state.message)}
+          </p>
+        </GlassCard>
+      )}
+      {state.status === "ready" && (
+        <GlassCard className="space-y-4">
+          <div className="flex flex-col items-center pt-2" aria-hidden>
+            <CompanionImage stage={state.profile.companionStage} className="size-60" />
+            <div className="-mt-1 h-4 w-28 rounded-full bg-foreground/15 blur-md" />
+          </div>
+          <FriendshipActions profile={state.profile} onAction={(action) => void act(action)} />
+          {actionError && (
+            <p role="alert" className="type-caption text-destructive">
+              {typograph(actionError)}
+            </p>
+          )}
+        </GlassCard>
+      )}
+    </ScreenLayout>
   );
+}
+
+function FriendshipActions({ profile, onAction }: { profile: PersonProfile; onAction: (action: FriendAction) => void }) {
+  switch (profile.friendship) {
+    case "none":
+      return (
+        <Button size="cta" onClick={() => onAction("send")}>
+          Добавить в друзья
+        </Button>
+      );
+    case "outgoing":
+      return (
+        <div className="space-y-3">
+          <p className="type-secondary text-muted-foreground">Запрос отправлен.</p>
+          <Button size="cta" variant="outline" onClick={() => onAction("cancel")}>
+            Отменить запрос
+          </Button>
+        </div>
+      );
+    case "incoming":
+      return (
+        <div className="space-y-3">
+          <p className="type-secondary text-foreground">
+            {typograph(`${profile.person.name} хочет добавить вас в друзья`)}
+          </p>
+          <div className="flex gap-3">
+            <Button size="cta" className="flex-1" onClick={() => onAction("accept")}>
+              Принять
+            </Button>
+            <Button size="cta" variant="outline" className="flex-1" onClick={() => onAction("decline")}>
+              Отклонить
+            </Button>
+          </div>
+        </div>
+      );
+    case "friend":
+      return (
+        <div className="space-y-3">
+          <p className="type-secondary text-muted-foreground">Вы друзья.</p>
+          <Link href={routes.together} className={buttonVariants({ size: "cta", variant: "outline" })}>
+            Предложить практику
+          </Link>
+          <Button size="cta" variant="ghost" className="text-muted-foreground" onClick={() => onAction("remove")}>
+            Удалить из друзей
+          </Button>
+        </div>
+      );
+  }
 }

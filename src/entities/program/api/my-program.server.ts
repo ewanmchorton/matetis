@@ -38,7 +38,7 @@ import {
 import { listPractices, type Practice, type PracticeVariant } from "./program-content.server";
 
 /** Сегодняшний день по часам человека: «2026-12-25». */
-async function todayFor(userId: string, now: Date): Promise<string> {
+export async function todayFor(userId: string, now: Date): Promise<string> {
   const [row] = await db
     .select({ timeZone: personSettings.timeZone })
     .from(personSettings)
@@ -108,7 +108,7 @@ type Person = {
 };
 
 /** Имя, тип, слабая стихия и стихия года. По типу и стихиям выбирается вариант практики. */
-async function personFor(userId: string, season: Season): Promise<Person> {
+export async function personFor(userId: string, season: Pick<Season, "elementId">): Promise<Person> {
   const [type, reading, [row]] = await Promise.all([
     getMyCurrentType(userId),
     getMyBirthReading(userId),
@@ -146,7 +146,7 @@ type VisiblePractice = { item: Practice; variant: PracticeVariant | null };
  * (медитация раз в 2 недели – стихия меняется раз в 2 недели).
  * Не подошёл ни один вариант – практики у человека нет.
  */
-function visiblePractices(practices: Practice[], person: Person, programDay: number): VisiblePractice[] {
+export function visiblePractices(practices: Practice[], person: Person, programDay: number): VisiblePractice[] {
   const week = programWeek(programDay);
   return practices.flatMap((item): VisiblePractice[] => {
     if (item.opensOnDay > programDay || !shownInWeek(week, item.opensOnDay, item.alternation)) return [];

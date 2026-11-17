@@ -2,28 +2,59 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import type { CompanionScreen } from "@/entities/companion";
 import { loadMyProgram } from "@/entities/program";
 import type { MyProgram } from "@/entities/program/server";
 import { request } from "@/shared/api/request";
-import { isStaticPrototype } from "@/shared/config/env";
+import { isDevelopment, isStaticPrototype } from "@/shared/config/env";
 
 export type ProgramState =
   | { status: "loading" }
   | { status: "error"; message: string }
   | { status: "ready"; program: MyProgram };
 
-/** Программа на сегодня и действия с ней: отметки практик, просмотр видео. */
+/** ?demo=transition и ?demo=new-period – посмотреть экраны спутника без сервера (меню «Экраны»). */
+function demoCompanionScreen(): CompanionScreen | null {
+  if (!isDevelopment && !isStaticPrototype) return null;
+  const demo = new URLSearchParams(window.location.search).get("demo");
+  if (demo === "transition") return { kind: "transition", from: 3, to: 4 };
+  if (demo === "new-period") return { kind: "new-period", elementId: "metal" };
+  return null;
+}
+
+async function loadCompanionScreen(): Promise<CompanionScreen | null> {
+  const demo = demoCompanionScreen();
+  if (demo || isStaticPrototype) return demo;
+  try {
+    return (await request<{ screen: CompanionScreen | null }>("/api/program/companion")).screen;
+  } catch {
+    // Экран спутника не должен мешать программе: не загрузился – покажем в следующий раз.
+    return null;
+  }
+}
+
+/** Программа на сегодня и действия с ней: отметки практик, просмотр видео, экран спутника. */
 export function useMyProgram() {
   const [state, setState] = useState<ProgramState>({ status: "loading" });
   const [actionError, setActionError] = useState<string | null>(null);
+  const [companionScreen, setCompanionScreen] = useState<CompanionScreen | null>(null);
 
   const reload = useCallback(async () => {
+    const companion = loadCompanionScreen().then(setCompanionScreen);
     try {
       setState({ status: "ready", program: await loadMyProgram() });
     } catch (loadError) {
       setState({ status: "error", message: (loadError as Error).message });
     }
+    await companion;
   }, []);
+
+  const markCompanionSeen = async () => {
+    const demo = demoCompanionScreen() !== null;
+    setCompanionScreen(null);
+    if (demo || isStaticPrototype) return;
+    await request("/api/program/companion", { method: "POST" }).catch(() => undefined);
+  };
 
   useEffect(() => {
     // Загрузка при открытии экрана: состояние меняется после ответа сервера.
@@ -70,6 +101,8 @@ export function useMyProgram() {
   return {
     state,
     actionError,
+    companionScreen,
+    markCompanionSeen,
     setDone,
     markWelcomeVideoSeen: () => run(() => request("/api/program/welcome-video", { method: "POST" })),
   };

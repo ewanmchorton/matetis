@@ -6,6 +6,7 @@ import { db, friendRequest, user } from "@/shared/db";
 import { clearDatabase, createPerson } from "../../../../tests/people";
 import {
   acceptFriendRequest,
+  cancelFriendRequest,
   declineFriendRequest,
   getPublicProfile,
   listFriends,
@@ -107,6 +108,14 @@ describe("Запрос в друзья", () => {
     await sendFriendRequest(anna, boris);
     expect((await listIncomingRequests(boris)).map((p) => p.name)).toEqual(["Анна"]);
     expect(await listIncomingRequests(anna)).toEqual([]);
+  });
+
+  it("отправитель может отменить свой запрос, а получатель – нет", async () => {
+    await sendFriendRequest(anna, boris);
+    await expect(cancelFriendRequest(boris, anna)).rejects.toMatchObject({ code: "request_not_found" });
+    await cancelFriendRequest(anna, boris);
+    expect(await listIncomingRequests(boris)).toEqual([]);
+    expect((await getPublicProfile(anna, boris))?.friendship).toBe("none");
   });
 
   it("нельзя отправить запрос самому себе", async () => {

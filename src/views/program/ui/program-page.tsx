@@ -16,6 +16,7 @@ import { TextGlow } from "@/shared/ui/text-glow";
 import { ScreenLayout } from "@/widgets/screen-layout";
 
 import { useMyProgram } from "../api/program-api";
+import { CompanionScreen } from "./companion-screen";
 import { PracticeRow } from "./practice-row";
 import { WeekLetters } from "./week-letters";
 import { WelcomeVideo } from "./welcome-video";
@@ -130,7 +131,7 @@ function NavigatorCard({ navigator }: { navigator: NonNullable<MyProgram["naviga
 
 /** Главный экран программы: навигатор, утро, вечер, неделя, еженедельные практики, осознания. */
 export function ProgramPage() {
-  const { state, actionError, setDone, markWelcomeVideoSeen } = useMyProgram();
+  const { state, actionError, companionScreen, markCompanionSeen, setDone, markWelcomeVideoSeen } = useMyProgram();
   const program = state.status === "ready" ? state.program : null;
   const element = program && getElement(program.season.elementId);
   const daily = program ? [...program.morning, ...program.evening] : [];
@@ -225,6 +226,14 @@ export function ProgramPage() {
             <WelcomeVideo video={program.welcomeVideo} onSeen={() => void markWelcomeVideoSeen()} />
           )}
         </>
+      )}
+
+      {companionScreen && !(program?.showWelcomeVideo && program.welcomeVideo) && (
+        <CompanionScreen
+          key={JSON.stringify(companionScreen)}
+          screen={companionScreen}
+          onNext={() => void markCompanionSeen()}
+        />
       )}
       </>
     );

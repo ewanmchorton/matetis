@@ -12,8 +12,10 @@ import {
   isMetalDateAllowed,
   isMetalSettingVisible,
   metalYearFor,
+  minskDay,
   minskMidnight,
   minskYearMonth,
+  seasonPeriodAt,
   type SeasonBackground,
 } from "../model/calendar";
 import type { ElementId } from "../model/types";
@@ -41,6 +43,25 @@ export async function getCurrentSeason(now = new Date()): Promise<Season> {
   const metal = await metalDates([year - 1, year, year + 1]);
   const metalFrom = (y: number) => metal.get(y) ?? defaultMetalStart(y);
   return { elementId: elementAt(now, metalFrom(year)), background: backgroundAt(now, metalFrom) };
+}
+
+export type SeasonPeriod = {
+  elementId: ElementId;
+  /** Первый и последний день периода по Минску: «2026-11-01», «2026-11-30». */
+  firstDay: string;
+  lastDay: string;
+};
+
+/** Период текущей стихии: с какого и по какой день. */
+export async function getCurrentSeasonPeriod(now = new Date()): Promise<SeasonPeriod> {
+  const { year } = minskYearMonth(now);
+  const metal = await metalDates([year - 1, year, year + 1]);
+  const period = seasonPeriodAt(now, (y) => metal.get(y) ?? defaultMetalStart(y));
+  return {
+    elementId: period.elementId,
+    firstDay: minskDay(period.from),
+    lastDay: minskDay(new Date(period.to.getTime() - 1)),
+  };
 }
 
 export type ElementCalendarState = Season & {

@@ -148,6 +148,13 @@
       "when": 1794411146318,
       "tag": "0020_navigator_drop_day5_task",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1794908831476,
+      "tag": "0021_companion_seen",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { backgroundAt, defaultMetalStart, elementAt, isMetalDateAllowed, isMetalSettingVisible, minskMidnight } from "./calendar";
+import {
+  backgroundAt,
+  defaultMetalStart,
+  elementAt,
+  isMetalDateAllowed,
+  isMetalSettingVisible,
+  minskDay,
+  minskMidnight,
+  seasonPeriodAt,
+} from "./calendar";
 
 const at = (iso: string) => new Date(iso);
 const metal2026 = minskMidnight(2026, 10, 14);
@@ -29,6 +38,23 @@ describe("Календарь стихий", () => {
     expect(elementAt(at("2026-10-14T00:00:00+03:00"), metal2026)).toBe("metal");
     expect(elementAt(at("2026-11-30T23:00:00+03:00"), metal2026)).toBe("metal");
     expect(elementAt(at("2026-12-01T00:00:00+03:00"), metal2026)).toBe("water");
+  });
+
+  it("период стихии: Металл с заданного дня до 1 декабря, зима – через Новый год", () => {
+    const metal = seasonPeriodAt(at("2026-11-17T12:00:00+03:00"), withMetal);
+    expect(metal.elementId).toBe("metal");
+    expect(minskDay(metal.from)).toBe("2026-10-14");
+    expect(minskDay(metal.to)).toBe("2026-12-01");
+
+    const water = seasonPeriodAt(at("2027-01-10T12:00:00+03:00"), withMetal);
+    expect(water.elementId).toBe("water");
+    expect(minskDay(water.from)).toBe("2026-12-01");
+    expect(minskDay(water.to)).toBe("2027-03-01");
+
+    const earth = seasonPeriodAt(at("2026-09-01T00:00:00+03:00"), withMetal);
+    expect(earth.elementId).toBe("earth");
+    expect(minskDay(earth.from)).toBe("2026-09-01");
+    expect(minskDay(earth.to)).toBe("2026-10-14");
   });
 
   it("смена сезона считается по Минску: 31 мая 22:00 UTC – уже лето", () => {

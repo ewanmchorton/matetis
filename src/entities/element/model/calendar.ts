@@ -60,6 +60,18 @@ function boundaries(now: Date, metalFrom: (year: number) => Date) {
   });
 }
 
+/** Период стихии, в котором этот момент: с какого момента и до какого (не включительно). */
+export function seasonPeriodAt(now: Date, metalFrom: (year: number) => Date): { elementId: ElementId; from: Date; to: Date } {
+  const sorted = boundaries(now, metalFrom).sort((a, b) => a.at.getTime() - b.at.getTime());
+  const next = sorted.findIndex((boundary) => boundary.at > now);
+  return { elementId: sorted[next].from, from: sorted[next - 1].at, to: sorted[next].at };
+}
+
+/** День по Минску для момента: «2026-11-01». */
+export function minskDay(moment: Date): string {
+  return new Date(moment.getTime() + MINSK_OFFSET_MS).toISOString().slice(0, 10);
+}
+
 /**
  * Какой фон показывать в этот момент. Ближе 5 дней к смене стихии – фон перехода,
  * иначе – фон текущей стихии. metalFrom(year) – день Металла в этом году.

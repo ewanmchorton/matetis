@@ -1,39 +1,29 @@
 "use client";
 
+import Link from "next/link";
+
+import { CompanionAvatar } from "@/entities/companion";
+import { routes } from "@/shared/config/routes";
+import { typograph } from "@/shared/lib/typograph";
 import { Button } from "@/shared/ui/button";
 import { CardInset } from "@/shared/ui/glass-card";
 
-import { typograph } from "@/shared/lib/typograph";
-
-import type { PublicPerson } from "../model/types";
-
-function initial(name: string): string {
-  const trimmed = name.trim();
-  return trimmed ? trimmed.charAt(0).toUpperCase() : "?";
-}
+import type { ProfileData, ProfileFriend } from "../model/types";
 
 /** Под аватаром – только имя: фамилия не помещается. */
 function firstName(name: string): string {
   return name.trim().split(/\s+/)[0] ?? name;
 }
 
-function FriendAvatar({ person }: { person: PublicPerson }) {
+function FriendAvatar({ person }: { person: ProfileFriend }) {
   return (
-    <li className="flex w-16 shrink-0 flex-col items-center gap-1.5">
-      {person.avatar ? (
-        // eslint-disable-next-line @next/next/no-img-element -- адрес аватара приходит с сервера, размер известен
-        <img src={person.avatar} alt="" className="size-14 rounded-full object-cover" />
-      ) : (
-        <span
-          aria-hidden
-          className="grid size-14 place-items-center rounded-full bg-secondary/80 type-block text-foreground"
-        >
-          {initial(person.name)}
+    <li className="w-16 shrink-0">
+      <Link href={`${routes.person}/${person.id}`} className="flex flex-col items-center gap-1.5">
+        <CompanionAvatar stage={person.companionStage} />
+        <span className="w-full truncate text-center type-caption text-foreground" title={person.name}>
+          {firstName(person.name)}
         </span>
-      )}
-      <span className="w-full truncate text-center type-caption text-foreground" title={person.name}>
-        {firstName(person.name)}
-      </span>
+      </Link>
     </li>
   );
 }
@@ -44,8 +34,8 @@ export function ProfileFriends({
   incoming,
   onAnswer,
 }: {
-  friends: PublicPerson[];
-  incoming: PublicPerson[];
+  friends: ProfileFriend[];
+  incoming: ProfileData["incoming"];
   onAnswer: (personId: string, action: "accept" | "decline") => void;
 }) {
   return (

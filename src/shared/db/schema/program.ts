@@ -236,6 +236,28 @@ export const elementVideoSeen = pgTable(
 );
 
 /**
+ * Какое состояние спутника человек уже видел в этот период стихии: экран превращения или новой стихии
+ * больше не повторяется. Само состояние не хранится – оно считается из отметок.
+ */
+export const companionSeen = pgTable(
+  "companion_seen",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    element: text("element").notNull(),
+    /** Год, в котором начался период стихии. */
+    seasonYear: smallint("season_year").notNull(),
+    stage: smallint("stage").notNull(),
+    seenAt: timestamp("seen_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.element, table.seasonYear] }),
+    check("companion_seen_stage", sql`${table.stage} between 1 and 6`),
+  ],
+);
+
+/**
  * Видео раздела «Библиотека»: приветственное (welcome) и по каждой стихии (wood, fire, earth, metal, water).
  * Ссылка на YouTube и текст под видео.
  */

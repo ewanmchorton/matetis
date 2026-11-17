@@ -25,9 +25,12 @@ const prototypeScreens: { href: string; label: string; note?: string }[] = [
   { href: `${routes.typeResult}?demo=request`, label: "Результат теста" },
   { href: routes.program, label: "Программа" },
   { href: `${routes.program}?demo=expired`, label: "Срок подписки истёк" },
+  { href: `${routes.program}?demo=transition`, label: "Превращение спутника" },
+  { href: `${routes.program}?demo=new-period`, label: "Новая стихия" },
   { href: routes.together, label: "Вместе" },
   { href: routes.library, label: "Библиотека" },
   { href: routes.profile, label: "Профиль" },
+  { href: `${routes.person}/marina`, label: "Профиль друга" },
   { href: routes.admin, label: "Админка", note: "веб-версия" },
 ];
 

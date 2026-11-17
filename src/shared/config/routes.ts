@@ -11,7 +11,6 @@ export const routes = {
   library: "/library",
   profile: "/profile",
   person: "/people",
-  elementResult: "/element-result",
   admin: "/admin",
   adminLogin: "/admin/login",
   adminNavigator: "/admin/navigator",

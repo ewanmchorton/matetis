@@ -3,21 +3,20 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 
+import { CompanionImage } from "@/entities/companion";
 import { ElementBadge, getCurrentElement } from "@/entities/element";
-import { filterRituals, usePracticeCatalog } from "@/entities/practice";
 import { getPersonType } from "@/entities/person-type";
 import { PhraseSettings } from "@/features/phrase-notifications";
-import { countInLastDays, getElementBadgeProgress, pluralRu, progressActions, useProgress } from "@/entities/progress";
+import { progressActions, useProgress } from "@/entities/progress";
 import { authClient } from "@/shared/auth/client";
 import { isTelegramContact } from "@/shared/auth/contact";
 import { isStaticPrototype } from "@/shared/config/env";
 import { routes } from "@/shared/config/routes";
-import { getWeekDays, getWeekStartKey, toDateKey } from "@/shared/lib/date";
 import { typograph } from "@/shared/lib/typograph";
 import { useIsClient } from "@/shared/lib/use-is-client";
 import { Button } from "@/shared/ui/button";
 import { Checkbox } from "@/shared/ui/checkbox";
-import { CardInset, GlassCard } from "@/shared/ui/glass-card";
+import { GlassCard } from "@/shared/ui/glass-card";
 import { ScreenLayout } from "@/widgets/screen-layout";
 
 import { useProfile } from "../api/profile-api";
@@ -39,7 +38,7 @@ export function ProfilePage() {
   }
 
   return (
-    <ScreenLayout variant="page" background="06_profile" title="Профиль">
+    <ScreenLayout variant="page" background="09_profile" title="Профиль">
       {state.status === "error" && (
         <GlassCard>
           <p role="alert" className="type-secondary text-destructive">
@@ -50,7 +49,10 @@ export function ProfilePage() {
 
       {state.status === "ready" ? (
         <GlassCard aria-label="Вы и друзья" className="space-y-4">
-          <h2 className="type-section">{state.data.me.name}</h2>
+          <div className="flex flex-col items-center">
+            <CompanionImage stage={state.data.me.companionStage} className="size-52" />
+            <h2 className="mt-2 text-center type-section">{state.data.me.name}</h2>
+          </div>
           {state.demo && !isStaticPrototype && (
             <p className="type-caption text-muted-foreground">{typograph("Вы не вошли – показаны демо-данные.")}</p>
           )}
@@ -75,10 +77,10 @@ export function ProfilePage() {
           )}
         </GlassCard>
       ) : (
-        state.status === "loading" && <GlassCard aria-hidden className="h-56 animate-pulse" />
+        state.status === "loading" && <GlassCard aria-hidden className="h-96 animate-pulse" />
       )}
 
-      <ProgressSections />
+      <PersonTypeCard />
 
       <Reminders>
         {state.status === "ready" && (
@@ -118,131 +120,34 @@ function SettingRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-// Ниже – разделы, которые пока работают на данных прототипа в браузере.
-// Их подключат к серверу на этапах 5–7 (тест и тип, программа, статистика).
+// Карточка психотипа пока работает на данных прототипа в браузере.
 
-function ProgressSections() {
+function PersonTypeCard() {
   const isClient = useIsClient();
-  const { typeId, completedPractices, ritualMarks } = useProgress();
+  const { typeId } = useProgress();
   const type = getPersonType(typeId ?? "t1");
   const element = getCurrentElement();
 
   if (!isClient) return <GlassCard aria-hidden className="h-40 animate-pulse" />;
+  if (!type) return null;
 
   return (
-    <>
-      <ProfileStats completedPractices={completedPractices} />
-      <ElementProgressCard completedPractices={completedPractices} ritualMarks={ritualMarks} />
-
-      {type && (
-        <GlassCard aria-label="Ваш психотип" className="space-y-3">
-          <p className="type-secondary text-primary">Ваш психотип</p>
-          <h2 className="type-section">
-            {type.number}. {type.name}
-          </h2>
-          <ul className="flex flex-wrap gap-2">
-            {type.traits.map((trait) => (
-              <li key={trait} className="rounded-full bg-secondary/70 px-3 py-1.5 type-secondary text-foreground">
-                {typograph(trait)}
-              </li>
-            ))}
-          </ul>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="type-secondary text-muted-foreground">Текущая стихия</span>
-            <ElementBadge element={element} />
-          </div>
-        </GlassCard>
-      )}
-
-      <ProfileRituals ritualMarks={ritualMarks} />
-    </>
-  );
-}
-
-function ProfileStats({ completedPractices }: { completedPractices: string[] }) {
-  const lastWeek = countInLastDays(completedPractices, new Date());
-
-  return (
-    <GlassCard aria-labelledby="profile-stats-title" className="space-y-4">
-      <h2 id="profile-stats-title" className="type-section">
-        Статистика
+    <GlassCard aria-label="Ваш психотип" className="space-y-3">
+      <p className="type-secondary text-primary">Ваш психотип</p>
+      <h2 className="type-section">
+        {type.number}. {type.name}
       </h2>
-      <div className="grid grid-cols-2 gap-3">
-        <CardInset>
-          <p className="type-section tabular-nums">{completedPractices.length}</p>
-          <p className="type-caption text-muted-foreground">{typograph("практик дня всего")}</p>
-        </CardInset>
-        <CardInset>
-          <p className="type-section tabular-nums">{lastWeek}</p>
-          <p className="type-caption text-muted-foreground">{typograph("за последние 7 дней")}</p>
-        </CardInset>
-      </div>
-    </GlassCard>
-  );
-}
-
-function ElementProgressCard({
-  completedPractices,
-  ritualMarks,
-}: {
-  completedPractices: string[];
-  ritualMarks: Record<string, string[]>;
-}) {
-  const element = getCurrentElement();
-  const rituals = filterRituals(usePracticeCatalog().rituals, element.id);
-  const progress = getElementBadgeProgress(completedPractices, ritualMarks, rituals, new Date());
-
-  return (
-    <GlassCard aria-labelledby="element-progress-title" className="space-y-3">
-      <h2 id="element-progress-title" className="type-section">
-        Прогресс стихии
-      </h2>
-      <div className="space-y-2">
-        <div className="flex items-center justify-between type-secondary">
-          <span className="text-foreground">{element.name}</span>
-          <span className="tabular-nums text-muted-foreground">{progress.percent}%</span>
-        </div>
-        <div className="h-2 overflow-hidden rounded-full bg-secondary" aria-hidden>
-          <div className="h-full rounded-full bg-primary" style={{ width: `${progress.percent}%` }} />
-        </div>
-      </div>
-    </GlassCard>
-  );
-}
-
-function dailyRitualLabel(days: number): string {
-  if (days === 0) return "пока не отмечено";
-  return `отмечено ${days} ${pluralRu(days, "день", "дня", "дней")}`;
-}
-
-function ProfileRituals({ ritualMarks }: { ritualMarks: Record<string, string[]> }) {
-  const today = new Date();
-  const weekStart = getWeekStartKey(today);
-  const weekKeys = new Set(getWeekDays(today).map((d) => toDateKey(d)));
-  const rituals = filterRituals(usePracticeCatalog().rituals, getCurrentElement().id);
-
-  return (
-    <GlassCard aria-labelledby="profile-rituals-title" className="space-y-3">
-      <h2 id="profile-rituals-title" className="type-section">
-        Ритуалы на этой неделе
-      </h2>
-      <ul className="divide-y divide-border/70">
-        {rituals.map((ritual) => {
-          const marks = ritualMarks[ritual.id] ?? [];
-          const label =
-            ritual.schedule === "daily"
-              ? dailyRitualLabel(marks.filter((d) => weekKeys.has(d)).length)
-              : marks.includes(weekStart)
-                ? "отмечено на этой неделе"
-                : "ещё не отмечено";
-          return (
-            <li key={ritual.id} className="flex justify-between gap-3 py-2.5 type-secondary">
-              <span className="text-muted-foreground">{typograph(ritual.title)}</span>
-              <span className="shrink-0 text-right text-foreground">{typograph(label)}</span>
-            </li>
-          );
-        })}
+      <ul className="flex flex-wrap gap-2">
+        {type.traits.map((trait) => (
+          <li key={trait} className="rounded-full bg-secondary/70 px-3 py-1.5 type-secondary text-foreground">
+            {typograph(trait)}
+          </li>
+        ))}
       </ul>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="type-secondary text-muted-foreground">Текущая стихия</span>
+        <ElementBadge element={element} />
+      </div>
     </GlassCard>
   );
 }

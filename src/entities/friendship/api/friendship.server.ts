@@ -167,6 +167,23 @@ export function declineFriendRequest(viewerId: string, personId: string) {
   return answerFriendRequest(viewerId, personId, "declined");
 }
 
+/** Отменить свой запрос, на который ещё не ответили. */
+export async function cancelFriendRequest(viewerId: string, personId: string) {
+  const deleted = await db
+    .delete(friendRequest)
+    .where(
+      and(
+        eq(friendRequest.fromUserId, viewerId),
+        eq(friendRequest.toUserId, personId),
+        eq(friendRequest.status, "pending"),
+      ),
+    )
+    .returning({ id: friendRequest.id });
+  if (deleted.length === 0) {
+    throw new AppError("request_not_found", "Запрос в друзья не найден");
+  }
+}
+
 /** Удалить из друзей. Дружба пропадает у обоих. */
 export async function removeFriend(viewerId: string, personId: string) {
   const deleted = await db

@@ -25,7 +25,12 @@ export type ScreenBackground =
   | "04_earth_03_lizard"
   | "04_earth_04_practice"
   | "04_expired"
-  | "06_profile";
+  | "07_transition_curtains"
+  | "07_transition_steps"
+  | "07_transition_path"
+  | "07_new_period"
+  | "09_profile"
+  | "09_friend";
 
 /**
  * Для экранов с картинкой: на какой высоте картинки (в ширинах экрана) должен оказаться
@@ -43,6 +48,11 @@ const heroTextLine: Partial<Record<ScreenBackground, number>> = {
 const fullImageTextTop: Partial<Record<ScreenBackground, number>> = {
   "03_name": 0.92,
   "03_birth": 0.79,
+  // Экраны спутника: сразу под логотипом – спутник, текст под ним.
+  "07_transition_curtains": 0,
+  "07_transition_steps": 0,
+  "07_transition_path": 0,
+  "07_new_period": 0,
 };
 
 /**
