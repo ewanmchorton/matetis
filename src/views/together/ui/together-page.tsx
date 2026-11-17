@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 
 import type { JointCard } from "@/entities/together/server";
 import { InviteSheet } from "@/features/invite-practice";
@@ -26,17 +27,42 @@ function inviteHint(card: JointCard | null): string | null {
   return null;
 }
 
-/** Вкладка «Вместе»: карточка практики, события друзей и предложение новой. */
-export function TogetherPage({ friendId }: { friendId?: string }) {
-  const together = useTogether();
-  const [inviteOpen, setInviteOpen] = useState(false);
-  const openedFor = useRef<string | undefined>(undefined);
+function TogetherLoading() {
+  return (
+    <ScreenLayout variant="page" background="08_together" title="Вместе">
+      <GlassCard aria-hidden className="h-48 animate-pulse" />
+    </ScreenLayout>
+  );
+}
 
-  useEffect(() => {
-    if (!friendId || together.state.status !== "ready" || openedFor.current === friendId) return;
-    openedFor.current = friendId;
-    setInviteOpen(true);
-  }, [friendId, together.state.status]);
+function TogetherWithLink() {
+  const friend = useSearchParams().get("friend") ?? undefined;
+  return <TogetherContent key={friend} friendId={friend} />;
+}
+
+/**
+ * Вкладка «Вместе». `?friend=` читается в браузере (через Suspense),
+ * потому что статический сайт-макет не может читать адрес на сервере.
+ */
+export function TogetherPage() {
+  return (
+    <Suspense fallback={<TogetherLoading />}>
+      <TogetherWithLink />
+    </Suspense>
+  );
+}
+
+/** Карточка практики, события друзей и предложение новой. */
+function TogetherContent({ friendId }: { friendId?: string }) {
+  const together = useTogether();
+  const [manualOpen, setManualOpen] = useState(false);
+  const [autoClosed, setAutoClosed] = useState(false);
+  const inviteOpen = manualOpen || (!!friendId && !autoClosed && together.state.status === "ready");
+
+  function setInviteOpen(open: boolean) {
+    setManualOpen(open);
+    if (!open) setAutoClosed(true);
+  }
 
   const ready = together.state.status === "ready" ? together.state.data : null;
   const hint = ready && !ready.canInvite ? inviteHint(ready.card) : null;
