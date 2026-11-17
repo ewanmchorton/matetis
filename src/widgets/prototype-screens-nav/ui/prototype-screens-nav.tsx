@@ -27,7 +27,15 @@ const prototypeScreens: { href: string; label: string; note?: string }[] = [
   { href: `${routes.program}?demo=expired`, label: "Срок подписки истёк" },
   { href: `${routes.program}?demo=transition`, label: "Превращение спутника" },
   { href: `${routes.program}?demo=new-period`, label: "Новая стихия" },
-  { href: routes.together, label: "Вместе" },
+  { href: routes.together, label: "Вместе: приглашение" },
+  { href: `${routes.together}?state=active`, label: "Вместе: идёт практика" },
+  { href: `${routes.together}?state=waiting`, label: "Вместе: ждём ответа" },
+  { href: `${routes.together}?state=monthly`, label: "Вместе: предложение месяца" },
+  { href: `${routes.together}?state=monthly-stranger`, label: "Вместе: предложение не другу" },
+  { href: `${routes.together}?state=completed`, label: "Вместе: завершили" },
+  { href: `${routes.together}?state=quiet`, label: "Вместе: пока тихо" },
+  { href: `${routes.together}?state=people`, label: "Вместе: нет друзей" },
+  { href: `${routes.together}?state=quiet&friend=marina`, label: "Вместе: предложить другу" },
   { href: routes.library, label: "Библиотека" },
   { href: routes.profile, label: "Профиль" },
   { href: `${routes.person}/marina`, label: "Профиль друга" },
@@ -35,6 +43,11 @@ const prototypeScreens: { href: string; label: string; note?: string }[] = [
 ];
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
+/** Смена ?demo=, ?state= или ?friend= должна загрузить страницу заново, иначе останется прежняя картинка. */
+function needsReload(value: string) {
+  return value.includes("demo=") || value.includes("state=") || value.includes("friend=");
+}
 
 /** reload – обычная ссылка: страница загрузится заново. Иначе – быстрый переход Next.js. */
 function ScreenLink({ href, reload, ...props }: ComponentProps<"a"> & { href: string; reload: boolean }) {
@@ -44,8 +57,12 @@ function ScreenLink({ href, reload, ...props }: ComponentProps<"a"> & { href: st
 
 function isActive(pathname: string, search: string, href: string): boolean {
   const [path, query = ""] = href.split("?");
-  // Экран «без доступа» и обычный – на одном адресе, различаются только ?demo=…
-  if (search.includes("demo=") !== query.includes("demo=")) return false;
+  const current = new URLSearchParams(search);
+  const target = new URLSearchParams(query);
+  // Один адрес, разные картинки: доступ (?demo=) и состояния «Вместе» (?state=, ?friend=).
+  if (current.get("demo") !== target.get("demo")) return false;
+  if ((current.get("state") ?? "") !== (target.get("state") ?? "")) return false;
+  if ((current.get("friend") ?? "") !== (target.get("friend") ?? "")) return false;
   return pathname === path || (path !== "/" && pathname.startsWith(`${path}/`));
 }
 
@@ -85,7 +102,7 @@ export function PrototypeScreensNav() {
                       иначе приложение не перечитает демо-данные доступа. */}
                   <ScreenLink
                     href={screen.href}
-                    reload={screen.href.includes("demo=") || search.includes("demo=")}
+                    reload={needsReload(screen.href) || needsReload(search)}
                     className={cn(
                       "flex items-center justify-between rounded-lg px-3 py-2.5 text-sm transition-colors",
                       active

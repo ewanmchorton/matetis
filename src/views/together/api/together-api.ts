@@ -7,12 +7,24 @@ import { request, type RequestError } from "@/shared/api/request";
 import { isDevelopment, isStaticPrototype } from "@/shared/config/env";
 import { addDays, toDateKey } from "@/shared/lib/date";
 
-import { demoOptions, demoTogether } from "../model/demo";
+import { demoOptions, demoTogether, isDemoKind, type DemoKind } from "../model/demo";
 
 export type TogetherState =
   | { status: "loading" }
   | { status: "error"; message: string }
   | { status: "ready"; data: Together; demo: boolean };
+
+/**
+ * Какой макет показать на сайте без сервера. Адрес ?state=…, без него – приглашение.
+ * Если открыли из профиля друга, карточки нет: панель «Предложить практику» не перекрыта.
+ */
+function demoKind(): DemoKind {
+  const params = new URLSearchParams(window.location.search);
+  const state = params.get("state");
+  if (isDemoKind(state)) return state;
+  if (params.get("friend")) return "quiet";
+  return "invite";
+}
 
 /** Данные вкладки «Вместе» и действия с ними. */
 export function useTogether() {
@@ -22,12 +34,13 @@ export function useTogether() {
   const [asked, setAsked] = useState<string[]>([]);
 
   const load = useCallback(async () => {
-    if (isStaticPrototype) return setState({ status: "ready", data: demoTogether(), demo: true });
+    const showDemo = (kind: DemoKind) => setState({ status: "ready", data: demoTogether(kind), demo: true });
+    if (isStaticPrototype) return showDemo(demoKind());
     try {
       setState({ status: "ready", data: await request<Together>("/api/together"), demo: false });
     } catch (error) {
       const status = (error as RequestError).status;
-      if (status === 401 && isDevelopment) setState({ status: "ready", data: demoTogether(), demo: true });
+      if (status === 401 && isDevelopment) showDemo(demoKind());
       else setState({ status: "error", message: (error as Error).message });
     }
   }, []);
