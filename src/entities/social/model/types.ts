@@ -9,7 +9,7 @@ export type DemoPerson = {
   unavailablePracticeIds: string[];
 };
 
-export type FeedKind = "first" | "week" | "together" | "return";
+export type FeedKind = "first" | "together" | "return";
 
 export type FeedEvent = {
   id: string;

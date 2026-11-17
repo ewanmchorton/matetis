@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { allowsTogether, usePracticeCatalog } from "@/entities/practice";
 import { getPerson, socialActions, useSocial } from "@/entities/social";
+import { typograph } from "@/shared/lib/typograph";
 import { Button } from "@/shared/ui/button";
 
 export function InvitePanel({
@@ -28,7 +29,9 @@ export function InvitePanel({
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="font-medium">Предложить практику</p>
-          <p className="mt-1 text-sm text-muted-foreground">Друг может принять или отклонить приглашение.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {typograph("Друг может принять или отклонить. Практика идёт семь дней с дня согласия.")}
+          </p>
         </div>
         <button type="button" className="text-sm text-muted-foreground underline-offset-4 hover:underline" onClick={onClose}>
           Закрыть

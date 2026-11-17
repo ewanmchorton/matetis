@@ -6,7 +6,8 @@ import { Check, Heart } from "lucide-react";
 import { progressActions } from "@/entities/progress";
 import { feedEvents, getPerson, socialActions, useSocial } from "@/entities/social";
 import { routes } from "@/shared/config/routes";
-import { formatWeekDeadline, toDateKey } from "@/shared/lib/date";
+import { addDays, toDateKey } from "@/shared/lib/date";
+import { typograph } from "@/shared/lib/typograph";
 import { useIsClient } from "@/shared/lib/use-is-client";
 import { cn } from "@/shared/lib/utils";
 import { InvitePanel } from "@/features/invite-practice";
@@ -32,7 +33,7 @@ function TogetherContent() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const today = new Date();
   const todayKey = toDateKey(today);
-  const deadline = formatWeekDeadline(today);
+  const deadline = addDays(today, 6).toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
   const active = invitations.filter((item) => item.status === "accepted");
   const incoming = invitations.filter((item) => item.status === "pending" && item.direction === "incoming");
 
@@ -46,7 +47,10 @@ function TogetherContent() {
               <p className="text-xs font-medium text-primary">Совместная практика</p>
               <h2 className="text-lg font-semibold leading-snug">{item.practiceTitle}</h2>
               <p className="text-sm text-muted-foreground">
-                {friend?.name} · до {deadline}
+                {typograph(`${friend?.name ?? "Друг"} · до ${deadline}`)}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {typograph("Семь дней с того дня, когда вы оба согласились.")}
               </p>
             </div>
             <ul className="space-y-1.5 text-sm">
@@ -85,8 +89,8 @@ function TogetherContent() {
                     {person?.name.slice(0, 1)}
                   </span>
                   <div className="min-w-0 space-y-0.5">
-                    <p className="text-xs font-medium text-primary">{event.title}</p>
-                    <p className="text-sm leading-snug">{event.text}</p>
+                    <p className="text-xs font-medium text-primary">{typograph(event.title)}</p>
+                    <p className="text-sm leading-snug">{typograph(event.text)}</p>
                   </div>
                 </div>
                 <button
@@ -114,7 +118,9 @@ function TogetherContent() {
             <p className="text-sm font-medium">
               {friend?.name} · «{item.practiceTitle}»
             </p>
-            <p className="text-xs text-muted-foreground">до {deadline}</p>
+            <p className="text-xs text-muted-foreground">
+              {typograph("Семь дней с того дня, когда вы примете.")}
+            </p>
             <div className="flex gap-2">
               <Button size="sm" className="flex-1" onClick={() => socialActions.respondInvite(item.id, true)}>
                 Принять

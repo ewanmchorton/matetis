@@ -53,13 +53,6 @@ export const feedEvents: FeedEvent[] = [
     text: "Светлана выполнила первую практику – «Коан дня».",
   },
   {
-    id: "e-week",
-    personId: "igor",
-    kind: "week",
-    title: "Несколько дней за неделю",
-    text: "Игорь практиковал несколько дней на этой неделе.",
-  },
-  {
     id: "e-together",
     personId: "marina",
     kind: "together",
