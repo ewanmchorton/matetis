@@ -13,21 +13,21 @@ export type TransitionStage = Exclude<CompanionStage, 1>;
 const transitionTitles: Record<TransitionStage, string> = {
   2: "Что-то внутри начинает раскрываться",
   3: "Всё приходит в движение",
-  4: "Всё соединяется внутри тебя",
-  5: "Всё, что ты растил, расцветает",
-  6: "Пройдя путь, возвращаешься к истоку",
+  4: "Всё соединяется внутри вас",
+  5: "Всё, что вы растили, расцветает",
+  6: "Пройдя путь, вы возвращаетесь к истоку",
 };
 
 export function transitionText(stage: TransitionStage) {
   return {
     caption: `Гармония · ${stageNames[stage]}`,
     title: transitionTitles[stage],
-    text: `Твой спутник меняется вместе с тобой. Гармония переходит в ${stageNames[stage]}.`,
+    text: `Ваш спутник меняется вместе с вами. Гармония переходит в ${stageNames[stage]}.`,
   };
 }
 
 export const newPeriodText = {
-  title: "Новый виток твоего пути",
+  title: "Новый виток вашего пути",
   text: "Гармония снова в Пробуждении. Начинаем новый цикл вместе.",
 };
 
