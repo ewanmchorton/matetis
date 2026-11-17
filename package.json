@@ -18,6 +18,7 @@
     "db:seed-friends": "node scripts/seed-friends.mts",
     "db:seed-admin": "node scripts/seed-admin.mts",
     "db:seed-program": "node scripts/seed-program.mts",
+    "db:seed-together": "node scripts/seed-together.mts",
     "telegram:dev": "node scripts/telegram-dev.mts"
   },
   "dependencies": {

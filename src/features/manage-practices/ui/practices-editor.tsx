@@ -37,6 +37,7 @@ type Practice = {
   opensOnDay: number;
   newEachWeek: boolean;
   alternation: Alternation;
+  allowTogether: boolean;
   variants: Variant[];
 };
 
@@ -61,6 +62,7 @@ function emptyDraft(frequency: Frequency, position: number): Draft {
     opensOnDay: 1,
     newEachWeek: false,
     alternation: null,
+    allowTogether: true,
     variants: [],
   };
 }
@@ -346,6 +348,17 @@ export function PracticesEditor({ frequency }: { frequency: Frequency }) {
         />
         Каждую неделю новый вариант – по порядку, потом по кругу
       </label>
+      {frequency !== "awareness" && (
+        <label className="flex min-h-11 items-center gap-3 text-sm">
+          <input
+            type="checkbox"
+            className="size-5"
+            checked={draft.allowTogether}
+            onChange={(event) => setDraft({ ...draft, allowTogether: event.target.checked })}
+          />
+          Можно делать вместе с другом
+        </label>
+      )}
       {frequency === "weekly" && (
         <div className="space-y-1.5">
           <Label htmlFor="practice-alternation">С 15-го дня чередуется по неделям</Label>
@@ -412,6 +425,7 @@ export function PracticesEditor({ frequency }: { frequency: Frequency }) {
                           {item.variants.length > 0 ? ` · вариантов: ${item.variants.length}` : item.body ? "" : " · без текста"}
                           {item.newEachWeek ? " · каждую неделю новый" : ""}
                           {item.alternation ? " · чередуется" : ""}
+                          {item.frequency !== "awareness" && !item.allowTogether ? " · не вместе" : ""}
                         </span>
                       </span>
                       <ChevronDown className="size-4 text-muted-foreground" />

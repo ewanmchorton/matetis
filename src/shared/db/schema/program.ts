@@ -51,6 +51,8 @@ export const practice = pgTable(
     newEachWeek: boolean("new_each_week").notNull().default(false),
     /** Пусто – без чередования. */
     alternation: practiceAlternation("alternation"),
+    /** Можно проходить вместе с другом. Админ снимает для отдельных практик. */
+    allowTogether: boolean("allow_together").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [

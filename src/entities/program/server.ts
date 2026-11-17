@@ -9,8 +9,10 @@ export {
   markElementVideoSeen,
   markNavigatorRead,
   markWelcomeVideoSeen,
+  practicesVisibleTo,
   saveMyNote,
   setPracticeDone,
+  todayFor,
 } from "./api/my-program.server";
 export type {
   NavigatorMessage,

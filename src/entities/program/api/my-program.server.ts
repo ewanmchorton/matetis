@@ -161,6 +161,19 @@ export function visiblePractices(practices: Practice[], person: Person, programD
   });
 }
 
+/**
+ * Практики, которые человек видит сегодня. Ничего не записывает: кто ещё не открывал программу,
+ * практик не видит. Нужно, чтобы проверить чужую программу (совместная практика).
+ */
+export async function practicesVisibleTo(userId: string, now = new Date()): Promise<Practice[]> {
+  const today = await todayFor(userId, now);
+  const [start] = await db.select().from(programStart).where(eq(programStart.userId, userId));
+  if (!start) return [];
+  const [practices, season] = await Promise.all([listPractices(), getCurrentSeason(now)]);
+  const person = await personFor(userId, season);
+  return visiblePractices(practices, person, programDayNumber(start.startedOn, today)).map(({ item }) => item);
+}
+
 export type ProgramPractice = {
   id: string;
   /** Какой вариант текста видит человек. null – текст самой практики. */

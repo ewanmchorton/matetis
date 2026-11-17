@@ -43,6 +43,8 @@ export type PracticeInput = {
   opensOnDay?: unknown;
   newEachWeek?: unknown;
   alternation?: unknown;
+  /** Можно ли проходить вместе с другом. Не передано – можно. */
+  allowTogether?: unknown;
   /** Варианты по порядку. Сохраняются целиком, заменяя прежние. */
   variants?: unknown;
 };
@@ -92,6 +94,7 @@ function practiceValues(input: PracticeInput) {
     opensOnDay: wholeNumber(input.opensOnDay, 1, 1),
     newEachWeek: input.newEachWeek === true,
     alternation,
+    allowTogether: input.allowTogether !== false,
   } as const;
 }
 
