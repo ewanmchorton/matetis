@@ -14,18 +14,19 @@ import { TextGlow } from "@/shared/ui/text-glow";
 import { companionStage } from "./joint-card";
 
 function eventCopy(item: FeedItem) {
-  if (item.kind === "first_practice") return { who: item.author.name, text: "впервые занимается." };
+  if (item.kind === "first_practice") return { tag: "Первая практика", who: item.author.name, text: "впервые занимается." };
   if (item.kind === "comeback") {
-    return { who: item.author.name, text: "снова занимается после перерыва больше недели." };
+    return { tag: "Снова в практике", who: item.author.name, text: "снова занимается после перерыва больше недели." };
   }
   const partner = item.partner?.name;
   return {
+    tag: "Совместная практика",
     who: partner ? `${item.author.name} и ${partner}` : item.author.name,
     text: partner ? "прошли практику вместе." : "и друг прошли практику вместе.",
   };
 }
 
-/** События друзей: кто что сделал и кнопка «Поддержать». */
+/** События друзей: кто что сделал, метка вида и кнопка «Поддержать». */
 export function TogetherFeed({
   feed,
   pending,
@@ -59,9 +60,14 @@ export function TogetherFeed({
                     <Link href={`${routes.person}/${item.author.id}`} aria-label={item.author.name} className="shrink-0">
                       <CompanionAvatar stage={companionStage(item.author.companionStage)} className="size-11" />
                     </Link>
-                    <p className="min-w-0 type-body">
-                      <span className="font-semibold">{copy.who}</span> {typograph(copy.text)}
-                    </p>
+                    <div className="min-w-0 space-y-2">
+                      <p className="type-body">
+                        <span className="font-semibold">{copy.who}</span> {typograph(copy.text)}
+                      </p>
+                      <span className="inline-flex rounded-full bg-secondary/70 px-2.5 py-1 type-caption text-muted-foreground">
+                        {copy.tag}
+                      </span>
+                    </div>
                   </div>
                   <Button
                     size="cta-sm"
