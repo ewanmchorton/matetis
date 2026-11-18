@@ -265,7 +265,15 @@ function ReaderScreen({ title, onBack }: { title: string; onBack: () => void }) 
 export function LibraryPage() {
   const [view, setView] = useState<View>({ name: "home" });
 
-  if (view.name === "reader") return <ReaderScreen title={view.title} onBack={() => setView({ name: view.back })} />;
+  if (view.name === "reader") {
+    const back = view.back;
+    return (
+      <ReaderScreen
+        title={view.title}
+        onBack={() => setView(back === "books" ? { name: "books" } : { name: "home" })}
+      />
+    );
+  }
   if (view.name === "element") return <ElementScreen onBack={() => setView({ name: "home" })} />;
   if (view.name === "practices") {
     return (
@@ -311,7 +319,13 @@ export function LibraryPage() {
     );
   }
   if (view.name === "practice") {
-    return <PracticeScreen title={view.title} onBack={() => setView({ name: view.back })} />;
+    const back = view.back;
+    return (
+      <PracticeScreen
+        title={view.title}
+        onBack={() => setView(back === "practices" ? { name: "practices" } : { name: "home" })}
+      />
+    );
   }
 
   return (
