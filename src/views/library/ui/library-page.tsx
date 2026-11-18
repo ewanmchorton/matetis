@@ -1,145 +1,326 @@
 "use client";
 
-import { BookOpen, Film, Headphones, PlayCircle } from "lucide-react";
+import { useState } from "react";
 
-import { ElementBadge, getElement } from "@/entities/element";
-import type { ElementId } from "@/entities/element";
-import { filterLibrary, useLibraryItems } from "@/entities/library";
-import { routes } from "@/shared/config/routes";
-import { Logo } from "@/shared/ui/logo";
+import { currentElementId, getElement, getElementGuide } from "@/entities/element";
+import { typograph } from "@/shared/lib/typograph";
+import { Button } from "@/shared/ui/button";
+import { GlassCard } from "@/shared/ui/glass-card";
+import { ScreenLayout } from "@/widgets/screen-layout";
 
-function ElementTag({ elementId }: { elementId?: ElementId }) {
-  if (!elementId) return null;
-  return <ElementBadge element={getElement(elementId)} className="shrink-0" />;
-}
+/** Редкие практики. На заглавной – только название, текст открывается внутри. */
+const libraryPractices = [
+  { title: "Золотая подушечка", meta: "Запись" },
+  { title: "Техника Золотого Шара", meta: "Запись" },
+  { title: "Приветственное видео", meta: "Видео" },
+];
 
-function MediaRow({
-  icon: Icon,
-  title,
-  meta,
-  elementId,
-}: {
-  icon: typeof PlayCircle;
-  title: string;
-  meta: string;
-  elementId?: ElementId;
-}) {
+/** Рекомендации внутри стихии: только обложки, читалка отсюда не открывается. */
+const waterRecommendations = {
+  books: [
+    { title: "Дао дэ цзин", author: "Лао-цзы" },
+    { title: "Цигун для начинающих", author: "Мантак Чиа" },
+  ],
+  films: [{ title: "Весна, лето, осень, зима… и снова весна" }],
+};
+
+/** Книги, которые можно читать. Раздел на заглавной, не внутри стихии. */
+const readableBooks = [{ title: "Цигун для начинающих", author: "Мантак Чиа" }];
+
+/** На заглавной видно столько строк. Остальные открываются отдельной страницей и листаются вниз. */
+const homePreview = 3;
+
+type View =
+  | { name: "home" }
+  | { name: "element" }
+  | { name: "practices" }
+  | { name: "books" }
+  | { name: "practice"; title: string; back: "home" | "practices" }
+  | { name: "reader"; title: string; back: "home" | "books" };
+
+/** Абзацы и строки, которые начинаются с «•», – списком. */
+function Prose({ text }: { text: string }) {
   return (
-    <li className="flex items-center gap-3 rounded-xl border bg-card p-3">
-      <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
-        <Icon className="size-5" />
-      </span>
-      <div className="min-w-0 flex-1 space-y-1">
-        <p className="text-sm font-medium leading-snug">{title}</p>
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-xs text-muted-foreground">{meta}</p>
-          <ElementTag elementId={elementId} />
-        </div>
-      </div>
-    </li>
+    <div className="space-y-4">
+      {text.split("\n\n").map((block) => {
+        const lines = block.split("\n");
+        if (lines.every((line) => line.startsWith("• "))) {
+          return (
+            <ul key={block} className="list-disc space-y-1 pl-5 type-body text-foreground">
+              {lines.map((line) => (
+                <li key={line}>{typograph(line.slice(2))}</li>
+              ))}
+            </ul>
+          );
+        }
+        return (
+          <p key={block} className="type-body text-foreground">
+            {typograph(block)}
+          </p>
+        );
+      })}
+    </div>
   );
 }
 
-export function LibraryPage() {
-  const items = useLibraryItems();
-  const videos = filterLibrary(items, "video");
-  const meditations = filterLibrary(items, "meditation");
-  const books = filterLibrary(items, "book");
-  const films = filterLibrary(items, "film");
+function Cover({ title, note }: { title: string; note?: string }) {
+  return (
+    <div className="space-y-2">
+      <div className="flex aspect-[2/3] items-end rounded-2xl bg-primary/10 p-3">
+        <span className="type-caption text-foreground">{typograph(title)}</span>
+      </div>
+      {note && <p className="type-caption text-muted-foreground">{note}</p>}
+    </div>
+  );
+}
+
+function Back({ onClick, label }: { onClick: () => void; label: string }) {
+  return (
+    <Button variant="ghost" className="self-start px-0" onClick={onClick}>
+      {label}
+    </Button>
+  );
+}
+
+function LibraryHome({
+  onElement,
+  onPractice,
+  onAllPractices,
+  onBook,
+  onAllBooks,
+}: {
+  onElement: () => void;
+  onPractice: (title: string) => void;
+  onAllPractices: () => void;
+  onBook: (title: string) => void;
+  onAllBooks: () => void;
+}) {
+  const element = getElement(currentElementId);
 
   return (
-    <main className="flex flex-1 flex-col gap-6 px-5 pt-6 pb-8">
-      <header className="space-y-4">
-        <Logo href={routes.program} />
-        <div className="space-y-2">
-          <h1 className="text-3xl font-semibold">Библиотека</h1>
-          <p className="text-sm text-muted-foreground">Видео, медитации, книги и фильмы.</p>
+    <ScreenLayout variant="page" title="Библиотека">
+      <GlassCard className="space-y-3 p-0">
+        <button type="button" className="block w-full space-y-3 p-5 text-left" onClick={onElement}>
+          <span className="flex aspect-video items-end rounded-2xl bg-foreground/5 p-4">
+            <span className="type-caption text-muted-foreground">Видео</span>
+          </span>
+          <span className="block">
+            <span className="block type-section text-foreground">Стихия {element.genitive}</span>
+            <span className="block type-caption text-muted-foreground">{element.period}</span>
+          </span>
+        </button>
+      </GlassCard>
+
+      <section className="space-y-3" aria-label="Практики">
+        <h2 className="type-section text-foreground">Практики</h2>
+        <GlassCard className="divide-y divide-foreground/8 px-5 py-1">
+          {libraryPractices.slice(0, homePreview).map((practice) => (
+            <button
+              key={practice.title}
+              type="button"
+              className="flex w-full items-center justify-between gap-3 py-3 text-left"
+              onClick={() => onPractice(practice.title)}
+            >
+              <span className="type-block text-foreground">{practice.title}</span>
+              <span className="type-caption text-muted-foreground">{practice.meta}</span>
+            </button>
+          ))}
+          {libraryPractices.length > homePreview && (
+            <button type="button" className="w-full py-3 text-left type-caption text-primary" onClick={onAllPractices}>
+              Все практики
+            </button>
+          )}
+        </GlassCard>
+      </section>
+
+      <section className="space-y-3" aria-label="Книги">
+        <h2 className="type-section text-foreground">Книги</h2>
+        <GlassCard className="divide-y divide-foreground/8 px-5 py-1">
+          {readableBooks.slice(0, homePreview).map((book) => (
+            <button
+              key={book.title}
+              type="button"
+              className="flex w-full items-center justify-between gap-3 py-3 text-left"
+              onClick={() => onBook(book.title)}
+            >
+              <span className="min-w-0">
+                <span className="block type-block text-foreground">{book.title}</span>
+                <span className="block type-caption text-muted-foreground">{book.author}</span>
+              </span>
+              <span className="type-caption text-primary">Читать</span>
+            </button>
+          ))}
+          {readableBooks.length > homePreview && (
+            <button type="button" className="w-full py-3 text-left type-caption text-primary" onClick={onAllBooks}>
+              Все книги
+            </button>
+          )}
+        </GlassCard>
+      </section>
+    </ScreenLayout>
+  );
+}
+
+function ElementScreen({ onBack }: { onBack: () => void }) {
+  const element = getElement(currentElementId);
+  const guide = getElementGuide(currentElementId);
+  const covers = currentElementId === "water" ? waterRecommendations : { books: [], films: [] };
+
+  return (
+    <ScreenLayout variant="page" title={`Стихия ${element.genitive}`} subtitle={element.period}>
+      <Back onClick={onBack} label="К библиотеке" />
+      <GlassCard className="space-y-3">
+        <p className="type-caption text-muted-foreground">Видео</p>
+        <div className="flex aspect-video items-center justify-center rounded-2xl bg-foreground/5">
+          <span className="type-secondary text-muted-foreground">
+            {guide?.videoTitle ?? `Видео по стихии ${element.genitive}`}
+          </span>
         </div>
-      </header>
+      </GlassCard>
+      <GlassCard>
+        {guide ? (
+          <Prose text={guide.text} />
+        ) : (
+          <p className="type-body text-muted-foreground">Описание появится, когда его добавят.</p>
+        )}
+      </GlassCard>
+      <section className="space-y-3" aria-label="Книги">
+        <h2 className="type-section text-foreground">Книги</h2>
+        <ul className="grid grid-cols-2 gap-4">
+          {covers.books.map((book) => (
+            <li key={book.title}>
+              <Cover title={book.title} note={book.author} />
+            </li>
+          ))}
+        </ul>
+      </section>
+      <section className="space-y-3" aria-label="Фильмы">
+        <h2 className="type-section text-foreground">Фильмы</h2>
+        <ul className="grid grid-cols-2 gap-4">
+          {covers.films.map((film) => (
+            <li key={film.title}>
+              <Cover title={film.title} />
+            </li>
+          ))}
+        </ul>
+      </section>
+    </ScreenLayout>
+  );
+}
 
-      {videos.length > 0 && (
-        <section className="space-y-3" aria-labelledby="lib-videos">
-          <h2 id="lib-videos" className="text-lg font-semibold">
-            Видео
-          </h2>
-          <ul className="space-y-2">
-            {videos.map((v) => (
-              <MediaRow
-                key={v.id}
-                icon={PlayCircle}
-                title={v.title}
-                elementId={v.elementId}
-                meta={v.duration ? `Видео · ${v.duration}` : "Видео"}
-              />
-            ))}
-          </ul>
-        </section>
-      )}
+function PracticeScreen({ title, onBack }: { title: string; onBack: () => void }) {
+  const practice = libraryPractices.find((item) => item.title === title);
 
-      {meditations.length > 0 && (
-        <section className="space-y-3" aria-labelledby="lib-meditations">
-          <h2 id="lib-meditations" className="text-lg font-semibold">
-            Медитации
-          </h2>
-          <ul className="space-y-2">
-            {meditations.map((m) => (
-              <MediaRow
-                key={m.id}
-                icon={Headphones}
-                title={m.title}
-                elementId={m.elementId}
-                meta={m.duration ? `Аудио · ${m.duration}` : "Аудио"}
-              />
-            ))}
-          </ul>
-        </section>
-      )}
+  return (
+    <ScreenLayout variant="page" title={title} subtitle={practice?.meta}>
+      <Back onClick={onBack} label="К библиотеке" />
+      <GlassCard className="flex aspect-video items-center justify-center">
+        <span className="type-secondary text-muted-foreground">{practice?.meta === "Видео" ? "Видео" : "Аудио"}</span>
+      </GlassCard>
+      <GlassCard>
+        <p className="type-body text-muted-foreground">[Текст практики]</p>
+      </GlassCard>
+    </ScreenLayout>
+  );
+}
 
-      {books.length > 0 && (
-        <section className="space-y-3" aria-labelledby="lib-books">
-          <h2 id="lib-books" className="flex items-center gap-2 text-lg font-semibold">
-            <BookOpen className="size-5 text-primary" />
-            Книги
-          </h2>
-          <ul className="space-y-2 rounded-2xl border bg-card p-4 text-sm">
-            {books.map((b) => (
-              <li key={b.id} className="flex flex-wrap items-center justify-between gap-2 py-1">
-                <span>
-                  {b.title}
-                  {b.author && <span className="text-muted-foreground"> – {b.author}</span>}
-                </span>
-                <ElementTag elementId={b.elementId} />
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+function ReaderScreen({ title, onBack }: { title: string; onBack: () => void }) {
+  const [mode, setMode] = useState<"page" | "scroll">("page");
+  const [page, setPage] = useState(1);
+  const pages = 12;
 
-      {films.length > 0 && (
-        <section className="space-y-3" aria-labelledby="lib-films">
-          <h2 id="lib-films" className="flex items-center gap-2 text-lg font-semibold">
-            <Film className="size-5 text-primary" />
-            Фильмы
-          </h2>
-          <ul className="space-y-2 rounded-2xl border bg-card p-4 text-sm">
-            {films.map((f) => (
-              <li key={f.id} className="flex flex-wrap items-center justify-between gap-2 py-1">
-                <span>
-                  {f.title}
-                  {f.year && <span className="text-muted-foreground"> ({f.year})</span>}
-                </span>
-                <ElementTag elementId={f.elementId} />
-              </li>
-            ))}
-          </ul>
-        </section>
+  return (
+    <ScreenLayout variant="page" title={title} subtitle={mode === "page" ? `Страница ${page} из ${pages}` : "Прокрутка"}>
+      <Back onClick={onBack} label="К библиотеке" />
+      <div className="flex gap-2">
+        <Button variant={mode === "page" ? "default" : "outline"} onClick={() => setMode("page")}>
+          Листание
+        </Button>
+        <Button variant={mode === "scroll" ? "default" : "outline"} onClick={() => setMode("scroll")}>
+          Прокрутка
+        </Button>
+      </div>
+      {mode === "page" ? (
+        <button
+          type="button"
+          className="flex min-h-80 items-center justify-center rounded-3xl bg-background/80 text-center"
+          onClick={() => setPage((current) => (current === pages ? 1 : current + 1))}
+        >
+          <span className="type-body text-muted-foreground">Нажмите, чтобы перелистнуть</span>
+        </button>
+      ) : (
+        <div className="space-y-3">
+          {[1, 2, 3].map((number) => (
+            <div key={number} className="flex min-h-48 items-center justify-center rounded-3xl bg-background/80">
+              <span className="type-caption text-muted-foreground">Страница {number}</span>
+            </div>
+          ))}
+        </div>
       )}
+    </ScreenLayout>
+  );
+}
 
-      {items.length === 0 && (
-        <p className="rounded-2xl border bg-card p-4 text-sm text-muted-foreground">
-          Материалы скоро появятся.
-        </p>
-      )}
-    </main>
+/** Заглавная – список. Читалка открывается из раздела «Книги». */
+export function LibraryPage() {
+  const [view, setView] = useState<View>({ name: "home" });
+
+  if (view.name === "reader") return <ReaderScreen title={view.title} onBack={() => setView({ name: view.back })} />;
+  if (view.name === "element") return <ElementScreen onBack={() => setView({ name: "home" })} />;
+  if (view.name === "practices") {
+    return (
+      <ScreenLayout variant="page" title="Практики">
+        <Back onClick={() => setView({ name: "home" })} label="К библиотеке" />
+        <GlassCard className="divide-y divide-foreground/8 px-5 py-1">
+          {libraryPractices.map((practice) => (
+            <button
+              key={practice.title}
+              type="button"
+              className="flex w-full items-center justify-between gap-3 py-3 text-left"
+              onClick={() => setView({ name: "practice", title: practice.title, back: "practices" })}
+            >
+              <span className="type-block text-foreground">{practice.title}</span>
+              <span className="type-caption text-muted-foreground">{practice.meta}</span>
+            </button>
+          ))}
+        </GlassCard>
+      </ScreenLayout>
+    );
+  }
+  if (view.name === "books") {
+    return (
+      <ScreenLayout variant="page" title="Книги">
+        <Back onClick={() => setView({ name: "home" })} label="К библиотеке" />
+        <GlassCard className="divide-y divide-foreground/8 px-5 py-1">
+          {readableBooks.map((book) => (
+            <button
+              key={book.title}
+              type="button"
+              className="flex w-full items-center justify-between gap-3 py-3 text-left"
+              onClick={() => setView({ name: "reader", title: book.title, back: "books" })}
+            >
+              <span className="min-w-0">
+                <span className="block type-block text-foreground">{book.title}</span>
+                <span className="block type-caption text-muted-foreground">{book.author}</span>
+              </span>
+              <span className="type-caption text-primary">Читать</span>
+            </button>
+          ))}
+        </GlassCard>
+      </ScreenLayout>
+    );
+  }
+  if (view.name === "practice") {
+    return <PracticeScreen title={view.title} onBack={() => setView({ name: view.back })} />;
+  }
+
+  return (
+    <LibraryHome
+      onElement={() => setView({ name: "element" })}
+      onPractice={(title) => setView({ name: "practice", title, back: "home" })}
+      onAllPractices={() => setView({ name: "practices" })}
+      onBook={(title) => setView({ name: "reader", title, back: "home" })}
+      onAllBooks={() => setView({ name: "books" })}
+    />
   );
 }
