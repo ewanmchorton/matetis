@@ -130,6 +130,10 @@ export const progressActions = {
   setType(typeId: string) {
     edit((current) => ({ ...current, typeId, testTaken: true }));
   },
+  /** Сайт-прототип: следующий проход после онбординга снова начинается с вопросов теста. */
+  forgetTest() {
+    edit((current) => ({ ...current, testTaken: false }));
+  },
   togglePractice(day: string) {
     edit((current) => ({ ...current, completedPractices: toggleDay(current.completedPractices, day) }));
   },

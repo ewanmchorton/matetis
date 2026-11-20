@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type ComponentType, type MouseEvent, type 
 import { CalendarCheck, ExternalLink, Repeat, Share, SquarePlus, Sparkles } from "lucide-react";
 
 import { ElementBadge, getElements } from "@/entities/element";
+import { progressActions } from "@/entities/progress";
 import {
   detectDevice,
   InstallSheet,
@@ -16,6 +17,7 @@ import {
   useInstallPrompt,
 } from "@/features/install-app";
 import { APP_NAME } from "@/shared/config/brand";
+import { isStaticPrototype } from "@/shared/config/env";
 import { routes } from "@/shared/config/routes";
 import { cn } from "@/shared/lib/utils";
 import { typograph } from "@/shared/lib/typograph";
@@ -219,7 +221,7 @@ function InstallScreen() {
       actions={
         <div className="flex w-full flex-col gap-2">
           {mainAction}
-          <Button variant="ghost" size="cta" className="text-muted-foreground" onClick={() => router.push(routes.typeTest)}>
+          <Button variant="ghost" size="cta" className="text-muted-foreground" onClick={() => continueToTest(router)}>
             {device === "inApp" ? "Продолжить здесь" : "Продолжить в браузере"}
           </Button>
         </div>
@@ -280,7 +282,15 @@ function TapNavigation({ onNext, onBack, children }: { onNext?: () => void; onBa
  * Онбординг: показывается один раз, сразу после регистрации.
  * Последний экран – установка на «Домой», без точек шагов.
  * После входа (в том числе в установленном приложении) человек попадает в тест или программу, а не сюда.
+ * На сайте-прототипе каждый проход заканчивается вопросами теста, даже если его уже проходили в этом браузере.
  */
+
+/** После онбординга – тест. На сайте-прототипе прошлый результат в браузере проход не сокращает. */
+function continueToTest(router: { push: (href: string) => void }) {
+  if (isStaticPrototype) progressActions.forgetTest();
+  router.push(routes.typeTest);
+}
+
 export function OnboardingPage() {
   const router = useRouter();
   const [index, setIndex] = useState(0);
@@ -295,7 +305,7 @@ export function OnboardingPage() {
 
   // Из установленного приложения шаг установки не нужен.
   function finish() {
-    if (openedFromHomeScreen()) router.push(routes.typeTest);
+    if (openedFromHomeScreen()) continueToTest(router);
     else setInstallStep(true);
   }
 
