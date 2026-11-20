@@ -1,4 +1,7 @@
-import type { CSSProperties, ReactNode } from "react";
+"use client";
+
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 import { typograph } from "@/shared/lib/typograph";
 import { cn } from "@/shared/lib/utils";
@@ -31,7 +34,10 @@ export type ScreenBackground =
   | "07_new_period"
   | "08_together"
   | "09_profile"
-  | "09_friend";
+  | "09_friend"
+  | "11_library"
+  | "11_water"
+  | "11_books";
 
 /**
  * Для экранов с картинкой: на какой высоте картинки (в ширинах экрана) должен оказаться
@@ -125,10 +131,17 @@ type ScreenLayoutProps = {
   /** Над заголовком: например, «Шаг 2 из 4» с полосой прогресса. */
   beforeTitle?: ReactNode;
   title: ReactNode;
+  /** Читалка: страница книги на весь экран, название только для программ чтения с экрана. */
+  hideHeading?: boolean;
   subtitle?: ReactNode;
   children?: ReactNode;
   /** Кнопки внизу экрана. В page – после содержимого, прижаты к низу экрана. */
   actions?: ReactNode;
+  /**
+   * Экран открыт внутри вкладок. Кнопки прижаты к низу видимой области,
+   * сразу над нижним меню, а не плавают посреди картинки.
+   */
+  clearNav?: boolean;
   /** Индикатор шагов над кнопками. */
   steps?: { count: number; current: number };
 };
@@ -136,6 +149,22 @@ type ScreenLayoutProps = {
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const screenWidth = "min(100vw, 440px)";
 const ivory = (alpha: number) => `rgb(250 247 242 / ${alpha})`;
+
+/** Кнопки у нижнего края телефона, сразу над вкладками. Вне карточки экрана, чтобы картинка их не сдвигала. */
+function PinnedActions({ children }: { children: ReactNode }) {
+  const [ready, setReady] = useState(false);
+  useEffect(() => setReady(true), []);
+  if (!ready) return null;
+  return createPortal(
+    <div
+      className="fixed inset-x-0 z-30 mx-auto flex w-full max-w-[440px] gap-3 px-(--screen-gutter)"
+      style={{ bottom: "calc(max(var(--nav-bottom), var(--safe-bottom) - 12px) + var(--nav-height) + 12px)" }}
+    >
+      {children}
+    </div>,
+    document.body,
+  );
+}
 
 /**
  * Плавный переход из сплошного Ivory (как полоса под часами) в картинку за height пикселей.
@@ -197,10 +226,12 @@ export function ScreenLayout({
   afterHaze,
   beforeTitle,
   title,
+  hideHeading = false,
   subtitle,
   children,
   actions,
   steps,
+  clearNav = false,
 }: ScreenLayoutProps) {
   const header = (
     <header className="px-(--screen-gutter) pt-[calc(var(--safe-top)+var(--header-top))]">
@@ -216,7 +247,12 @@ export function ScreenLayout({
   const belowTitle = `calc(${screenWidth} * ${BACKGROUND_RATIO - textLine})`;
 
   return (
-    <div className="relative isolate flex min-h-dvh flex-1 flex-col overflow-clip">
+    <div
+      className={cn(
+        "relative isolate flex min-h-dvh flex-1 flex-col overflow-clip",
+        clearNav && "pb-[calc(max(var(--nav-bottom),var(--safe-bottom)-12px)+var(--nav-height)+12px+48px)]",
+      )}
+    >
       {background && variant === "page" && (
         <div
           aria-hidden
@@ -337,26 +373,30 @@ export function ScreenLayout({
             {beforeTitle && (
               <div className={cn("mb-4", variant === "page" && "mt-(--page-title-gap)")}>{beforeTitle}</div>
             )}
-            <div
-              className={cn(
-                compact ? "space-y-1.5" : "space-y-2",
-                variant === "page" && !beforeTitle && "mt-(--page-title-gap)",
-              )}
-            >
-              <h1 className="type-title text-foreground">{typeof title === "string" ? typograph(title) : title}</h1>
-              {subtitle && (
-                <p className={cn(compact ? "type-secondary" : "type-body", "text-muted-foreground")}>
-                  {typeof subtitle === "string" ? typograph(subtitle) : subtitle}
-                </p>
-              )}
-            </div>
+            {hideHeading ? (
+              <h1 className="sr-only">{typeof title === "string" ? typograph(title) : title}</h1>
+            ) : (
+              <div
+                className={cn(
+                  compact ? "space-y-1.5" : "space-y-2",
+                  variant === "page" && !beforeTitle && "mt-(--page-title-gap)",
+                )}
+              >
+                <h1 className="type-title text-foreground">{typeof title === "string" ? typograph(title) : title}</h1>
+                {subtitle && (
+                  <p className={cn(compact ? "type-secondary" : "type-body", "text-muted-foreground")}>
+                    {typeof subtitle === "string" ? typograph(subtitle) : subtitle}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {children && (
             <div
               className={cn(
                 "flex flex-col",
-                compact ? "mt-4 gap-4" : "mt-6 gap-6",
+                hideHeading ? "mt-2 gap-4" : compact ? "mt-4 gap-4" : "mt-6 gap-6",
                 centered && "mx-auto w-full max-w-(--centered-text-width)",
               )}
             >
@@ -366,12 +406,13 @@ export function ScreenLayout({
         </div>
         {afterHaze && <div className={cn("flex flex-col", compact ? "mt-4 gap-4" : "mt-6 gap-6")}>{afterHaze}</div>}
 
-        {(actions || steps) && (
+        {((actions && !clearNav) || steps) && (
           <div className={cn("flex flex-col gap-6", compact ? "pt-4" : "pt-6", (variant === "page" || fullImage) && "mt-auto")}>
             {steps && <StepDots count={steps.count} current={steps.current} />}
-            {actions && <div className="flex gap-3">{actions}</div>}
+            {actions && !clearNav && <div className="flex gap-3">{actions}</div>}
           </div>
         )}
+        {clearNav && actions && <PinnedActions>{actions}</PinnedActions>}
       </main>
     </div>
   );

@@ -239,6 +239,44 @@
 @utility companion-float {
   animation: companion-float 6s ease-in-out 2.6s infinite;
 }
+/* Текст электронной книги в читалке. Размеры – из дизайн-гайда. */
+.flow-sheet {
+  font-family: var(--reader-font, var(--font-sans));
+  font-size: var(--reader-size, 17px);
+  line-height: 1.45;
+  color: var(--foreground);
+}
+.flow-sheet p {
+  margin: 0 0 0.75em;
+}
+.flow-sheet h2,
+.flow-sheet h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  line-height: 1.2;
+  margin: 0 0 0.6em;
+}
+.flow-sheet h2 {
+  font-size: 24px;
+}
+.flow-sheet h3 {
+  font-size: 20px;
+}
+.flow-sheet img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto 0.75em;
+}
+.flow-sheet blockquote {
+  margin: 0 0 0.75em;
+  padding-left: 12px;
+  border-left: 2px solid var(--border);
+}
+.flow-sheet em {
+  font-style: italic;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .companion-old,
   .companion-glow {

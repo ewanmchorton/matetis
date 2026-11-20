@@ -1,19 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Bookmark, BookOpen, ChevronRight, Headphones, Play, Video } from "lucide-react";
 
 import { currentElementId, getElement, getElementGuide } from "@/entities/element";
+import { formatLabel, readableBooks } from "@/entities/library/model/readable-books";
 import { typograph } from "@/shared/lib/typograph";
+import { cn } from "@/shared/lib/utils";
+import { BackButton } from "@/shared/ui/back-button";
 import { Button } from "@/shared/ui/button";
 import { GlassCard } from "@/shared/ui/glass-card";
-import { ScreenLayout } from "@/widgets/screen-layout";
+import { ScreenLayout, backgroundSrc } from "@/widgets/screen-layout";
+import { AudioPlayer } from "@/views/practice/ui/audio-player";
+
+import { readMarks, type ReaderMark } from "./reader-marks";
+import { writePlace } from "./reader-place";
+import { ReaderScreen } from "./reader-screen";
 
 /** Редкие практики. На заглавной – только название, текст открывается внутри. */
 const libraryPractices = [
-  { title: "Золотая подушечка", meta: "Запись" },
-  { title: "Техника Золотого Шара", meta: "Запись" },
-  { title: "Приветственное видео", meta: "Видео" },
+  { title: "Золотая подушечка", kind: "audio" as const },
+  { title: "Техника Золотого Шара", kind: "audio" as const },
+  { title: "Приветственное видео", kind: "video" as const },
 ];
+
+const kindLabel = { audio: "Аудио", video: "Видео" };
+
+/** Фон экрана практики – фон текущей стихии. Сейчас идёт Вода, поэтому берём её экран. */
+const practiceBackground = currentElementId === "water" ? "11_water" : "04_earth_04_practice";
 
 /** Рекомендации внутри стихии: только обложки, читалка отсюда не открывается. */
 const waterRecommendations = {
@@ -24,9 +38,6 @@ const waterRecommendations = {
   films: [{ title: "Весна, лето, осень, зима… и снова весна" }],
 };
 
-/** Книги, которые можно читать. Раздел на заглавной, не внутри стихии. */
-const readableBooks = [{ title: "Цигун для начинающих", author: "Мантак Чиа" }];
-
 /** На заглавной видно столько строк. Остальные открываются отдельной страницей и листаются вниз. */
 const homePreview = 3;
 
@@ -35,8 +46,9 @@ type View =
   | { name: "element" }
   | { name: "practices" }
   | { name: "books" }
+  | { name: "bookmarks" }
   | { name: "practice"; title: string; back: "home" | "practices" }
-  | { name: "reader"; title: string; back: "home" | "books" };
+  | { name: "reader"; id: string };
 
 /** Абзацы и строки, которые начинаются с «•», – списком. */
 function Prose({ text }: { text: string }) {
@@ -74,11 +86,49 @@ function Cover({ title, note }: { title: string; note?: string }) {
   );
 }
 
-function Back({ onClick, label }: { onClick: () => void; label: string }) {
+/** Заголовок раздела прямо на картинке: мягкий светлый овал, чтобы строка читалась. */
+function PictureHeading({ children }: { children: string }) {
   return (
-    <Button variant="ghost" className="self-start px-0" onClick={onClick}>
-      {label}
-    </Button>
+    <h2 className="relative z-0 w-fit type-section text-foreground">
+      <span
+        aria-hidden
+        className="absolute top-1/2 left-1/2 -z-10 h-[160%] w-[calc(100%+32px)] -translate-x-1/2 -translate-y-1/2 rounded-[50%]"
+        style={{
+          background:
+            "radial-gradient(ellipse at center, rgb(250 247 242 / 0.65) 0%, rgb(250 247 242 / 0) 72%)",
+        }}
+      />
+      {children}
+    </h2>
+  );
+}
+
+function RowIcon({ kind }: { kind: "audio" | "video" | "book" | "mark" }) {
+  const Icon = kind === "audio" ? Headphones : kind === "video" ? Video : kind === "mark" ? Bookmark : BookOpen;
+  return <Icon className="size-6 shrink-0 text-primary" strokeWidth={1.75} aria-hidden />;
+}
+
+/** Строка списка на заглавной и на страницах «Все практики» и «Все книги». */
+function LibraryRow({
+  icon,
+  title,
+  meta,
+  onClick,
+}: {
+  icon?: "audio" | "video" | "book" | "mark";
+  title: string;
+  meta?: string;
+  onClick: () => void;
+}) {
+  return (
+    <button type="button" onClick={onClick} className="flex min-h-14 w-full items-center gap-3 px-5 py-3 text-left">
+      {icon && <RowIcon kind={icon} />}
+      <span className="min-w-0 flex-1">
+        <span className={cn("block type-block", icon ? "text-foreground" : "text-primary")}>{typograph(title)}</span>
+        {meta && <span className="block type-caption text-muted-foreground">{typograph(meta)}</span>}
+      </span>
+      <ChevronRight className={cn("size-5 shrink-0", icon ? "text-muted-foreground" : "text-primary")} aria-hidden />
+    </button>
   );
 }
 
@@ -92,69 +142,64 @@ function LibraryHome({
   onElement: () => void;
   onPractice: (title: string) => void;
   onAllPractices: () => void;
-  onBook: (title: string) => void;
+  onBook: (id: string) => void;
   onAllBooks: () => void;
 }) {
   const element = getElement(currentElementId);
 
   return (
-    <ScreenLayout variant="page" title="Библиотека">
-      <GlassCard className="space-y-3 p-0">
-        <button type="button" className="block w-full space-y-3 p-5 text-left" onClick={onElement}>
-          <span className="flex aspect-video items-end rounded-2xl bg-foreground/5 p-4">
-            <span className="type-caption text-muted-foreground">Видео</span>
-          </span>
-          <span className="block">
-            <span className="block type-section text-foreground">Стихия {element.genitive}</span>
-            <span className="block type-caption text-muted-foreground">{element.period}</span>
+    <ScreenLayout variant="page" background="11_library" title="Библиотека">
+      <GlassCard className="p-5">
+        <button type="button" className="block w-full text-left" onClick={onElement}>
+          <span className="block type-section text-foreground">Стихия {element.genitive}</span>
+          <span className="mt-2 block type-secondary text-muted-foreground">{element.period}</span>
+          <span className="relative mt-4 block aspect-video overflow-hidden rounded-2xl">
+            <img
+              src={backgroundSrc("11_library")}
+              alt=""
+              className="size-full object-cover object-[center_12%]"
+            />
+            <span className="absolute inset-0 flex items-center justify-center">
+              <span className="flex size-12 items-center justify-center rounded-full bg-background/85 text-primary shadow-[0_2px_8px_rgb(41_44_40/0.12)]">
+                <Play className="size-5 fill-current" aria-hidden />
+              </span>
+            </span>
+            <span className="absolute bottom-3 left-3 rounded-lg bg-background/85 px-2.5 py-1 type-caption text-foreground">
+              Видео
+            </span>
           </span>
         </button>
       </GlassCard>
 
       <section className="space-y-3" aria-label="Практики">
-        <h2 className="type-section text-foreground">Практики</h2>
-        <GlassCard className="divide-y divide-foreground/8 px-5 py-1">
+        <PictureHeading>Практики</PictureHeading>
+        <GlassCard className="divide-y divide-foreground/10 p-0">
           {libraryPractices.slice(0, homePreview).map((practice) => (
-            <button
+            <LibraryRow
               key={practice.title}
-              type="button"
-              className="flex w-full items-center justify-between gap-3 py-3 text-left"
+              icon={practice.kind}
+              title={practice.title}
+              meta={kindLabel[practice.kind]}
               onClick={() => onPractice(practice.title)}
-            >
-              <span className="type-block text-foreground">{practice.title}</span>
-              <span className="type-caption text-muted-foreground">{practice.meta}</span>
-            </button>
+            />
           ))}
-          {libraryPractices.length > homePreview && (
-            <button type="button" className="w-full py-3 text-left type-caption text-primary" onClick={onAllPractices}>
-              Все практики
-            </button>
-          )}
+          <LibraryRow title="Все практики" onClick={onAllPractices} />
         </GlassCard>
       </section>
 
       <section className="space-y-3" aria-label="Книги">
-        <h2 className="type-section text-foreground">Книги</h2>
-        <GlassCard className="divide-y divide-foreground/8 px-5 py-1">
+        <PictureHeading>Книги</PictureHeading>
+        <GlassCard className="divide-y divide-foreground/10 p-0">
           {readableBooks.slice(0, homePreview).map((book) => (
-            <button
-              key={book.title}
-              type="button"
-              className="flex w-full items-center justify-between gap-3 py-3 text-left"
-              onClick={() => onBook(book.title)}
-            >
-              <span className="min-w-0">
-                <span className="block type-block text-foreground">{book.title}</span>
-                <span className="block type-caption text-muted-foreground">{book.author}</span>
-              </span>
-              <span className="type-caption text-primary">Читать</span>
-            </button>
+            <LibraryRow
+              key={book.id}
+              icon="book"
+              title={book.title}
+              meta={`${book.author} – ${formatLabel[book.format]}`}
+              onClick={() => onBook(book.id)}
+            />
           ))}
-          {readableBooks.length > homePreview && (
-            <button type="button" className="w-full py-3 text-left type-caption text-primary" onClick={onAllBooks}>
-              Все книги
-            </button>
-          )}
+          <LibraryRow title="Все книги" onClick={onAllBooks} />
         </GlassCard>
       </section>
     </ScreenLayout>
@@ -167,8 +212,14 @@ function ElementScreen({ onBack }: { onBack: () => void }) {
   const covers = currentElementId === "water" ? waterRecommendations : { books: [], films: [] };
 
   return (
-    <ScreenLayout variant="page" title={`Стихия ${element.genitive}`} subtitle={element.period}>
-      <Back onClick={onBack} label="К библиотеке" />
+    <ScreenLayout
+      variant="page"
+      background="11_water"
+      title={`Стихия ${element.genitive}`}
+      subtitle={element.period}
+      clearNav
+      actions={<BackButton onClick={onBack} />}
+    >
       <GlassCard className="space-y-3">
         <p className="type-caption text-muted-foreground">Видео</p>
         <div className="flex aspect-video items-center justify-center rounded-2xl bg-foreground/5">
@@ -210,52 +261,135 @@ function ElementScreen({ onBack }: { onBack: () => void }) {
 
 function PracticeScreen({ title, onBack }: { title: string; onBack: () => void }) {
   const practice = libraryPractices.find((item) => item.title === title);
+  const video = practice?.kind === "video";
 
   return (
-    <ScreenLayout variant="page" title={title} subtitle={practice?.meta}>
-      <Back onClick={onBack} label="К библиотеке" />
-      <GlassCard className="flex aspect-video items-center justify-center">
-        <span className="type-secondary text-muted-foreground">{practice?.meta === "Видео" ? "Видео" : "Аудио"}</span>
-      </GlassCard>
-      <GlassCard>
-        <p className="type-body text-muted-foreground">[Текст практики]</p>
+    <ScreenLayout
+      variant="page"
+      background={practiceBackground}
+      beforeTitle={<p className="type-caption text-muted-foreground">{video ? "Видео" : "Аудио"}</p>}
+      title={title}
+      clearNav
+      actions={
+        <>
+          <BackButton onClick={onBack} />
+          <Button size="cta" className="flex-1" onClick={onBack}>
+            Выполнено
+          </Button>
+        </>
+      }
+    >
+      {video ? (
+        <GlassCard className="flex aspect-video items-center justify-center bg-background/80">
+          <span className="type-secondary text-muted-foreground">Видео</span>
+        </GlassCard>
+      ) : (
+        <AudioPlayer durationSeconds={5 * 60} />
+      )}
+      <GlassCard className="bg-background/80">
+        <p className="type-body text-foreground">Текст практики появится, когда его добавят.</p>
       </GlassCard>
     </ScreenLayout>
   );
 }
 
-function ReaderScreen({ title, onBack }: { title: string; onBack: () => void }) {
-  const [mode, setMode] = useState<"page" | "scroll">("page");
-  const [page, setPage] = useState(1);
-  const pages = 12;
+function PracticeList({ onBack, onOpen }: { onBack: () => void; onOpen: (title: string) => void }) {
+  return (
+    <ScreenLayout variant="page" title="Практики" clearNav actions={<BackButton onClick={onBack} />}>
+      <GlassCard className="divide-y divide-foreground/10 p-0">
+        {libraryPractices.map((practice) => (
+          <LibraryRow
+            key={practice.title}
+            icon={practice.kind}
+            title={practice.title}
+            meta={kindLabel[practice.kind]}
+            onClick={() => onOpen(practice.title)}
+          />
+        ))}
+      </GlassCard>
+    </ScreenLayout>
+  );
+}
+
+function savedMarks() {
+  return readableBooks.flatMap((book) =>
+    [...readMarks(book.id)].reverse().map((mark) => ({ book, mark })),
+  );
+}
+
+function markLabel(format: (typeof readableBooks)[number]["format"], mark: ReaderMark) {
+  const name = format === "epub" || format === "fb2" ? "Лист" : "Страница";
+  return `${name} ${mark.page}`;
+}
+
+function BookList({
+  onBack,
+  onOpen,
+  onBookmarks,
+}: {
+  onBack: () => void;
+  onOpen: (id: string) => void;
+  onBookmarks: () => void;
+}) {
+  return (
+    <ScreenLayout
+      variant="page"
+      background="11_books"
+      title="Книги"
+      clearNav
+      headerAction={
+        <button type="button" onClick={onBookmarks} className="type-secondary -mr-2 min-h-11 px-2 text-primary">
+          Закладки
+        </button>
+      }
+      actions={<BackButton onClick={onBack} />}
+    >
+      <GlassCard className="divide-y divide-foreground/10 p-0">
+        {readableBooks.map((book) => (
+          <LibraryRow
+            key={book.id}
+            icon="book"
+            title={book.title}
+            meta={`${book.author} – ${formatLabel[book.format]}`}
+            onClick={() => onOpen(book.id)}
+          />
+        ))}
+      </GlassCard>
+    </ScreenLayout>
+  );
+}
+
+function BookmarkScreen({ onBack, onOpen }: { onBack: () => void; onOpen: (id: string, mark: ReaderMark) => void }) {
+  const [marks, setMarks] = useState<ReturnType<typeof savedMarks>>([]);
+
+  useEffect(() => {
+    setMarks(savedMarks());
+  }, []);
 
   return (
-    <ScreenLayout variant="page" title={title} subtitle={mode === "page" ? `Страница ${page} из ${pages}` : "Прокрутка"}>
-      <Back onClick={onBack} label="К библиотеке" />
-      <div className="flex gap-2">
-        <Button variant={mode === "page" ? "default" : "outline"} onClick={() => setMode("page")}>
-          Листание
-        </Button>
-        <Button variant={mode === "scroll" ? "default" : "outline"} onClick={() => setMode("scroll")}>
-          Прокрутка
-        </Button>
-      </div>
-      {mode === "page" ? (
-        <button
-          type="button"
-          className="flex min-h-80 items-center justify-center rounded-3xl bg-background/80 text-center"
-          onClick={() => setPage((current) => (current === pages ? 1 : current + 1))}
-        >
-          <span className="type-body text-muted-foreground">Нажмите, чтобы перелистнуть</span>
-        </button>
+    <ScreenLayout
+      variant="page"
+      background="11_books"
+      title="Закладки"
+      clearNav
+      actions={<BackButton onClick={onBack} />}
+    >
+      {marks.length === 0 ? (
+        <GlassCard>
+          <p className="type-body text-foreground">Закладок пока нет. Поставьте закладку в книге, и она появится здесь.</p>
+        </GlassCard>
       ) : (
-        <div className="space-y-3">
-          {[1, 2, 3].map((number) => (
-            <div key={number} className="flex min-h-48 items-center justify-center rounded-3xl bg-background/80">
-              <span className="type-caption text-muted-foreground">Страница {number}</span>
-            </div>
+        <GlassCard className="divide-y divide-foreground/10 p-0">
+          {marks.map(({ book, mark }) => (
+            <LibraryRow
+              key={`${book.id}-${mark.slice}-${mark.page}`}
+              icon="mark"
+              title={book.title}
+              meta={markLabel(book.format, mark)}
+              onClick={() => onOpen(book.id, mark)}
+            />
           ))}
-        </div>
+        </GlassCard>
       )}
     </ScreenLayout>
   );
@@ -266,56 +400,37 @@ export function LibraryPage() {
   const [view, setView] = useState<View>({ name: "home" });
 
   if (view.name === "reader") {
-    const back = view.back;
-    return (
-      <ReaderScreen
-        title={view.title}
-        onBack={() => setView(back === "books" ? { name: "books" } : { name: "home" })}
-      />
-    );
+    const book = readableBooks.find((item) => item.id === view.id);
+    if (!book) return null;
+    return <ReaderScreen book={book} onBack={() => setView({ name: "books" })} />;
   }
   if (view.name === "element") return <ElementScreen onBack={() => setView({ name: "home" })} />;
   if (view.name === "practices") {
     return (
-      <ScreenLayout variant="page" title="Практики">
-        <Back onClick={() => setView({ name: "home" })} label="К библиотеке" />
-        <GlassCard className="divide-y divide-foreground/8 px-5 py-1">
-          {libraryPractices.map((practice) => (
-            <button
-              key={practice.title}
-              type="button"
-              className="flex w-full items-center justify-between gap-3 py-3 text-left"
-              onClick={() => setView({ name: "practice", title: practice.title, back: "practices" })}
-            >
-              <span className="type-block text-foreground">{practice.title}</span>
-              <span className="type-caption text-muted-foreground">{practice.meta}</span>
-            </button>
-          ))}
-        </GlassCard>
-      </ScreenLayout>
+      <PracticeList
+        onBack={() => setView({ name: "home" })}
+        onOpen={(title) => setView({ name: "practice", title, back: "practices" })}
+      />
     );
   }
   if (view.name === "books") {
     return (
-      <ScreenLayout variant="page" title="Книги">
-        <Back onClick={() => setView({ name: "home" })} label="К библиотеке" />
-        <GlassCard className="divide-y divide-foreground/8 px-5 py-1">
-          {readableBooks.map((book) => (
-            <button
-              key={book.title}
-              type="button"
-              className="flex w-full items-center justify-between gap-3 py-3 text-left"
-              onClick={() => setView({ name: "reader", title: book.title, back: "books" })}
-            >
-              <span className="min-w-0">
-                <span className="block type-block text-foreground">{book.title}</span>
-                <span className="block type-caption text-muted-foreground">{book.author}</span>
-              </span>
-              <span className="type-caption text-primary">Читать</span>
-            </button>
-          ))}
-        </GlassCard>
-      </ScreenLayout>
+      <BookList
+        onBack={() => setView({ name: "home" })}
+        onOpen={(id) => setView({ name: "reader", id })}
+        onBookmarks={() => setView({ name: "bookmarks" })}
+      />
+    );
+  }
+  if (view.name === "bookmarks") {
+    return (
+      <BookmarkScreen
+        onBack={() => setView({ name: "books" })}
+        onOpen={(id, mark) => {
+          writePlace(id, mark);
+          setView({ name: "reader", id });
+        }}
+      />
     );
   }
   if (view.name === "practice") {
@@ -333,7 +448,7 @@ export function LibraryPage() {
       onElement={() => setView({ name: "element" })}
       onPractice={(title) => setView({ name: "practice", title, back: "home" })}
       onAllPractices={() => setView({ name: "practices" })}
-      onBook={(title) => setView({ name: "reader", title, back: "home" })}
+      onBook={(id) => setView({ name: "reader", id })}
       onAllBooks={() => setView({ name: "books" })}
     />
   );

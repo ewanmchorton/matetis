@@ -40,4 +40,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Книги для проверки читалки. Чужие тексты, в git не кладём.
+/private/
+
 !.env.example
