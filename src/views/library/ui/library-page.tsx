@@ -8,7 +8,6 @@ import { formatLabel, readableBooks } from "@/entities/library/model/readable-bo
 import { typograph } from "@/shared/lib/typograph";
 import { cn } from "@/shared/lib/utils";
 import { BackButton } from "@/shared/ui/back-button";
-import { Button } from "@/shared/ui/button";
 import { GlassCard } from "@/shared/ui/glass-card";
 import { ScreenLayout, backgroundSrc } from "@/widgets/screen-layout";
 import { AudioPlayer } from "@/views/practice/ui/audio-player";
@@ -270,14 +269,7 @@ function PracticeScreen({ title, onBack }: { title: string; onBack: () => void }
       beforeTitle={<p className="type-caption text-muted-foreground">{video ? "Видео" : "Аудио"}</p>}
       title={title}
       clearNav
-      actions={
-        <>
-          <BackButton onClick={onBack} />
-          <Button size="cta" className="flex-1" onClick={onBack}>
-            Выполнено
-          </Button>
-        </>
-      }
+      actions={<BackButton onClick={onBack} />}
     >
       {video ? (
         <GlassCard className="flex aspect-video items-center justify-center bg-background/80">
@@ -338,8 +330,13 @@ function BookList({
       title="Книги"
       clearNav
       headerAction={
-        <button type="button" onClick={onBookmarks} className="type-secondary -mr-2 min-h-11 px-2 text-primary">
-          Закладки
+        <button
+          type="button"
+          aria-label="Закладки"
+          onClick={onBookmarks}
+          className="grid size-11 shrink-0 place-items-center rounded-full text-primary"
+        >
+          <Bookmark className="size-6" strokeWidth={1.75} aria-hidden />
         </button>
       }
       actions={<BackButton onClick={onBack} />}
