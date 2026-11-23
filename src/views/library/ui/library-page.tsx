@@ -287,7 +287,13 @@ function PracticeScreen({ title, onBack }: { title: string; onBack: () => void }
 
 function PracticeList({ onBack, onOpen }: { onBack: () => void; onOpen: (title: string) => void }) {
   return (
-    <ScreenLayout variant="page" title="Практики" clearNav actions={<BackButton onClick={onBack} />}>
+    <ScreenLayout
+      variant="page"
+      background={practiceBackground}
+      title="Практики"
+      clearNav
+      actions={<BackButton onClick={onBack} />}
+    >
       <GlassCard className="divide-y divide-foreground/10 p-0">
         {libraryPractices.map((practice) => (
           <LibraryRow
