@@ -19,6 +19,7 @@
     "db:seed-admin": "node scripts/seed-admin.mts",
     "db:seed-program": "node scripts/seed-program.mts",
     "db:seed-together": "node scripts/seed-together.mts",
+    "db:seed-journal": "node scripts/seed-journal.mts",
     "telegram:dev": "node scripts/telegram-dev.mts"
   },
   "dependencies": {

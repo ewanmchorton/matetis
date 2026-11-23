@@ -2,16 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, Sparkles, UserRound, Users } from "lucide-react";
 
 import { routes } from "@/shared/config/routes";
 import { cn } from "@/shared/lib/utils";
 
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
+/** Рисунки из design/icons. Обычная вкладка – как в файле, выбранная – цветом подписи. */
 const tabs = [
-  { href: routes.program, label: "Программа", icon: Sparkles },
-  { href: routes.together, label: "Вместе", icon: Users },
-  { href: routes.library, label: "Библиотека", icon: BookOpen },
-  { href: routes.profile, label: "Профиль", icon: UserRound },
+  { href: routes.program, label: "Программа", icon: `${basePath}/nav/program.png` },
+  { href: routes.together, label: "Вместе", icon: `${basePath}/nav/together.png` },
+  { href: routes.library, label: "Библиотека", icon: `${basePath}/nav/library.png` },
+  { href: routes.profile, label: "Профиль", icon: `${basePath}/nav/profile.png` },
 ];
 
 /** Нижнее меню: плавающая панель, положение – docs/design-guide.md, раздел «Расположение». */
@@ -27,7 +29,9 @@ export function BottomNav() {
         {tabs.map((tab) => {
           const active =
             tab.href === routes.profile
-              ? pathname === routes.profile || pathname.startsWith(`${routes.person}/`)
+              ? pathname === routes.profile ||
+                pathname.startsWith(`${routes.profile}/`) ||
+                pathname.startsWith(`${routes.person}/`)
               : pathname === tab.href;
           return (
             <li key={tab.href}>
@@ -39,7 +43,25 @@ export function BottomNav() {
                   active && "text-primary",
                 )}
               >
-                <tab.icon className="size-6" strokeWidth={1.5} />
+                <span className="relative size-6">
+                  <img src={tab.icon} alt="" className={cn("size-6", active && "invisible")} />
+                  {active && (
+                    <span
+                      aria-hidden
+                      className="absolute inset-0 bg-current"
+                      style={{
+                        maskImage: `url("${tab.icon}")`,
+                        WebkitMaskImage: `url("${tab.icon}")`,
+                        maskRepeat: "no-repeat",
+                        WebkitMaskRepeat: "no-repeat",
+                        maskPosition: "center",
+                        WebkitMaskPosition: "center",
+                        maskSize: "contain",
+                        WebkitMaskSize: "contain",
+                      }}
+                    />
+                  )}
+                </span>
                 {tab.label}
               </Link>
             </li>

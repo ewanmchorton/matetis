@@ -10,6 +10,7 @@ export const routes = {
   together: "/together",
   library: "/library",
   profile: "/profile",
+  journal: "/profile/journal",
   person: "/people",
   admin: "/admin",
   adminLogin: "/admin/login",

@@ -19,14 +19,17 @@ import { Checkbox } from "@/shared/ui/checkbox";
 import { GlassCard } from "@/shared/ui/glass-card";
 import { ScreenLayout } from "@/widgets/screen-layout";
 
+import { useJournal } from "../api/journal-api";
 import { useProfile } from "../api/profile-api";
 import { ProfileFriends } from "./profile-friends";
+import { ProfileJournal } from "./profile-journal";
 
 const checkboxClass = "size-6 rounded-md border-primary/40 bg-background/70 [&_svg]:size-4!";
 
 export function ProfilePage() {
   const router = useRouter();
   const { state, actionError, setPublishEvents, setPhraseSettings, answerRequest } = useProfile();
+  const journal = useJournal();
 
   useEffect(() => {
     if (state.status === "signed-out") router.replace(routes.auth);
@@ -81,6 +84,8 @@ export function ProfilePage() {
       )}
 
       <PersonTypeCard />
+
+      <ProfileJournal state={journal} />
 
       <Reminders>
         {state.status === "ready" && (

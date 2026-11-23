@@ -5,6 +5,7 @@ import { updateMySettings } from "@/entities/person-settings/server";
 import { saveMyTypeTest } from "@/entities/type-test-attempt/server";
 
 import { clearDatabase, createPerson } from "../../../../tests/people";
+import { listMyJournal } from "./journal.server";
 import {
   getMyNavigator,
   getMyNote,
@@ -444,6 +445,16 @@ describe("Заметки для себя", () => {
     expect(await getMyNote(anna, thinking.id, day(2))).toEqual({ text: "" });
     await saveMyNote(anna, thinking.id, "", day(1));
     expect(await getMyNote(anna, thinking.id, day(1))).toEqual({ text: "" });
+  });
+
+  it("журнал показывает заметки от новых к старым", async () => {
+    const thinking = await savePractice(manager, { title: "Мышление по навигатору", frequency: "daily", daypart: "evening", position: 2 });
+    await saveMyNote(anna, thinking.id, "Старая", day(1));
+    await saveMyNote(anna, thinking.id, "Новая", day(2));
+    expect(await listMyJournal(anna)).toEqual([
+      { day: "2026-12-26", text: "Новая" },
+      { day: "2026-12-25", text: "Старая" },
+    ]);
   });
 });
 
