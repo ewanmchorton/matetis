@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ComponentType, type MouseEvent, type ReactNode, type TouchEvent } from "react";
-import { ExternalLink, HandHeart, Infinity as InfinityIcon, Share, SquarePlus, UserPlus } from "lucide-react";
+import { ExternalLink, Share, SquarePlus } from "lucide-react";
 
 import { ElementBadge, getElements } from "@/entities/element";
 import { progressActions } from "@/entities/progress";
@@ -24,6 +24,10 @@ import { typograph } from "@/shared/lib/typograph";
 import { Button, buttonVariants } from "@/shared/ui/button";
 import { GlassCard } from "@/shared/ui/glass-card";
 import { backgroundSrc, ScreenLayout, type ScreenBackground } from "@/widgets/screen-layout";
+
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+/** Значок, вырезанный из макета в design/screens, а не нарисованный заново. */
+const mockIcon = (name: string) => `${basePath}/onboarding/${name}.png`;
 
 type Slide = {
   /** page – заголовок сверху, картинка видна целиком под карточками (как в макете 02_3). */
@@ -58,68 +62,31 @@ function ElementsList() {
 }
 
 const togetherParts = [
-  { icon: UserPlus, title: "Друзья", text: "Добавляйте людей, которые тоже проходят программу." },
-  { icon: InfinityIcon, title: "Совместная практика", text: "Одна практика на двоих. Каждый проходит её в своё время." },
-  { icon: HandHeart, title: "Поддержка", text: "В ленте видны важные шаги друзей: их можно поддержать." },
+  { image: mockIcon("together-friends"), title: "Друзья", text: "Добавляйте людей, которые тоже проходят программу." },
+  { image: mockIcon("together-practice"), title: "Совместная практика", text: "Одна практика на двоих. Каждый проходит её в своё время." },
+  { image: mockIcon("together-support"), title: "Поддержка", text: "В ленте видны важные шаги друзей: их можно поддержать." },
 ];
 
-/** Значки экрана программы – как на макете `design/screens/02_3_program`, не из общего набора. */
-function ProgramIcon({ className, children }: { className?: string; children: ReactNode }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      {children}
-    </svg>
-  );
-}
-
-function PracticeIcon({ className }: { className?: string }) {
-  return (
-    <ProgramIcon className={className}>
-      <rect x="3.5" y="5" width="17" height="15.5" rx="2.2" />
-      <path d="M8 3.2v3.4M16 3.2v3.4M3.5 9.4h17" />
-      <path d="M8.2 14.4c1.1 1.4 2.3 2.1 3.8 2.1s2.7-.7 3.8-2.1" />
-    </ProgramIcon>
-  );
-}
-
-function RitualsIcon({ className }: { className?: string }) {
-  return (
-    <ProgramIcon className={className}>
-      <path d="M3 9c1.4-1.6 2.8-1.6 4.2 0S10 10.6 11.4 9" />
-      <path d="M3 15c1.4-1.6 2.8-1.6 4.2 0s3 1.6 4.2 0" />
-      <path d="m14.2 8.2 1.5 1.5 3-3" />
-      <path d="m14.2 14.2 1.5 1.5 3-3" />
-    </ProgramIcon>
-  );
-}
-
-function LibraryIcon({ className }: { className?: string }) {
-  return (
-    <ProgramIcon className={className}>
-      <path d="M4 7.4c2.4-.9 4.6-.5 6 .8 1.4-1.3 3.6-1.7 6-.8 1 .3 1.8.5 2.5.5v10.4c-.8-.2-1.6-.4-2.6-.7-2.4-.6-4.4-.2-5.9.9-1.5-1.1-3.5-1.5-5.9-.9-1 .3-1.8.5-2.6.7V7.9c.7 0 1.5-.2 2.5-.5Z" />
-      <path d="M12 8.2v10.2" />
-      <path d="M10 10.1v4.8l5-2.4-5-2.4Z" fill="currentColor" stroke="none" strokeWidth="0" />
-    </ProgramIcon>
-  );
-}
-
 const programParts = [
-  { icon: PracticeIcon, title: "Практика на сегодня", text: "Набор коротких практик и медитаций на каждый день." },
+  { image: mockIcon("program-practice"), title: "Практика на сегодня", text: "Набор коротких практик и медитаций на каждый день." },
   {
-    icon: RitualsIcon,
+    image: mockIcon("program-rituals"),
     title: "Ритуалы недели",
     text: "Зарядка, медитации, которые можно выполнять в удобное время среди недели.",
   },
-  { icon: LibraryIcon, title: "Библиотека", text: "Видео, книги и фильмы в библиотеке." },
+  { image: mockIcon("program-library"), title: "Библиотека", text: "Видео, книги и фильмы в библиотеке." },
 ];
 
 function IconCard({
   icon: Icon,
+  image,
   title,
   text,
   compact = false,
 }: {
-  icon: ComponentType<{ className?: string }>;
+  icon?: ComponentType<{ className?: string }>;
+  /** Кружок со значком, вырезанный из макета. */
+  image?: string;
   title: string;
   text: string;
   /** Плотнее: внизу картинки должно остаться место для графики. */
@@ -127,14 +94,18 @@ function IconCard({
 }) {
   return (
     <GlassCard className={cn("flex", compact ? "gap-3 p-4" : "gap-4")}>
-      <span
-        className={cn(
-          "grid shrink-0 place-items-center rounded-full bg-primary/8 text-primary",
-          compact ? "size-10" : "size-12",
-        )}
-      >
-        <Icon className="size-6" />
-      </span>
+      {image ? (
+        <img src={image} alt="" className={cn("shrink-0", compact ? "size-11" : "size-12")} />
+      ) : (
+        <span
+          className={cn(
+            "grid shrink-0 place-items-center rounded-full bg-primary/8 text-primary",
+            compact ? "size-10" : "size-12",
+          )}
+        >
+          {Icon && <Icon className="size-6" />}
+        </span>
+      )}
       <div className="space-y-1">
         <p className="type-block">{title}</p>
         <p className="type-secondary text-muted-foreground">{typograph(text)}</p>
