@@ -38,7 +38,7 @@ function FullInstruction({ test }: { test: TypeTest }) {
       <details className="group">
         <summary className="flex min-h-14 cursor-pointer list-none items-center gap-3 px-5 type-secondary text-foreground [&::-webkit-details-marker]:hidden">
           <ChevronRight className="size-5 shrink-0 transition-transform group-open:rotate-90" aria-hidden />
-          Инструкция к тесту от Жанны
+          Полная инструкция от Жанны
         </summary>
         <div className="space-y-3 px-5 pb-5 type-secondary text-muted-foreground">
           {test.instruction.map((paragraph) => (
@@ -132,7 +132,7 @@ export function TypeTestFlow({ test }: { test: TypeTest }) {
         haze
         afterHaze={<FullInstruction test={test} />}
         beforeTitle={<StepProgress current={1} total={totalSteps} />}
-        title="Как проходить тест"
+        title="Тест на тип"
         actions={
           <Button size="cta" className="flex-1" onClick={() => goTo(1)}>
             Начать
