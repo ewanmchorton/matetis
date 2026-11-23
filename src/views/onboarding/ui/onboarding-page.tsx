@@ -2,7 +2,17 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ComponentType, type MouseEvent, type ReactNode, type TouchEvent } from "react";
-import { CalendarCheck, ExternalLink, Heart, Repeat, Share, SquarePlus, Sparkles, UserPlus, Users } from "lucide-react";
+import {
+  BookOpen,
+  CalendarCheck,
+  ExternalLink,
+  HandHeart,
+  Infinity as InfinityIcon,
+  Share,
+  SquarePlus,
+  UserPlus,
+  WavesHorizontal,
+} from "lucide-react";
 
 import { ElementBadge, getElements } from "@/entities/element";
 import { progressActions } from "@/entities/progress";
@@ -59,18 +69,18 @@ function ElementsList() {
 
 const togetherParts = [
   { icon: UserPlus, title: "Друзья", text: "Добавляйте людей, которые тоже проходят программу." },
-  { icon: Users, title: "Совместная практика", text: "Одна практика на двоих. Каждый проходит её в своё время." },
-  { icon: Heart, title: "Поддержка", text: "В ленте видны важные шаги друзей: их можно поддержать." },
+  { icon: InfinityIcon, title: "Совместная практика", text: "Одна практика на двоих. Каждый проходит её в своё время." },
+  { icon: HandHeart, title: "Поддержка", text: "В ленте видны важные шаги друзей: их можно поддержать." },
 ];
 
 const programParts = [
-  { icon: Sparkles, title: "Практика на сегодня", text: "Набор коротких практик и медитаций на каждый день." },
+  { icon: CalendarCheck, title: "Практика на сегодня", text: "Набор коротких практик и медитаций на каждый день." },
   {
-    icon: Repeat,
+    icon: WavesHorizontal,
     title: "Ритуалы недели",
     text: "Зарядка, медитации, которые можно выполнять в удобное время среди недели.",
   },
-  { icon: CalendarCheck, title: "Осознания Стихии", text: "Индивидуальный набор мудростей исходя из вашего типа." },
+  { icon: BookOpen, title: "Библиотека", text: "Видео, книги и фильмы в библиотеке." },
 ];
 
 function IconCard({
@@ -149,9 +159,8 @@ const slides: Slide[] = [
     ),
   },
   {
-    // Фон вкладки «Вместе» – временный, пока нет отдельной картинки онбординга.
     variant: "page",
-    background: "08_together",
+    background: "02_4_together",
     title: "Путь можно пройти вместе",
     body: (
       <div className="space-y-2">
@@ -223,7 +232,7 @@ function InstallScreen() {
   return (
     <ScreenLayout
       variant="hero"
-      background="02_4_onboard"
+      background="02_5_onboard"
       narrow
       title="Установите приложение"
       subtitle={
@@ -317,7 +326,7 @@ export function OnboardingPage() {
 
   // Картинки следующих экранов грузим заранее, пока человек читает первый.
   useEffect(() => {
-    for (const background of [...slides.map((slide) => slide.background), "02_4_onboard" as const]) {
+    for (const background of [...slides.map((slide) => slide.background), "02_5_onboard" as const]) {
       new Image().src = backgroundSrc(background);
     }
   }, []);

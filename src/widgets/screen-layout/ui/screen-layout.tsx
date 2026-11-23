@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 
 import { typograph } from "@/shared/lib/typograph";
 import { cn } from "@/shared/lib/utils";
-import { Logo } from "@/shared/ui/logo";
+import { AppLogo } from "./app-logo";
 import { StepDots } from "@/shared/ui/step-dots";
 
 /**
@@ -18,7 +18,8 @@ export type ScreenBackground =
   | "02_1_onboard"
   | "02_2_onboard"
   | "02_3_onboard"
-  | "02_4_onboard"
+  | "02_4_together"
+  | "02_5_onboard"
   | "03_1_test"
   | "03_name"
   | "03_birth"
@@ -74,6 +75,8 @@ const keepImageTop: ScreenBackground[] = ["02_1_onboard", "02_2_onboard"];
  */
 const pageImageY: Partial<Record<ScreenBackground, string>> = {
   "02_3_onboard": "60%",
+  // Лента ниже середины: между карточками и кнопкой, арки остаются у заголовка.
+  "02_4_together": "72%",
 };
 
 /**
@@ -234,9 +237,9 @@ export function ScreenLayout({
   clearNav = false,
 }: ScreenLayoutProps) {
   const header = (
-    <header className="px-(--screen-gutter) pt-[calc(var(--safe-top)+var(--header-top))]">
+    <header className="relative z-20 px-(--screen-gutter) pt-[calc(var(--safe-top)+var(--header-top))]">
       <div className="flex h-(--header-height) items-center justify-between gap-4">
-        <Logo />
+        <AppLogo />
         {headerAction}
       </div>
     </header>
