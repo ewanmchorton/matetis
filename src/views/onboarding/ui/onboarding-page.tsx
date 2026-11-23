@@ -2,17 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ComponentType, type MouseEvent, type ReactNode, type TouchEvent } from "react";
-import {
-  BookOpen,
-  CalendarCheck,
-  ExternalLink,
-  HandHeart,
-  Infinity as InfinityIcon,
-  Share,
-  SquarePlus,
-  UserPlus,
-  WavesHorizontal,
-} from "lucide-react";
+import { ExternalLink, HandHeart, Infinity as InfinityIcon, Share, SquarePlus, UserPlus } from "lucide-react";
 
 import { ElementBadge, getElements } from "@/entities/element";
 import { progressActions } from "@/entities/progress";
@@ -73,14 +63,54 @@ const togetherParts = [
   { icon: HandHeart, title: "Поддержка", text: "В ленте видны важные шаги друзей: их можно поддержать." },
 ];
 
+/** Значки экрана программы – как на макете `design/screens/02_3_program`, не из общего набора. */
+function ProgramIcon({ className, children }: { className?: string; children: ReactNode }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      {children}
+    </svg>
+  );
+}
+
+function PracticeIcon({ className }: { className?: string }) {
+  return (
+    <ProgramIcon className={className}>
+      <rect x="3.5" y="5" width="17" height="15.5" rx="2.2" />
+      <path d="M8 3.2v3.4M16 3.2v3.4M3.5 9.4h17" />
+      <path d="M8.2 14.4c1.1 1.4 2.3 2.1 3.8 2.1s2.7-.7 3.8-2.1" />
+    </ProgramIcon>
+  );
+}
+
+function RitualsIcon({ className }: { className?: string }) {
+  return (
+    <ProgramIcon className={className}>
+      <path d="M3 9c1.4-1.6 2.8-1.6 4.2 0S10 10.6 11.4 9" />
+      <path d="M3 15c1.4-1.6 2.8-1.6 4.2 0s3 1.6 4.2 0" />
+      <path d="m14.2 8.2 1.5 1.5 3-3" />
+      <path d="m14.2 14.2 1.5 1.5 3-3" />
+    </ProgramIcon>
+  );
+}
+
+function LibraryIcon({ className }: { className?: string }) {
+  return (
+    <ProgramIcon className={className}>
+      <path d="M4 7.4c2.4-.9 4.6-.5 6 .8 1.4-1.3 3.6-1.7 6-.8 1 .3 1.8.5 2.5.5v10.4c-.8-.2-1.6-.4-2.6-.7-2.4-.6-4.4-.2-5.9.9-1.5-1.1-3.5-1.5-5.9-.9-1 .3-1.8.5-2.6.7V7.9c.7 0 1.5-.2 2.5-.5Z" />
+      <path d="M12 8.2v10.2" />
+      <path d="M10 10.1v4.8l5-2.4-5-2.4Z" fill="currentColor" stroke="none" strokeWidth="0" />
+    </ProgramIcon>
+  );
+}
+
 const programParts = [
-  { icon: CalendarCheck, title: "Практика на сегодня", text: "Набор коротких практик и медитаций на каждый день." },
+  { icon: PracticeIcon, title: "Практика на сегодня", text: "Набор коротких практик и медитаций на каждый день." },
   {
-    icon: WavesHorizontal,
+    icon: RitualsIcon,
     title: "Ритуалы недели",
     text: "Зарядка, медитации, которые можно выполнять в удобное время среди недели.",
   },
-  { icon: BookOpen, title: "Библиотека", text: "Видео, книги и фильмы в библиотеке." },
+  { icon: LibraryIcon, title: "Библиотека", text: "Видео, книги и фильмы в библиотеке." },
 ];
 
 function IconCard({
