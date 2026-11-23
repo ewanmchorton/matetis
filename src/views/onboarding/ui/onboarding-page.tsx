@@ -137,6 +137,18 @@ const slides: Slide[] = [
     after: <ElementsList />,
   },
   {
+    variant: "page",
+    background: "02_3_onboard",
+    title: "Как устроена программа",
+    body: (
+      <div className="space-y-2">
+        {programParts.map((part) => (
+          <IconCard key={part.title} compact {...part} />
+        ))}
+      </div>
+    ),
+  },
+  {
     // Фон вкладки «Вместе» – временный, пока нет отдельной картинки онбординга.
     variant: "page",
     background: "08_together",
@@ -144,18 +156,6 @@ const slides: Slide[] = [
     body: (
       <div className="space-y-2">
         {togetherParts.map((part) => (
-          <IconCard key={part.title} compact {...part} />
-        ))}
-      </div>
-    ),
-  },
-  {
-    variant: "page",
-    background: "02_3_onboard",
-    title: "Как устроена программа",
-    body: (
-      <div className="space-y-2">
-        {programParts.map((part) => (
           <IconCard key={part.title} compact {...part} />
         ))}
       </div>
