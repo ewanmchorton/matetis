@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ComponentType, type MouseEvent, type ReactNode, type TouchEvent } from "react";
-import { CalendarCheck, ExternalLink, Repeat, Share, SquarePlus, Sparkles } from "lucide-react";
+import { CalendarCheck, ExternalLink, Heart, Repeat, Share, SquarePlus, Sparkles, UserPlus, Users } from "lucide-react";
 
 import { ElementBadge, getElements } from "@/entities/element";
 import { progressActions } from "@/entities/progress";
@@ -56,6 +56,12 @@ function ElementsList() {
     </ul>
   );
 }
+
+const togetherParts = [
+  { icon: UserPlus, title: "Друзья", text: "Добавляйте людей, которые тоже проходят программу." },
+  { icon: Users, title: "Совместная практика", text: "Одна практика на двоих. Каждый проходит её в своё время." },
+  { icon: Heart, title: "Поддержка", text: "В ленте видны важные шаги друзей: их можно поддержать." },
+];
 
 const programParts = [
   { icon: Sparkles, title: "Практика на сегодня", text: "Набор коротких практик и медитаций на каждый день." },
@@ -129,6 +135,19 @@ const slides: Slide[] = [
     textGlow: true,
     subtitle: "Стихии сменяются вместе со временем года, а с ними обновляется и ваша программа.",
     after: <ElementsList />,
+  },
+  {
+    // Фон вкладки «Вместе» – временный, пока нет отдельной картинки онбординга.
+    variant: "page",
+    background: "08_together",
+    title: "Путь можно пройти вместе",
+    body: (
+      <div className="space-y-2">
+        {togetherParts.map((part) => (
+          <IconCard key={part.title} compact {...part} />
+        ))}
+      </div>
+    ),
   },
   {
     variant: "page",
