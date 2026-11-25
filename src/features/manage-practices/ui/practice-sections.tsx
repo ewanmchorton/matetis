@@ -40,7 +40,6 @@ type Section = {
   groupBy: GroupBy;
   alternation: "first" | "second" | null;
   opensOnDay: number;
-  hint: string;
   addLabel: string;
   /** Пусто – поле «Сколько недель» есть. У зарядки его нет: одна на всю стихию. */
   showWeeks?: boolean;
@@ -53,7 +52,6 @@ const weeklySections: Section[] = [
     groupBy: "type",
     alternation: "first",
     opensOnDay: 1,
-    hint: "Своя очередь у каждого типа. Пустые недели – на всю стихию, потом её сменяет медитация на слабую.",
     addLabel: "Добавить медитацию",
   },
   {
@@ -62,7 +60,6 @@ const weeklySections: Section[] = [
     groupBy: "weak",
     alternation: "second",
     opensOnDay: 8,
-    hint: "Очередь по слабой стихии человека. Сменяет медитацию на качество силы, вместе их нет.",
     addLabel: "Добавить медитацию",
   },
   {
@@ -71,7 +68,6 @@ const weeklySections: Section[] = [
     groupBy: "type",
     alternation: null,
     opensOnDay: 15,
-    hint: "Своя очередь у каждого типа. Обычно одна неделя, потом следующий вопрос.",
     addLabel: "Добавить вопрос",
   },
   {
@@ -80,7 +76,6 @@ const weeklySections: Section[] = [
     groupBy: "season",
     alternation: null,
     opensOnDay: 1,
-    hint: "По стихии года: одна и та же для всех, пока идёт эта стихия.",
     addLabel: "Добавить зарядку",
     showWeeks: false,
   },
@@ -93,7 +88,6 @@ const awarenessSections: Section[] = [
     groupBy: "type",
     alternation: null,
     opensOnDay: 1,
-    hint: "Своя очередь у каждого типа. На экране одно осознание.",
     addLabel: "Добавить осознание",
   },
   {
@@ -102,7 +96,6 @@ const awarenessSections: Section[] = [
     groupBy: "weak",
     alternation: null,
     opensOnDay: 8,
-    hint: "По слабой стихии. Сменяет осознание по книге, вместе их нет.",
     addLabel: "Добавить осознание",
   },
 ];
@@ -232,10 +225,6 @@ export function PracticeSections({ frequency }: { frequency: Frequency }) {
           {error}
         </p>
       )}
-      <p className="text-sm text-muted-foreground">
-        Типы и стихии всегда в списке, даже пустые: раздел наполняется, когда появляется текст. Порядок – место в этой
-        очереди. Строку можно перетащить за значок слева.
-      </p>
       {sections.map((section) => {
         const open = openSection === section.title;
         const practice = practiceOf(section);
@@ -249,7 +238,6 @@ export function PracticeSections({ frequency }: { frequency: Frequency }) {
             >
               <span className="min-w-0 flex-1">
                 <span className="block font-semibold">{section.title}</span>
-                <span className="block text-sm text-muted-foreground">{section.hint}</span>
               </span>
               <ChevronDown className={cn("size-4 text-muted-foreground", open && "rotate-180")} />
             </button>
@@ -317,7 +305,7 @@ export function PracticeSections({ frequency }: { frequency: Frequency }) {
                               {section.addLabel}
                             </Button>
                           )}
-                          {items.length === 0 && <p className="text-sm text-muted-foreground">Пока пусто. Раздел на месте.</p>}
+                          {items.length === 0 && <p className="text-sm text-muted-foreground">Пока пусто.</p>}
                           {items.map((item, index) => {
                             const line = item.title?.trim() || item.body.trim() || "Без названия";
                             const note = item.title?.trim() && item.body.trim() && item.body.trim() !== item.title.trim() ? item.body.trim() : "";

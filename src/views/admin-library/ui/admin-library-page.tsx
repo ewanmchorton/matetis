@@ -30,31 +30,19 @@ type Practice = {
 };
 type Book = { id: string; title: string; author: string; format: BookFormat; ready: boolean };
 type Catalog = { elements: ElementPage[]; practices: Practice[]; books: Book[] };
-type Chapter = "elements" | "practices" | "books";
+const tabs = [
+  { id: "elements", label: "Видео стихий" },
+  { id: "practices", label: "Практики" },
+  { id: "books", label: "Книги" },
+] as const;
 
-const chapters: { id: Chapter; title: string; hint: string }[] = [
-  {
-    id: "elements",
-    title: "Видео стихий",
-    hint: "У каждой стихии своя страница: видео, текст, книги и фильмы. Как страница Воды у человека.",
-  },
-  {
-    id: "practices",
-    title: "Практики",
-    hint: "Название, видео или аудио и текст. Это редкие практики, не ежедневные.",
-  },
-  {
-    id: "books",
-    title: "Книги",
-    hint: "Книги для читалки. Здесь те, что уже лежат в библиотеке.",
-  },
-];
+type Chapter = (typeof tabs)[number]["id"];
 
-/** Раздел «Библиотека»: три части, как у человека, а не один общий список. */
+/** Раздел «Библиотека»: видео стихий, практики и книги. */
 export function AdminLibraryPage() {
+  const [chapter, setChapter] = useState<Chapter>("elements");
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [chapter, setChapter] = useState<Chapter | null>("elements");
   const [elementId, setElementId] = useState<ElementId | null>("water");
   const [openPractice, setOpenPractice] = useState<string | null>(null);
   const [addingPractice, setAddingPractice] = useState(false);
@@ -83,27 +71,30 @@ export function AdminLibraryPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-4">
       <h1 className="text-2xl font-semibold">Библиотека</h1>
-      <p className="text-sm text-muted-foreground">
-        Три раздела, как в библиотеке человека. Внутри каждого – свои записи, а не одна общая лента.
-      </p>
+      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Разделы библиотеки">
+        {tabs.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            role="tab"
+            aria-selected={chapter === item.id}
+            onClick={() => setChapter(item.id)}
+            className={cn(
+              "min-h-11 rounded-full border px-4 text-sm",
+              chapter === item.id ? "border-primary bg-primary/10 text-primary" : "bg-background text-muted-foreground",
+            )}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
       {error && (
         <p role="alert" className="text-sm text-destructive">
           {error}
         </p>
       )}
-      {chapters.map((item) => {
-        const open = chapter === item.id;
-        return (
-          <section key={item.id} className="overflow-hidden rounded-2xl border bg-background">
-            <button type="button" className="flex w-full items-center gap-3 px-4 py-3 text-left" onClick={() => setChapter(open ? null : item.id)}>
-              <span className="min-w-0 flex-1">
-                <span className="block font-semibold">{item.title}</span>
-                <span className="block text-sm text-muted-foreground">{item.hint}</span>
-              </span>
-              <ChevronDown className={cn("size-4 text-muted-foreground", open && "rotate-180")} />
-            </button>
-            {open && item.id === "elements" && (
-              <div className="space-y-2 border-t p-3">
+      {chapter === "elements" && (
+              <div className="space-y-2">
                 {getElements().map((element) => {
                   const page = catalog.elements.find((entry) => entry.id === element.id);
                   if (!page) return null;
@@ -125,8 +116,8 @@ export function AdminLibraryPage() {
                 })}
               </div>
             )}
-            {open && item.id === "practices" && (
-              <div className="space-y-3 border-t p-3">
+            {chapter === "practices" && (
+              <div className="space-y-3">
                 <div className="sticky top-0 z-10 bg-background py-1">
                   {addingPractice ? (
                     <PracticeForm
@@ -206,21 +197,18 @@ export function AdminLibraryPage() {
                 ))}
               </div>
             )}
-            {open && item.id === "books" && (
-              <ul className="divide-y border-t">
-                {catalog.books.map((book) => (
-                  <li key={book.id} className="px-4 py-3">
-                    <span className="block font-medium">{book.title}</span>
-                    <span className="block text-sm text-muted-foreground">
-                      {book.author} · {formatLabel[book.format]} · {book.ready ? "файл на месте" : "файла нет на компьютере"}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-        );
-      })}
+      {chapter === "books" && (
+        <ul className="divide-y overflow-hidden rounded-2xl border bg-background">
+          {catalog.books.map((book) => (
+            <li key={book.id} className="px-4 py-3">
+              <span className="block font-medium">{book.title}</span>
+              <span className="block text-sm text-muted-foreground">
+                {book.author} · {formatLabel[book.format]} · {book.ready ? "файл на месте" : "файла нет на компьютере"}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

@@ -235,9 +235,8 @@ export function AdminNavigatorPage() {
               {type.name}
             </option>
           ))}
-        </select>
-        <p className="text-xs text-muted-foreground">Послание одного типа. В списке оно лежит в разделе этого типа.</p>
-      </div>
+          </select>
+        </div>
 
       <div className="space-y-1.5">
         <Label htmlFor="message-intro">Вступление – его читают на 7-й день</Label>
@@ -334,10 +333,6 @@ export function AdminNavigatorPage() {
     <div className="mx-auto max-w-3xl space-y-5">
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold">Навигатор</h1>
-        <p className="text-sm text-muted-foreground">
-          Все 12 типов всегда в списке. У каждого своя очередь, послание принадлежит одному типу. Кнопка добавления
-          сверху. Строка – свёрнутое послание: нажатие открывает всю форму.
-        </p>
       </div>
 
       <div className="sticky top-0 z-10 bg-muted/40 py-2">
@@ -376,7 +371,7 @@ export function AdminNavigatorPage() {
               </button>
               {shown && (
                 <div className="space-y-2 border-t p-3">
-                  {queue.length === 0 && <p className="text-sm text-muted-foreground">Пока пусто. Раздел на месте.</p>}
+                  {queue.length === 0 && <p className="text-sm text-muted-foreground">Пока пусто.</p>}
                   {queue.map((message, index) => (
                     <div key={message.id} onDragOver={(event) => event.preventDefault()} onDrop={() => void dropMessage(type.id, message.id)}>
                       <div className="flex items-center gap-2">

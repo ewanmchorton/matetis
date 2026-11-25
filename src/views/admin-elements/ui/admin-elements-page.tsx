@@ -100,10 +100,6 @@ export function AdminElementsPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-4">
       <h1 className="text-2xl font-semibold">Стихии</h1>
-      <p className="text-sm text-muted-foreground">
-        Сверху – стихия, которая идёт сегодня. У каждой стихии одна основная картинка (страница в библиотеке и фон
-        программы) и несколько картинок экранов практик.
-      </p>
       {error && (
         <p role="alert" className="text-sm text-destructive">
           {error}
@@ -138,7 +134,6 @@ export function AdminElementsPage() {
                 )}
                 <div className="space-y-2">
                   <h2 className="font-medium">Основная картинка</h2>
-                  <p className="text-xs text-muted-foreground">Страница стихии в библиотеке и фон программы.</p>
                   <div className="flex flex-wrap items-end gap-3">
                     {group.main && <Thumb picture={group.main} onRemove={() => void remove(group.main!.id)} />}
                     <FileButton label={group.main ? "Заменить" : "Выбрать картинку"} onFile={(file) => void upload(elementId, "main", file)} />
@@ -146,7 +141,6 @@ export function AdminElementsPage() {
                 </div>
                 <div className="space-y-2">
                   <h2 className="font-medium">Экраны практик</h2>
-                  <p className="text-xs text-muted-foreground">Несколько картинок. Их можно перетащить за значок слева.</p>
                   <div className="flex flex-wrap gap-3">
                     {group.practice.map((picture) => (
                       <div
@@ -194,7 +188,6 @@ function MetalDate({ year, value, onSave }: { year: number; value: string | null
           </Button>
         )}
       </div>
-      <p className="text-xs text-muted-foreground">Только у Металла. Остальные стихии сменяются сами по временам года.</p>
     </div>
   );
 }
