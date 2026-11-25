@@ -5,6 +5,7 @@ import { Bookmark, BookOpen, ChevronRight, Headphones, Play, Video } from "lucid
 
 import { currentElementId, getElement, getElementGuide } from "@/entities/element";
 import { formatLabel, readableBooks } from "@/entities/library/model/readable-books";
+import { request } from "@/shared/api/request";
 import { typograph } from "@/shared/lib/typograph";
 import { cn } from "@/shared/lib/utils";
 import { BackButton } from "@/shared/ui/back-button";
@@ -209,11 +210,19 @@ function ElementScreen({ onBack }: { onBack: () => void }) {
   const element = getElement(currentElementId);
   const guide = getElementGuide(currentElementId);
   const covers = currentElementId === "water" ? waterRecommendations : { books: [], films: [] };
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    request<{ main: { url: string } | null }>("/api/element-images")
+      .then((pictures) => setImageSrc(pictures.main?.url ?? null))
+      .catch(() => setImageSrc(null));
+  }, []);
 
   return (
     <ScreenLayout
       variant="page"
       background="11_water"
+      imageSrc={imageSrc}
       title={`Стихия ${element.genitive}`}
       subtitle={element.period}
       clearNav

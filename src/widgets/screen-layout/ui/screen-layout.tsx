@@ -98,6 +98,8 @@ type ScreenLayoutProps = {
    */
   variant: "hero" | "page";
   background?: ScreenBackground;
+  /** Своя картинка вместо файла фона. Как картинка ляжет, по-прежнему берётся из background. */
+  imageSrc?: string | null;
   /**
    * Общая плавная светлая область под логотипом, строкой над заголовком, заголовком и подзаголовком
    * (page): светлее всего у левого края, уходит вправо и вниз. Заменяет пятно под заголовком.
@@ -184,7 +186,13 @@ function topFade(height: number, from = 1) {
 export const backgroundSrc = (background: ScreenBackground) => `${basePath}/backgrounds/${background}.jpg`;
 const imageUrl = (background: ScreenBackground) => `url(${backgroundSrc(background)})`;
 
-function pageBackgroundStyle(background: ScreenBackground) {
+function withBase(src: string) {
+  if (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("data:")) return src;
+  if (basePath && src.startsWith(basePath)) return src;
+  return `${basePath}${src}`;
+}
+
+function pageBackgroundStyle(background: ScreenBackground, layer: string) {
   const lift = pageImageLift[background];
   if (lift) {
     const liftLength = `calc(${screenWidth} * ${lift})`;
@@ -195,7 +203,7 @@ function pageBackgroundStyle(background: ScreenBackground) {
         topFade(110),
         // Картинка поднята – её низ растворяется в Ivory до того, как она закончится.
         `linear-gradient(to bottom, ${ivory(0)} calc(100% - ${liftLength} - 120px), ${ivory(1)} calc(100% - ${liftLength}))`,
-        imageUrl(background),
+        layer,
       ].join(", "),
     };
   }
@@ -206,7 +214,7 @@ function pageBackgroundStyle(background: ScreenBackground) {
       topFade(110),
       // Низ уходит в сплошной Ivory: обрыва картинки над панелью браузера не видно.
       `linear-gradient(to bottom, ${ivory(0)} 85%, ${ivory(1)} 100%)`,
-      imageUrl(background),
+      layer,
     ].join(", "),
   };
 }
@@ -218,6 +226,7 @@ function pageBackgroundStyle(background: ScreenBackground) {
 export function ScreenLayout({
   variant,
   background,
+  imageSrc,
   titleGlow = false,
   compact = false,
   centered = false,
@@ -246,6 +255,7 @@ export function ScreenLayout({
   );
 
   const textLine = background ? (heroTextLine[background] ?? 0.9) : 0.9;
+  const layer = background ? (imageSrc ? `url(${withBase(imageSrc)})` : imageUrl(background)) : "";
   // Сколько картинки остаётся ниже верха заголовка.
   const belowTitle = `calc(${screenWidth} * ${BACKGROUND_RATIO - textLine})`;
 
@@ -260,7 +270,7 @@ export function ScreenLayout({
         <div
           aria-hidden
           className="pointer-events-none fixed inset-y-0 left-1/2 -z-10 w-full max-w-[440px] -translate-x-1/2 bg-background bg-cover bg-top"
-          style={pageBackgroundStyle(background)}
+          style={pageBackgroundStyle(background, layer)}
         />
       )}
 
@@ -281,7 +291,7 @@ export function ScreenLayout({
             <div
               aria-hidden
               className="pointer-events-none fixed inset-y-0 left-1/2 -z-10 w-full max-w-[440px] -translate-x-1/2 bg-background bg-cover bg-top"
-              style={{ backgroundImage: [topFade(110), imageUrl(background)].join(", ") }}
+              style={{ backgroundImage: [topFade(110), layer].join(", ") }}
             />
           )}
           {header}
@@ -315,7 +325,7 @@ export function ScreenLayout({
                   topFade(110),
                   topFade(110),
                   `linear-gradient(to bottom, ${ivory(0)} calc(100% - ${belowTitle} - 60px), ${ivory(0.45)} calc(100% - ${belowTitle}), ${ivory(0.6)} 80%, ${ivory(1)} 100%)`,
-                  imageUrl(background),
+                  layer,
                 ].join(", "),
               }}
             />

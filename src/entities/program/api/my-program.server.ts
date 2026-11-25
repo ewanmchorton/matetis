@@ -6,7 +6,7 @@ import { and, asc, eq, gte, inArray, lte } from "drizzle-orm";
 import { getMyBirthReading, weakElements } from "@/entities/birth-reading/server";
 import { DEFAULT_TIME_ZONE, localDay } from "@/entities/daily-phrase";
 import type { ElementId } from "@/entities/element";
-import { getCurrentSeason, type Season } from "@/entities/element/server";
+import { currentElementPictures, getCurrentSeason, type Season } from "@/entities/element/server";
 import { getMyCurrentType } from "@/entities/type-test-attempt/server";
 import {
   db,
@@ -336,6 +336,8 @@ export type MyProgram = {
   /** Видео по текущей стихии, если админ его добавил, и посмотрел ли его человек в этот период. */
   elementVideo: (LibraryVideo & { seen: boolean }) | null;
   person: { name: string; typeName: string | null };
+  /** Картинки текущей стихии. Пусто – на экране остаётся прежний фон из проекта. */
+  backgrounds: { main: string | null; practice: string[] };
 };
 
 type LibraryVideo = { videoUrl: string; body: string };
@@ -345,7 +347,7 @@ export async function getMyProgram(userId: string, now = new Date()): Promise<My
   const today = await todayFor(userId, now);
   const days = weekDays(today);
   const programDay = programDayNumber(await startedOn(userId, today), today);
-  const [season, navigator, practices, marks, reads, [welcome], videos] = await Promise.all([
+  const [season, navigator, practices, marks, reads, [welcome], videos, pictures] = await Promise.all([
     getCurrentSeason(now),
     navigatorFor(userId, programDay, today),
     listPractices(),
@@ -359,6 +361,7 @@ export async function getMyProgram(userId: string, now = new Date()): Promise<My
       .where(and(eq(navigatorRead.userId, userId), gte(navigatorRead.day, days[0]), lte(navigatorRead.day, days[6]))),
     db.select().from(welcomeVideoSeen).where(eq(welcomeVideoSeen.userId, userId)),
     db.select().from(programVideo),
+    currentElementPictures(now),
   ]);
 
   const person = await personFor(userId, season);
@@ -409,6 +412,7 @@ export async function getMyProgram(userId: string, now = new Date()): Promise<My
     welcomeVideo: video("welcome"),
     elementVideo: elementVideo && { ...elementVideo, seen: Boolean(elementSeen) },
     person: { name: person.name, typeName: person.typeName },
+    backgrounds: { main: pictures.main?.url ?? null, practice: pictures.practice.map((picture) => picture.url) },
   };
 }
 

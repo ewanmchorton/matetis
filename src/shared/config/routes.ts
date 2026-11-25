@@ -13,6 +13,7 @@ export const routes = {
   journal: "/profile/journal",
   person: "/people",
   admin: "/admin",
+  adminElements: "/admin/elements",
   adminLogin: "/admin/login",
   adminNavigator: "/admin/navigator",
   adminPractices: "/admin/practices",

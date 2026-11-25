@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Compass, ExternalLink, LayoutDashboard, Library, ListChecks, LockKeyhole, Users } from "lucide-react";
+import { Compass, ExternalLink, Image, Library, ListChecks, LockKeyhole, Users } from "lucide-react";
 
 import type { PersonRole } from "@/shared/auth/roles";
 import { APP_NAME } from "@/shared/config/brand";
@@ -13,7 +13,7 @@ import { buttonVariants } from "@/shared/ui/button";
 
 // adminOnly – раздел не виден контент-менеджеру.
 const allNav = [
-  { href: routes.admin, label: "Обзор", icon: LayoutDashboard },
+  { href: routes.adminElements, label: "Стихии", icon: Image },
   { href: routes.adminNavigator, label: "Навигатор", icon: Compass },
   { href: routes.adminPractices, label: "Практики", icon: ListChecks },
   { href: routes.adminLibrary, label: "Библиотека", icon: Library },
@@ -34,7 +34,7 @@ export function AdminShell({ children, role }: { children: ReactNode; role: Pers
   return (
     <div className="flex min-h-dvh bg-muted/40">
       <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r bg-background p-4 md:flex">
-        <Link href={routes.admin} className="mb-8 flex items-center gap-2 px-2 font-semibold">
+        <Link href={routes.adminElements} className="mb-8 flex items-center gap-2 px-2 font-semibold">
           <span className="grid size-7 place-items-center rounded-lg bg-primary text-xs font-bold text-primary-foreground">
             {APP_NAME.charAt(0)}
           </span>
@@ -46,7 +46,7 @@ export function AdminShell({ children, role }: { children: ReactNode; role: Pers
         <nav aria-label="Разделы админки">
           <ul className="space-y-1">
             {nav.map((item) => {
-              const active = pathname === item.href || (item.href !== routes.admin && pathname.startsWith(`${item.href}/`));
+              const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
               return (
                 <li key={item.href}>
                   <Link

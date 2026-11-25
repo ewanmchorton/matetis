@@ -103,5 +103,6 @@ export function demoProgram(now = new Date()): MyProgram {
     welcomeVideo: null,
     elementVideo: null,
     person: { name: "Ваня", typeName: "Целитель" },
+    backgrounds: { main: null, practice: [] },
   };
 }

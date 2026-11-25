@@ -6,7 +6,6 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { getPersonTypes } from "@/entities/person-type";
 import { request } from "@/shared/api/request";
 import { isStaticPrototype } from "@/shared/config/env";
-import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
@@ -54,13 +53,6 @@ function toDraft(message: Message): Draft {
   };
 }
 
-function typeNames(typeIds: string[]) {
-  return types
-    .filter((type) => typeIds.includes(type.id))
-    .map((type) => type.name)
-    .join(", ");
-}
-
 /** Раздел «Навигатор»: послания Мастеров из трёх частей, по порядку для своих типов. */
 export function AdminNavigatorPage() {
   const [state, setState] = useState<ListState>({ status: "loading" });
@@ -68,6 +60,8 @@ export function AdminNavigatorPage() {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [openType, setOpenType] = useState("t1");
+  const [dragId, setDragId] = useState<string | null>(null);
 
   const load = useCallback(() => {
     if (isStaticPrototype) return;
@@ -89,7 +83,12 @@ export function AdminNavigatorPage() {
     setError(null);
     if (openId === message.id) return close();
     setOpenId(message.id);
-    setDraft(toDraft(message));
+    const typeId = message.typeIds[0];
+    const place = messages
+      .filter((item) => item.typeIds[0] === typeId)
+      .sort((a, b) => a.position - b.position)
+      .findIndex((item) => item.id === message.id);
+    setDraft({ ...toDraft(message), position: place + 1, typeIds: typeId ? [typeId] : [] });
   }
 
   function startNew() {
@@ -101,7 +100,7 @@ export function AdminNavigatorPage() {
       givenOn: "",
       intro: "",
       closing: "",
-      position: messages.length + 1,
+      position: 1,
       day7Task: "",
       typeIds: [],
       parts: [emptyPart(), emptyPart(), emptyPart()],
@@ -113,19 +112,25 @@ export function AdminNavigatorPage() {
     setDraft({ ...draft, parts: draft.parts.map((part, i) => (i === index ? { ...part, ...change } : part)) });
   }
 
-  function toggleType(id: string) {
-    if (!draft) return;
-    const typeIds = draft.typeIds.includes(id) ? draft.typeIds.filter((item) => item !== id) : [...draft.typeIds, id];
-    setDraft({ ...draft, typeIds });
-  }
-
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!draft) return;
     setPending(true);
     setError(null);
     try {
-      await request("/api/admin/navigator", { method: "POST", body: JSON.stringify(draft) });
+      const saved = await request<Message>("/api/admin/navigator", { method: "POST", body: JSON.stringify(draft) });
+      const typeId = draft.typeIds[0];
+      if (typeId && state.status === "ready") {
+        const queue = state.messages
+          .filter((item) => item.id !== saved.id && item.typeIds[0] === typeId)
+          .sort((a, b) => a.position - b.position);
+        const index = Math.min(Math.max(draft.position, 1), queue.length + 1) - 1;
+        queue.splice(index, 0, saved);
+        await request("/api/admin/navigator/order", {
+          method: "PUT",
+          body: JSON.stringify({ typeId, ids: queue.map((item) => item.id) }),
+        });
+      }
       close();
       load();
     } catch (saveError) {
@@ -143,6 +148,28 @@ export function AdminNavigatorPage() {
       load();
     } catch (removeError) {
       setError((removeError as Error).message);
+    }
+  }
+
+  async function dropMessage(typeId: string, targetId: string) {
+    if (!dragId || dragId === targetId || state.status !== "ready") return;
+    const queue = state.messages
+      .filter((item) => item.typeIds[0] === typeId)
+      .sort((a, b) => a.position - b.position);
+    const from = queue.findIndex((item) => item.id === dragId);
+    const to = queue.findIndex((item) => item.id === targetId);
+    if (from < 0 || to < 0) return;
+    const [moved] = queue.splice(from, 1);
+    queue.splice(to, 0, moved);
+    setDragId(null);
+    try {
+      await request("/api/admin/navigator/order", {
+        method: "PUT",
+        body: JSON.stringify({ typeId, ids: queue.map((item) => item.id) }),
+      });
+      load();
+    } catch (dropError) {
+      setError((dropError as Error).message);
     }
   }
 
@@ -193,27 +220,24 @@ export function AdminNavigatorPage() {
         </div>
       </div>
 
-      <fieldset className="space-y-2">
-        <legend className="text-sm font-medium">Каким типам подходит</legend>
-        <div className="flex flex-wrap gap-2">
+      <div className="space-y-1.5">
+        <Label htmlFor="message-type">Тип</Label>
+        <select
+          id="message-type"
+          className="h-11 w-full rounded-lg border bg-background px-3 text-sm"
+          required
+          value={draft.typeIds[0] ?? ""}
+          onChange={(event) => setDraft({ ...draft, typeIds: event.target.value ? [event.target.value] : [] })}
+        >
+          <option value="">Выберите тип</option>
           {types.map((type) => (
-            <button
-              key={type.id}
-              type="button"
-              aria-pressed={draft.typeIds.includes(type.id)}
-              onClick={() => toggleType(type.id)}
-              className={cn(
-                "min-h-9 rounded-full border px-3 text-sm",
-                draft.typeIds.includes(type.id)
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "bg-background text-muted-foreground",
-              )}
-            >
+            <option key={type.id} value={type.id}>
               {type.name}
-            </button>
+            </option>
           ))}
-        </div>
-      </fieldset>
+        </select>
+        <p className="text-xs text-muted-foreground">Послание одного типа. В списке оно лежит в разделе этого типа.</p>
+      </div>
 
       <div className="space-y-1.5">
         <Label htmlFor="message-intro">Вступление – его читают на 7-й день</Label>
@@ -311,13 +335,22 @@ export function AdminNavigatorPage() {
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold">Навигатор</h1>
         <p className="text-sm text-muted-foreground">
-          Одно послание – на неделю: по два дня на каждую из трёх частей, на 7-й день – послание полностью, с
-          названием, автором, датой, вступлением и завершением. Послания идут по порядку для своих типов, потом
-          сначала.
+          Все 12 типов всегда в списке. У каждого своя очередь, послание принадлежит одному типу. Кнопка добавления
+          сверху. Строка – свёрнутое послание: нажатие открывает всю форму.
         </p>
       </div>
 
-      <h2 className="font-semibold">Послания Мастеров</h2>
+      <div className="sticky top-0 z-10 bg-muted/40 py-2">
+        {openId === "new" ? (
+          <div className="overflow-hidden rounded-2xl border bg-background">{form}</div>
+        ) : (
+          <Button variant="outline" className="h-11" onClick={startNew}>
+            <Plus />
+            Добавить послание
+          </Button>
+        )}
+      </div>
+
       {state.status === "loading" && <p className="text-sm text-muted-foreground">Загружаем…</p>}
       {state.status === "error" && (
         <p role="alert" className="text-sm text-destructive">
@@ -330,52 +363,43 @@ export function AdminNavigatorPage() {
         </p>
       )}
 
-      {state.status === "ready" && (
-        <ul className="divide-y overflow-hidden rounded-2xl border bg-background">
-          {messages.length === 0 && <li className="p-4 text-sm text-muted-foreground">Посланий пока нет.</li>}
-          {messages.map((message) => (
-            <li key={message.id}>
-              <div className="flex items-center gap-2 pr-2">
-                <button
-                  type="button"
-                  className="flex min-h-14 flex-1 items-center gap-3 px-4 py-2 text-left hover:bg-muted/50"
-                  aria-expanded={openId === message.id}
-                  onClick={() => open(message)}
-                >
-                  <span className="w-8 text-sm text-muted-foreground">{message.position}</span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block font-medium">{message.title}</span>
-                    <span className="block truncate text-xs text-muted-foreground">
-                      {message.masterName} · {typeNames(message.typeIds)}
-                    </span>
-                  </span>
-                  <ChevronDown className="size-4 text-muted-foreground" />
-                </button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-11"
-                  aria-label={`Удалить послание «${message.title}»`}
-                  onClick={() => void remove(message)}
-                >
-                  <Trash2 />
-                </Button>
-              </div>
-              {openId === message.id && form}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {openId === "new" ? (
-        <div className="overflow-hidden rounded-2xl border bg-background">{form}</div>
-      ) : (
-        <Button variant="outline" className="h-11" onClick={startNew}>
-          <Plus />
-          Добавить послание
-        </Button>
-      )}
-
+      {state.status === "ready" &&
+        types.map((type) => {
+          const queue = messages.filter((item) => item.typeIds[0] === type.id).sort((a, b) => a.position - b.position);
+          const shown = openType === type.id;
+          return (
+            <section key={type.id} className="overflow-hidden rounded-2xl border bg-background">
+              <button type="button" className="flex w-full items-center gap-3 px-4 py-3 text-left" onClick={() => setOpenType(shown ? "" : type.id)}>
+                <span className="flex-1 font-semibold">{type.name}</span>
+                <span className="text-xs text-muted-foreground">{queue.length ? `${queue.length} в очереди` : "пока пусто"}</span>
+                <ChevronDown className="size-4 text-muted-foreground" />
+              </button>
+              {shown && (
+                <div className="space-y-2 border-t p-3">
+                  {queue.length === 0 && <p className="text-sm text-muted-foreground">Пока пусто. Раздел на месте.</p>}
+                  {queue.map((message, index) => (
+                    <div key={message.id} onDragOver={(event) => event.preventDefault()} onDrop={() => void dropMessage(type.id, message.id)}>
+                      <div className="flex items-center gap-2">
+                        <span draggable className="cursor-grab px-1 text-muted-foreground" onDragStart={() => setDragId(message.id)}>
+                          ⋮⋮
+                        </span>
+                        <button type="button" className="min-w-0 flex-1 py-2 text-left" aria-expanded={openId === message.id} onClick={() => open(message)}>
+                          <span className="text-sm text-muted-foreground">{index + 1}. </span>
+                          <span className="font-medium">{message.title}</span>
+                          <span className="block truncate text-xs text-muted-foreground">{message.masterName}</span>
+                        </button>
+                        <Button variant="ghost" size="icon" className="size-11" aria-label={`Удалить послание «${message.title}»`} onClick={() => void remove(message)}>
+                          <Trash2 />
+                        </Button>
+                      </div>
+                      {openId === message.id && form}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          );
+        })}
     </div>
   );
 }

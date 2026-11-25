@@ -28,11 +28,16 @@ export type {
 export {
   deleteNavigatorMessage,
   deletePractice,
+  deleteSectionVariant,
+  ensureSectionPractice,
   listNavigatorMessagesForStaff,
   listPracticesForStaff,
   listProgramVideosForStaff,
   programVideoSlots,
+  reorderNavigatorMessages,
+  reorderPracticeVariants,
   saveNavigatorMessage,
   savePractice,
   saveProgramVideo,
+  saveSectionVariant,
 } from "./api/program-content.server";

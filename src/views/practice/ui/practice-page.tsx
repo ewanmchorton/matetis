@@ -23,7 +23,10 @@ import { ScreenLayout } from "@/widgets/screen-layout";
 
 import { AudioPlayer } from "./audio-player";
 
-type State = { status: "loading" } | { status: "error"; message: string } | { status: "ready"; practice: ProgramPractice };
+type State =
+  | { status: "loading" }
+  | { status: "error"; message: string }
+  | { status: "ready"; practice: ProgramPractice; practiceImages: string[]; programDay: number };
 
 const daypartNames = { morning: "Утро", evening: "Вечер" } as const;
 
@@ -46,7 +49,7 @@ export function PracticePage({ practiceId }: { practiceId: string }) {
     const practice = rememberedPractice(practiceId);
     if (!practice) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setState({ status: "ready", practice });
+    setState({ status: "ready", practice, practiceImages: [], programDay: 1 });
   }, [practiceId]);
 
   useEffect(() => {
@@ -57,7 +60,12 @@ export function PracticePage({ practiceId }: { practiceId: string }) {
           (item) => item.id === practiceId,
         );
         if (!practice) throw new Error("Практика не найдена");
-        setState({ status: "ready", practice });
+        setState({
+          status: "ready",
+          practice,
+          practiceImages: program.backgrounds.practice,
+          programDay: program.programDay,
+        });
         if (!isThinkingPractice(practice) || isStaticPrototype) return;
         const saved = await request<{ text: string }>(notePath);
         setNote(saved.text);
@@ -69,6 +77,10 @@ export function PracticePage({ practiceId }: { practiceId: string }) {
   const practice = state.status === "ready" ? state.practice : null;
   const withAudio = practice ? isAudioPractice(practice) : false;
   const reading = practice ? isAwarenessPractice(practice) : false;
+  const practiceImages = state.status === "ready" ? state.practiceImages : [];
+  const practiceImage = practiceImages.length
+    ? practiceImages[((state.status === "ready" ? state.programDay : 1) - 1) % practiceImages.length]
+    : null;
 
   // Пока практики нет, не рисуем экран: иначе на миг вспыхивает чужой фон и заголовок «Практика».
   if (state.status === "loading") return null;
@@ -100,6 +112,7 @@ export function PracticePage({ practiceId }: { practiceId: string }) {
     <ScreenLayout
       variant="page"
       background={reading || withAudio ? "04_earth_04_practice" : "04_earth_03_lizard"}
+      imageSrc={practiceImage}
       beforeTitle={
         practice?.daypart && (
           <p className="type-caption text-muted-foreground">{daypartNames[practice.daypart]} · каждый день</p>

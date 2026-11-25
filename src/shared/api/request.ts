@@ -4,9 +4,10 @@ const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 export type RequestError = Error & { status?: number };
 
 export async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const payload = init?.body;
   const response = await fetch(`${basePath}${path}`, {
     ...init,
-    headers: { "Content-Type": "application/json", ...init?.headers },
+    headers: payload instanceof FormData ? init?.headers : { "Content-Type": "application/json", ...init?.headers },
   });
   const body: unknown = await response.json().catch(() => null);
   if (!response.ok) {

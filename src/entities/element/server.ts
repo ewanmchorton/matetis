@@ -6,3 +6,12 @@ export {
   getElementCalendarForStaff,
   setMetalStart,
 } from "./api/element-calendar.server";
+export {
+  currentElementPictures,
+  deleteElementImage,
+  listElementPicturesForStaff,
+  readElementImage,
+  reorderPracticeImages,
+  saveElementImage,
+} from "./api/element-images.server";
+export type { ElementPictures } from "./api/element-images.server";

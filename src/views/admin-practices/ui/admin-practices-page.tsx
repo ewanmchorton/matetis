@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { PhrasesEditor } from "@/features/manage-phrases";
-import { PracticesEditor } from "@/features/manage-practices";
+import { PracticeSections, PracticesEditor } from "@/features/manage-practices";
 import { routes } from "@/shared/config/routes";
 import { cn } from "@/shared/lib/utils";
 
@@ -44,8 +44,8 @@ export function AdminPracticesPage() {
       </div>
 
       {tab === "daily" && <PracticesEditor frequency="daily" />}
-      {tab === "weekly" && <PracticesEditor frequency="weekly" />}
-      {tab === "awareness" && <PracticesEditor frequency="awareness" />}
+      {tab === "weekly" && <PracticeSections frequency="weekly" />}
+      {tab === "awareness" && <PracticeSections frequency="awareness" />}
       {tab === "phrases" && <PhrasesEditor />}
     </div>
   );

@@ -251,6 +251,7 @@ export function ProgramPage() {
     <ScreenLayout
       variant="page"
       background="04_earth_01_program"
+      imageSrc={program?.backgrounds.main}
       titleGlow
       title={program ? greeting(program.person.name) : "Программа"}
       subtitle={
