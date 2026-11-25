@@ -6,9 +6,10 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-self.addEventListener("fetch", (event) => {
-  event.respondWith(fetch(event.request));
-});
+// Обработчик нужен, чтобы сайт можно было поставить на экран «Домой».
+// Запрос здесь не перехватываем: иначе в разработке админка зависает на «Загружаем…»,
+// потому что служебный сценарий встаёт между страницей и сервером.
+self.addEventListener("fetch", () => {});
 
 // Уведомления администратору: заявки и сводка о доступах (src/shared/push/send-push.ts).
 self.addEventListener("push", (event) => {

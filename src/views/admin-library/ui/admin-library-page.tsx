@@ -66,7 +66,15 @@ export function AdminLibraryPage() {
     }
   }
 
-  if (!catalog) return <p className="text-sm text-muted-foreground">Загружаем…</p>;
+  if (!catalog) {
+    return error ? (
+      <p role="alert" className="text-sm text-destructive">
+        {error}
+      </p>
+    ) : (
+      <p className="text-sm text-muted-foreground">Загружаем…</p>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">

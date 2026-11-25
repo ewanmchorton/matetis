@@ -92,7 +92,15 @@ export function AdminElementsPage() {
     }
   }
 
-  if (!calendar || !pictures) return <p className="text-sm text-muted-foreground">Загружаем…</p>;
+  if (!calendar || !pictures) {
+    return error ? (
+      <p role="alert" className="text-sm text-destructive">
+        {error}
+      </p>
+    ) : (
+      <p className="text-sm text-muted-foreground">Загружаем…</p>
+    );
+  }
 
   const current = getElement(calendar.elementId);
   const sorted = [calendar.elementId, ...order.filter((id) => id !== calendar.elementId)];

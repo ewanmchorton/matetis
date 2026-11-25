@@ -216,7 +216,15 @@ export function PracticeSections({ frequency }: { frequency: Frequency }) {
     }
   }
 
-  if (!practices) return <p className="text-sm text-muted-foreground">Загружаем…</p>;
+  if (!practices) {
+    return error ? (
+      <p role="alert" className="text-sm text-destructive">
+        {error}
+      </p>
+    ) : (
+      <p className="text-sm text-muted-foreground">Загружаем…</p>
+    );
+  }
 
   return (
     <div className="space-y-3">
