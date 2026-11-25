@@ -109,7 +109,7 @@ export const monthlyMatch = pgTable(
 /** Первая практика, завершение совместной, возвращение после перерыва больше 7 дней. */
 export const feedEventKind = pgEnum("feed_event_kind", ["first_practice", "joint_completed", "comeback"]);
 
-/** Событие ленты. Видят друзья автора, если у него включена публикация (проверяется при показе). */
+/** Событие ленты. Видят друзья автора. */
 export const feedEvent = pgTable(
   "feed_event",
   {

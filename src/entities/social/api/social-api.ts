@@ -6,7 +6,6 @@ import { getPerson, people } from "../model/people";
 import type { Friendship, Invitation, SocialState } from "../model/types";
 
 const seed: SocialState = {
-  shareActivity: true,
   relations: {
     marina: "friend",
     igor: "friend",
@@ -56,9 +55,6 @@ export function useFriendship(personId: string): Friendship {
 }
 
 export const socialActions = {
-  setShareActivity(shareActivity: boolean) {
-    store.update((state) => ({ ...state, shareActivity }));
-  },
   sendRequest(personId: string) {
     store.update((state) => {
       if (relationOf(state, personId) !== "none") return state;

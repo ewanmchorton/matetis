@@ -6,8 +6,6 @@ import { db, personSettings } from "@/shared/db";
 import { AppError } from "@/shared/lib/app-error";
 
 export type PersonSettings = {
-  /** Попадают ли мои события в ленту друзей. */
-  publishEvents: boolean;
   /** Согласие на ежемесячный автоподбор совместной практики. */
   autoMatchConsent: boolean;
   /** Согласие получать фразу дня уведомлением. */
@@ -24,7 +22,6 @@ export type PersonSettingsChanges = Partial<PersonSettings> & {
 };
 
 const defaults: PersonSettings = {
-  publishEvents: true,
   autoMatchConsent: true,
   phraseNotifications: true,
   phraseFromHour: 9,
@@ -32,7 +29,6 @@ const defaults: PersonSettings = {
 };
 
 const columns = {
-  publishEvents: personSettings.publishEvents,
   autoMatchConsent: personSettings.autoMatchConsent,
   phraseNotifications: personSettings.phraseNotifications,
   phraseFromHour: personSettings.phraseFromHour,
@@ -61,7 +57,6 @@ function isHour(value: unknown, min: number, max: number): value is number {
 /** Изменить одну или несколько настроек. Возвращает настройки после изменения. */
 export async function updateMySettings(viewerId: string, changes: PersonSettingsChanges): Promise<PersonSettings> {
   const set: Partial<PersonSettings> & { timeZone?: string } = {};
-  if (typeof changes.publishEvents === "boolean") set.publishEvents = changes.publishEvents;
   if (typeof changes.autoMatchConsent === "boolean") set.autoMatchConsent = changes.autoMatchConsent;
   if (typeof changes.phraseNotifications === "boolean") set.phraseNotifications = changes.phraseNotifications;
   if (isHour(changes.phraseFromHour, 0, 23)) set.phraseFromHour = changes.phraseFromHour;

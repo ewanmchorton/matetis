@@ -26,12 +26,6 @@ const PEOPLE_LIMIT = 5;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
- * Публикация включена: строки настроек нет – по умолчанию включена.
- * Столбец автора – с именем таблицы: без него внутри подзапроса user_id означает столбец person_settings.
- */
-const publishes = sql`coalesce((select ps.publish_events from person_settings ps where ps.user_id = "feed_event"."user_id"), true)`;
-
-/**
  * После отметки практики: первая практика в жизни или возвращение после перерыва больше 7 дней.
  * Снятая потом отметка событие не убирает.
  */
@@ -59,7 +53,7 @@ export async function recordPracticeEvents(userId: string, now = new Date()) {
 }
 
 /**
- * События друзей, у которых включена публикация, – новые сверху.
+ * События друзей – новые сверху.
  * Совместную практику двух моих друзей показываем один раз, свою совместную – не показываем.
  */
 export async function listFeed(viewerId: string, now = new Date()): Promise<FeedItem[]> {
@@ -76,7 +70,6 @@ export async function listFeed(viewerId: string, now = new Date()): Promise<Feed
     .where(
       and(
         inArray(feedEvent.userId, [...names.keys()]),
-        publishes,
         or(isNull(feedEvent.jointId), notInArray(feedEvent.jointId, mine)),
       ),
     )
@@ -128,10 +121,10 @@ export async function supportEvent(viewerId: string, eventId: unknown, on: boole
   const notFound = new AppError("not_found", "Событие не найдено");
   if (typeof eventId !== "string" || !/^[0-9a-f-]{36}$/i.test(eventId)) throw notFound;
   const [event] = await db
-    .select({ id: feedEvent.id, userId: feedEvent.userId, publishes })
+    .select({ id: feedEvent.id, userId: feedEvent.userId })
     .from(feedEvent)
     .where(eq(feedEvent.id, eventId));
-  if (!event || !event.publishes) throw notFound;
+  if (!event) throw notFound;
   if ((await getPublicProfile(viewerId, event.userId))?.friendship !== "friend") throw notFound;
   if (on) {
     await db.insert(feedReaction).values({ eventId: event.id, userId: viewerId }).onConflictDoNothing();

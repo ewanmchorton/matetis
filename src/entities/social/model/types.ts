@@ -33,8 +33,6 @@ export type Invitation = {
 };
 
 export type SocialState = {
-  /** Человек сам решает, попадают ли его выполнения в ленту друзей. */
-  shareActivity: boolean;
   relations: Record<string, Friendship>;
   /** Одна реакция «поддержать» на событие. */
   reactions: Record<string, boolean>;

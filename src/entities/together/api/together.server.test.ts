@@ -232,12 +232,6 @@ describe("Лента событий друзей", () => {
     expect(kinds.map((row) => row.kind).sort()).toEqual(["comeback", "first_practice"]);
   });
 
-  it("выключил публикацию – друзья не видят его событий, даже прошлых", async () => {
-    await mark(boris, smile, nov2);
-    await updateMySettings(boris, { publishEvents: false });
-    expect((await getTogether(anna, nov2)).feed).toEqual([]);
-  });
-
   it("«Поддержать» – одна реакция; чужое событие поддержать нельзя", async () => {
     await mark(boris, smile, nov2);
     const [event] = (await getTogether(anna, nov2)).feed;
@@ -247,8 +241,6 @@ describe("Лента событий друзей", () => {
     await supportEvent(anna, event.id, false);
     expect((await getTogether(anna, nov2)).feed[0].supported).toBe(false);
     await expect(supportEvent(olga, event.id, true)).rejects.toMatchObject({ code: "not_found" });
-    await updateMySettings(boris, { publishEvents: false });
-    await expect(supportEvent(anna, event.id, true)).rejects.toMatchObject({ code: "not_found" });
   });
 
   it("совместную практику двух друзей общий друг видит один раз", async () => {

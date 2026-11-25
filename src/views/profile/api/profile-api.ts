@@ -9,7 +9,7 @@ import type { ProfileData } from "../model/types";
 /** Демо-данные: на GitHub Pages (там нет сервера) и при локальной разработке без входа. */
 const demoProfile: ProfileData = {
   me: { name: "Анна", contact: "anna@example.ru", companionStage: 5 },
-  settings: { publishEvents: true, autoMatchConsent: true, phraseNotifications: true, phraseFromHour: 9, phraseToHour: 21 },
+  settings: { autoMatchConsent: true, phraseNotifications: true, phraseFromHour: 9, phraseToHour: 21 },
   friends: [
     { id: "marina", name: "Марина", companionStage: 1 },
     { id: "igor", name: "Игорь", companionStage: 3 },
@@ -75,22 +75,6 @@ export function useProfile() {
     setState((current) => (current.status === "ready" ? { ...current, data: change(current.data) } : current));
   }
 
-  async function setPublishEvents(publishEvents: boolean) {
-    setActionError(null);
-    update((data) => ({ ...data, settings: { ...data.settings, publishEvents } }));
-    if (demo) return;
-    try {
-      const settings = await request<ProfileData["settings"]>("/api/profile/settings", {
-        method: "PATCH",
-        body: JSON.stringify({ publishEvents }),
-      });
-      update((data) => ({ ...data, settings }));
-    } catch (error) {
-      update((data) => ({ ...data, settings: { ...data.settings, publishEvents: !publishEvents } }));
-      setActionError((error as Error).message);
-    }
-  }
-
   /** Фраза дня: согласие и промежуток. Вместе с ними сохраняется часовой пояс телефона. */
   async function setPhraseSettings(changes: Partial<ProfileData["settings"]>) {
     setActionError(null);
@@ -133,5 +117,5 @@ export function useProfile() {
     }
   }
 
-  return { state, actionError, setPublishEvents, setPhraseSettings, answerRequest };
+  return { state, actionError, setPhraseSettings, answerRequest };
 }

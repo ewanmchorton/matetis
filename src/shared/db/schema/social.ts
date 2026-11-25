@@ -56,6 +56,7 @@ export const personSettings = pgTable(
     userId: text("user_id")
       .primaryKey()
       .references(() => user.id, { onDelete: "cascade" }),
+    /** Больше не используется: события ленты видны друзьям всегда. Колонка осталась от прежней галочки. */
     publishEvents: boolean("publish_events").notNull().default(true),
     autoMatchConsent: boolean("auto_match_consent").notNull().default(true),
     /** Согласие получать фразу дня уведомлением. */

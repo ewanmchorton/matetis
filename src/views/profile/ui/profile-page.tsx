@@ -28,7 +28,7 @@ const checkboxClass = "size-6 rounded-md border-primary/40 bg-background/70 [&_s
 
 export function ProfilePage() {
   const router = useRouter();
-  const { state, actionError, setPublishEvents, setPhraseSettings, answerRequest } = useProfile();
+  const { state, actionError, setPhraseSettings, answerRequest } = useProfile();
   const journal = useJournal();
 
   useEffect(() => {
@@ -59,15 +59,6 @@ export function ProfilePage() {
           {state.demo && !isStaticPrototype && (
             <p className="type-caption text-muted-foreground">{typograph("Вы не вошли – показаны демо-данные.")}</p>
           )}
-          <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3">
-            <span className="type-secondary text-muted-foreground">{typograph("Делиться прогрессом с друзьями")}</span>
-            <Checkbox
-              className={checkboxClass}
-              aria-label="Делиться прогрессом с друзьями"
-              checked={state.data.settings.publishEvents}
-              onCheckedChange={(value) => void setPublishEvents(value === true)}
-            />
-          </label>
           <ProfileFriends
             friends={state.data.friends}
             incoming={state.data.incoming}

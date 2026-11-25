@@ -15,13 +15,8 @@ beforeEach(async () => {
 });
 
 describe("Настройки человека", () => {
-  it("у нового человека включены публикация событий, автоподбор и фраза дня с 9 до 21", async () => {
-    expect(await getMySettings(anna)).toEqual({ publishEvents: true, autoMatchConsent: true, ...phraseDefaults });
-  });
-
-  it("человек может выключить публикацию событий", async () => {
-    await updateMySettings(anna, { publishEvents: false });
-    expect((await getMySettings(anna)).publishEvents).toBe(false);
+  it("у нового человека включены автоподбор и фраза дня с 9 до 21", async () => {
+    expect(await getMySettings(anna)).toEqual({ autoMatchConsent: true, ...phraseDefaults });
   });
 
   it("человек может отказаться от автоподбора и снова его включить", async () => {
@@ -33,13 +28,13 @@ describe("Настройки человека", () => {
 
   it("изменение одной настройки не сбрасывает другую", async () => {
     await updateMySettings(anna, { autoMatchConsent: false });
-    await updateMySettings(anna, { publishEvents: false });
-    expect(await getMySettings(anna)).toEqual({ publishEvents: false, autoMatchConsent: false, ...phraseDefaults });
+    await updateMySettings(anna, { phraseNotifications: false });
+    expect(await getMySettings(anna)).toEqual({ autoMatchConsent: false, ...phraseDefaults, phraseNotifications: false });
   });
 
   it("настройки одного человека не меняют настройки другого", async () => {
-    await updateMySettings(anna, { publishEvents: false, autoMatchConsent: false });
-    expect(await getMySettings(boris)).toEqual({ publishEvents: true, autoMatchConsent: true, ...phraseDefaults });
+    await updateMySettings(anna, { autoMatchConsent: false });
+    expect(await getMySettings(boris)).toEqual({ autoMatchConsent: true, ...phraseDefaults });
   });
 
   it("человек может отказаться от фразы дня", async () => {
