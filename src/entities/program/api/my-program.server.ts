@@ -386,7 +386,7 @@ export async function getMyProgram(userId: string, now = new Date()): Promise<My
   const view = ({ item, variant }: VisiblePractice): ProgramPractice => ({
     id: item.id,
     variantId: variant?.id ?? null,
-    title: item.title,
+    title: variant?.title || item.title,
     daypart: item.daypart,
     hasVideo: Boolean((variant ?? item).videoUrl),
     hasAudio: Boolean((variant ?? item).audioPath),

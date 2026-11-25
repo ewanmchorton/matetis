@@ -22,6 +22,8 @@ type ElementId = (typeof elementIds)[number];
 export type PracticeVariant = {
   id: string;
   position: number;
+  /** Как увидит человек. Пусто – на экране остаётся название раздела. */
+  title: string | null;
   body: string;
   audioPath: string | null;
   videoUrl: string | null;
@@ -114,6 +116,7 @@ function variantValues(input: unknown) {
     const typeIds = Array.isArray(variant.typeIds) ? [...new Set(variant.typeIds.filter((id) => known.has(id)))] : [];
     return {
       position: index + 1,
+      title: optionalText(variant.title),
       body: text(variant.body),
       videoUrl: youTubeUrl(variant.videoUrl),
       weakElement: elementOrNull(variant.weakElement),
@@ -144,6 +147,7 @@ export async function listPractices(): Promise<Practice[]> {
       .map((variant) => ({
         id: variant.id,
         position: variant.position,
+        title: variant.title,
         body: variant.body,
         audioPath: variant.audioPath,
         videoUrl: variant.videoUrl,
@@ -285,6 +289,7 @@ export async function saveSectionVariant(
     key?: unknown;
     order?: unknown;
     id?: unknown;
+    title?: unknown;
     body?: unknown;
     videoUrl?: unknown;
     typeIds?: unknown;
@@ -302,6 +307,7 @@ export async function saveSectionVariant(
   const key = text(input.key);
   if (!key) throw new AppError("empty_types", "Выберите тип или стихию");
   const [variant] = variantValues([input]);
+  if (!variant.title) throw new AppError("empty_title", "Напишите название");
   const order = wholeNumber(input.order, 1, 1);
 
   const id = await db.transaction(async (tx) => {
@@ -309,6 +315,7 @@ export async function saveSectionVariant(
       const [row] = await tx
         .update(practiceVariant)
         .set({
+          title: variant.title,
           body: variant.body,
           videoUrl: variant.videoUrl,
           weakElement: variant.weakElement,
@@ -333,6 +340,7 @@ export async function saveSectionVariant(
       .values({
         practiceId,
         position: Number(max?.value ?? 0) + 1,
+        title: variant.title,
         body: variant.body,
         videoUrl: variant.videoUrl,
         weakElement: variant.weakElement,

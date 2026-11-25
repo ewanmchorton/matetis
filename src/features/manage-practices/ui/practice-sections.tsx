@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Trash2 } from "lucide-react";
+import { ChevronDown, Plus, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 
 import { getElements, type ElementId } from "@/entities/element";
@@ -18,6 +18,7 @@ type Frequency = "weekly" | "awareness";
 type Variant = {
   id: string;
   position: number;
+  title: string | null;
   body: string;
   videoUrl: string | null;
   typeIds: string[];
@@ -40,6 +41,7 @@ type Section = {
   alternation: "first" | "second" | null;
   opensOnDay: number;
   hint: string;
+  addLabel: string;
 };
 
 const weeklySections: Section[] = [
@@ -50,6 +52,7 @@ const weeklySections: Section[] = [
     alternation: "first",
     opensOnDay: 1,
     hint: "Своя очередь у каждого типа. Пустые недели – на всю стихию, потом её сменяет медитация на слабую.",
+    addLabel: "Добавить медитацию",
   },
   {
     title: "Медитация на слабую стихию",
@@ -58,6 +61,7 @@ const weeklySections: Section[] = [
     alternation: "second",
     opensOnDay: 8,
     hint: "Очередь по слабой стихии человека. Сменяет медитацию на качество силы, вместе их нет.",
+    addLabel: "Добавить медитацию",
   },
   {
     title: "Прогулка без телефона",
@@ -66,6 +70,7 @@ const weeklySections: Section[] = [
     alternation: null,
     opensOnDay: 15,
     hint: "Своя очередь у каждого типа. Обычно одна неделя, потом следующий вопрос.",
+    addLabel: "Добавить вопрос",
   },
   {
     title: "Полный цикл зарядки",
@@ -74,6 +79,7 @@ const weeklySections: Section[] = [
     alternation: null,
     opensOnDay: 1,
     hint: "По стихии года: одна и та же для всех, пока идёт эта стихия.",
+    addLabel: "Добавить зарядку",
   },
 ];
 
@@ -85,6 +91,7 @@ const awarenessSections: Section[] = [
     alternation: null,
     opensOnDay: 1,
     hint: "Своя очередь у каждого типа. На экране одно осознание.",
+    addLabel: "Добавить осознание",
   },
   {
     title: "Осознание на слабую стихию",
@@ -93,6 +100,7 @@ const awarenessSections: Section[] = [
     alternation: null,
     opensOnDay: 8,
     hint: "По слабой стихии. Сменяет осознание по книге, вместе их нет.",
+    addLabel: "Добавить осознание",
   },
 ];
 
@@ -123,6 +131,7 @@ export function PracticeSections({ frequency }: { frequency: Frequency }) {
   const [openSection, setOpenSection] = useState(sections[0].title);
   const [openBucket, setOpenBucket] = useState<string | null>(frequency === "weekly" ? "t1" : "t1");
   const [openItem, setOpenItem] = useState<string | null>(null);
+  const [adding, setAdding] = useState<{ section: string; bucketId: string | null } | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
 
   const load = useCallback(() => {
@@ -137,19 +146,21 @@ export function PracticeSections({ frequency }: { frequency: Frequency }) {
     return practices?.find((item) => item.title === section.title) ?? null;
   }
 
-  async function saveItem(section: Section, bucketId: string, event: FormEvent<HTMLFormElement>, variantId?: string) {
+  async function saveItem(section: Section, bucketId: string | null, event: FormEvent<HTMLFormElement>, variantId?: string) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
+    const key = bucketId ?? String(data.get("bucket") ?? "");
     setError(null);
     const practice = practiceOf(section);
     const variant = {
       id: variantId,
+      title: String(data.get("title") ?? ""),
       body: String(data.get("body") ?? ""),
       videoUrl: String(data.get("video") ?? ""),
       spanWeeks: weeksOrNull(String(data.get("weeks") ?? "")),
-      typeIds: section.groupBy === "type" ? [bucketId] : [],
-      weakElement: section.groupBy === "weak" ? bucketId : null,
-      seasonElement: section.groupBy === "season" ? bucketId : null,
+      typeIds: section.groupBy === "type" ? [key] : [],
+      weakElement: section.groupBy === "weak" ? key : null,
+      seasonElement: section.groupBy === "season" ? key : null,
       order: Number(data.get("order")) || 1,
     };
     try {
@@ -166,11 +177,12 @@ export function PracticeSections({ frequency }: { frequency: Frequency }) {
                 opensOnDay: section.opensOnDay,
               },
           groupBy: section.groupBy,
-          key: bucketId,
+          key,
           ...variant,
         }),
       });
       setOpenItem(null);
+      setAdding(null);
       load();
     } catch (saveError) {
       setError((saveError as Error).message);
@@ -240,11 +252,33 @@ export function PracticeSections({ frequency }: { frequency: Frequency }) {
             </button>
             {open && (
               <div className="space-y-2 border-t px-3 py-3">
+                <div className="sticky top-0 z-10 bg-background py-1">
+                  {adding?.section === section.title && adding.bucketId === null ? (
+                    <ItemForm
+                      formKey={`${section.title}-new`}
+                      order={(practice?.variants.length ?? 0) + 1}
+                      buckets={buckets(section)}
+                      chooseLabel={section.groupBy === "type" ? "Тип" : section.groupBy === "weak" ? "Слабая стихия" : "Стихия года"}
+                      submitLabel={section.addLabel}
+                      onSubmit={(event) => void saveItem(section, null, event)}
+                    />
+                  ) : (
+                    <Button
+                      variant="outline"
+                      className="h-11"
+                      onClick={() => setAdding({ section: section.title, bucketId: null })}
+                    >
+                      <Plus />
+                      {section.addLabel}
+                    </Button>
+                  )}
+                </div>
                 {buckets(section).map((bucket) => {
                   const items = (practice?.variants ?? [])
                     .filter((variant) => inBucket(section, variant, bucket.id))
                     .sort((a, b) => a.position - b.position);
                   const bucketOpen = openBucket === `${section.title}:${bucket.id}`;
+                  const addingHere = adding?.section === section.title && adding.bucketId === bucket.id;
                   return (
                     <section key={bucket.id} className="overflow-hidden rounded-xl border">
                       <button
@@ -261,58 +295,79 @@ export function PracticeSections({ frequency }: { frequency: Frequency }) {
                       </button>
                       {bucketOpen && (
                         <div className="space-y-3 border-t bg-muted/20 p-3">
-                          <ItemForm
-                            order={items.length + 1}
-                            onSubmit={(event) => void saveItem(section, bucket.id, event)}
-                          />
+                          {addingHere ? (
+                            <ItemForm
+                              formKey={`${section.title}-${bucket.id}`}
+                              order={items.length + 1}
+                              submitLabel={section.addLabel}
+                              onSubmit={(event) => void saveItem(section, bucket.id, event)}
+                            />
+                          ) : (
+                            <Button
+                              variant="outline"
+                              className="h-11"
+                              onClick={() => setAdding({ section: section.title, bucketId: bucket.id })}
+                            >
+                              <Plus />
+                              {section.addLabel}
+                            </Button>
+                          )}
                           {items.length === 0 && <p className="text-sm text-muted-foreground">Пока пусто. Раздел на месте.</p>}
-                          {items.map((item, index) => (
-                            <div key={item.id}>
-                              <div
-                                className="flex items-center gap-2"
-                                onDragOver={(event) => event.preventDefault()}
-                                onDrop={() => void dropOn(section, bucket.id, item.id)}
-                              >
-                                <span
-                                  draggable
-                                  title="Перетащить"
-                                  className="cursor-grab px-1 text-muted-foreground"
-                                  onDragStart={() => setDragId(item.id)}
+                          {items.map((item, index) => {
+                            const line = item.title?.trim() || item.body.trim() || "Без названия";
+                            const note = item.title?.trim() && item.body.trim() && item.body.trim() !== item.title.trim() ? item.body.trim() : "";
+                            return (
+                              <div key={item.id}>
+                                <div
+                                  className="flex items-center gap-2"
+                                  onDragOver={(event) => event.preventDefault()}
+                                  onDrop={() => void dropOn(section, bucket.id, item.id)}
                                 >
-                                  ⋮⋮
-                                </span>
-                                <button
-                                  type="button"
-                                  className="min-w-0 flex-1 text-left"
-                                  onClick={() => setOpenItem(openItem === item.id ? null : item.id)}
-                                >
-                                  <span className="text-sm text-muted-foreground">{index + 1}. </span>
-                                  <span className="text-sm">{item.body || "Без текста"}</span>
-                                  <span className="mt-0.5 block text-xs text-muted-foreground">
-                                    {item.spanWeeks ? `${item.spanWeeks} нед.` : "на всю стихию"}
+                                  <span
+                                    draggable
+                                    title="Перетащить"
+                                    className="cursor-grab px-1 text-muted-foreground"
+                                    onDragStart={() => setDragId(item.id)}
+                                  >
+                                    ⋮⋮
                                   </span>
-                                </button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="size-11"
-                                  aria-label="Удалить запись"
-                                  onClick={() => void removeItem(item)}
-                                >
-                                  <Trash2 />
-                                </Button>
+                                  <button
+                                    type="button"
+                                    className="min-w-0 flex-1 text-left"
+                                    onClick={() => setOpenItem(openItem === item.id ? null : item.id)}
+                                  >
+                                    <span className="text-sm text-muted-foreground">{index + 1}. </span>
+                                    <span className="text-sm font-medium">{line}</span>
+                                    <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                                      {item.spanWeeks ? `${item.spanWeeks} нед.` : "на всю стихию"}
+                                      {note ? ` · ${note}` : ""}
+                                    </span>
+                                  </button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="size-11"
+                                    aria-label="Удалить запись"
+                                    onClick={() => void removeItem(item)}
+                                  >
+                                    <Trash2 />
+                                  </Button>
+                                </div>
+                                {openItem === item.id && (
+                                  <ItemForm
+                                    formKey={item.id}
+                                    order={index + 1}
+                                    title={item.title ?? ""}
+                                    body={item.body}
+                                    weeks={item.spanWeeks}
+                                    video={item.videoUrl}
+                                    submitLabel="Сохранить"
+                                    onSubmit={(event) => void saveItem(section, bucket.id, event, item.id)}
+                                  />
+                                )}
                               </div>
-                              {openItem === item.id && (
-                                <ItemForm
-                                  order={index + 1}
-                                  body={item.body}
-                                  weeks={item.spanWeeks}
-                                  video={item.videoUrl}
-                                  onSubmit={(event) => void saveItem(section, bucket.id, event, item.id)}
-                                />
-                              )}
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
                     </section>
@@ -328,25 +383,52 @@ export function PracticeSections({ frequency }: { frequency: Frequency }) {
 }
 
 function ItemForm({
+  formKey,
   order,
+  title = "",
   body = "",
   weeks = null,
   video = "",
+  buckets,
+  chooseLabel,
+  submitLabel,
   onSubmit,
 }: {
+  formKey: string;
   order: number;
+  title?: string;
   body?: string;
   weeks?: number | null;
   video?: string | null;
+  buckets?: { id: string; name: string }[];
+  chooseLabel?: string;
+  submitLabel: string;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
   return (
     <form className="space-y-3 rounded-xl border bg-background p-3" onSubmit={onSubmit}>
+      {buckets && (
+        <div className="space-y-1.5">
+          <Label htmlFor={`bucket-${formKey}`}>{chooseLabel}</Label>
+          <select id={`bucket-${formKey}`} name="bucket" required className="h-11 w-full rounded-lg border bg-background px-3 text-sm">
+            <option value="">Выберите</option>
+            {buckets.map((bucket) => (
+              <option key={bucket.id} value={bucket.id}>
+                {bucket.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+      <div className="space-y-1.5">
+        <Label htmlFor={`title-${formKey}`}>Название</Label>
+        <Input id={`title-${formKey}`} name="title" className="h-11" placeholder="Как увидит человек" defaultValue={title} required />
+      </div>
       <div className="grid gap-3 sm:grid-cols-[1fr_140px]">
         <div className="space-y-1.5">
-          <Label htmlFor={`weeks-${order}-${body.slice(0, 8)}`}>Сколько недель</Label>
+          <Label htmlFor={`weeks-${formKey}`}>Сколько недель</Label>
           <Input
-            id={`weeks-${order}-${body.slice(0, 8)}`}
+            id={`weeks-${formKey}`}
             name="weeks"
             type="number"
             min={1}
@@ -356,27 +438,20 @@ function ItemForm({
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor={`order-${order}-${body.slice(0, 8)}`}>Порядок</Label>
-          <Input
-            id={`order-${order}-${body.slice(0, 8)}`}
-            name="order"
-            type="number"
-            min={1}
-            className="h-11"
-            defaultValue={order}
-          />
+          <Label htmlFor={`order-${formKey}`}>Порядок</Label>
+          <Input id={`order-${formKey}`} name="order" type="number" min={1} className="h-11" defaultValue={order} />
         </div>
       </div>
       <div className="space-y-1.5">
-        <Label>Текст</Label>
-        <Textarea name="body" className="min-h-24" defaultValue={body} required />
+        <Label htmlFor={`body-${formKey}`}>Текст</Label>
+        <Textarea id={`body-${formKey}`} name="body" className="min-h-24" defaultValue={body} required />
       </div>
       <div className="space-y-1.5">
-        <Label>Видео – ссылка на YouTube</Label>
-        <Input name="video" className="h-11" placeholder="https://youtu.be/…" defaultValue={video ?? ""} />
+        <Label htmlFor={`video-${formKey}`}>Видео – ссылка на YouTube</Label>
+        <Input id={`video-${formKey}`} name="video" className="h-11" placeholder="https://youtu.be/…" defaultValue={video ?? ""} />
       </div>
       <Button type="submit" className="h-11">
-        Сохранить
+        {submitLabel}
       </Button>
     </form>
   );

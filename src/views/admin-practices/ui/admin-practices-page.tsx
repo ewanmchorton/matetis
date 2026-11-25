@@ -8,10 +8,10 @@ import { routes } from "@/shared/config/routes";
 import { cn } from "@/shared/lib/utils";
 
 const tabs = [
-  { id: "daily", label: "Ежедневные" },
   { id: "weekly", label: "На стихию" },
   { id: "awareness", label: "Осознания" },
   { id: "phrases", label: "Фразы дня" },
+  { id: "daily", label: "Ежедневные" },
 ] as const;
 
 type Tab = (typeof tabs)[number]["id"];
@@ -20,7 +20,7 @@ type Tab = (typeof tabs)[number]["id"];
 export function AdminPracticesPage() {
   const router = useRouter();
   const fromUrl = useSearchParams().get("tab");
-  const tab: Tab = tabs.some((item) => item.id === fromUrl) ? (fromUrl as Tab) : "daily";
+  const tab: Tab = tabs.some((item) => item.id === fromUrl) ? (fromUrl as Tab) : "weekly";
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">

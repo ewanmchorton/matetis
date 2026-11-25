@@ -83,6 +83,8 @@ export const practiceVariant = pgTable(
       .references(() => practice.id, { onDelete: "cascade" }),
     /** Порядок вариантов: по нему они идут неделя за неделей. */
     position: smallint("position").notNull(),
+    /** Как практика называется у человека. Пусто – остаётся название раздела. */
+    title: text("title"),
     body: text("body").notNull().default(""),
     audioPath: text("audio_path"),
     videoUrl: text("video_url"),
