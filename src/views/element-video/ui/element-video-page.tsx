@@ -17,7 +17,7 @@ import { ScreenLayout } from "@/widgets/screen-layout";
 
 type State = { status: "loading" } | { status: "error"; message: string } | { status: "ready"; program: MyProgram };
 
-/** Карточка видео по стихии: видео смотрят здесь, «Просмотрено» убирает его из «На этой неделе». */
+/** Карточка видео по стихии: видео смотрят здесь, «Просмотрено» убирает его из «На стихию». */
 export function ElementVideoPage() {
   const router = useRouter();
   const [state, setState] = useState<State>({ status: "loading" });

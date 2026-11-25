@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { typograph } from "@/shared/lib/typograph";
 import { youTubeEmbedUrl } from "@/shared/lib/youtube";
 import { Button } from "@/shared/ui/button";
-import { Logo } from "@/shared/ui/logo";
+import { AppLogo } from "@/widgets/screen-layout";
 
 /**
  * Приветственное видео поверх программы: открывается само, пока человек не нажал «Просмотрено».
@@ -23,7 +23,7 @@ export function WelcomeVideo({ video, onSeen }: { video: { videoUrl: string; bod
     >
       <div className="mx-auto flex min-h-dvh w-full max-w-[440px] flex-col gap-6 px-(--screen-gutter) pt-[calc(var(--safe-top)+var(--header-top))] pb-[calc(var(--safe-bottom)+var(--action-bottom))]">
         <div className="flex h-(--header-height) items-center">
-          <Logo />
+          <AppLogo />
         </div>
         <h1 id="welcome-video-title" className="type-title text-foreground">
           Приветственное видео

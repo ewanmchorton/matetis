@@ -1,13 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  chainPosition,
   navigatorDay,
   navigatorPosition,
   programDayNumber,
   programWeek,
-  shownInWeek,
   weekDays,
-  weeksShownBefore,
   weekStart,
   type NavigatorPart,
   type NavigatorWhole,
@@ -77,22 +76,23 @@ describe("Цикл навигатора", () => {
   });
 });
 
-describe("Недели программы и чередование", () => {
+describe("Сколько недель показывать вариант", () => {
   it("дни 1–7 – первая неделя, 8-й день – вторая", () => {
     expect([1, 7, 8, 15].map(programWeek)).toEqual([1, 1, 2, 3]);
   });
 
-  it("без чередования практика есть каждую неделю с недели, где она появилась", () => {
-    expect([1, 2, 3, 4].map((week) => shownInWeek(week, 8, null))).toEqual([false, true, true, true]);
+  it("пусто – первый вариант на всю стихию", () => {
+    expect(chainPosition([null, null], 0)).toEqual({ index: 0, into: 0 });
+    expect(chainPosition([null, null], 10)).toEqual({ index: 0, into: 10 });
   });
 
-  it("с 15-го дня «first» – в 3-ю и 5-ю неделю, «second» – в 4-ю и 6-ю", () => {
-    expect([1, 2, 3, 4, 5, 6].map((week) => shownInWeek(week, 1, "first"))).toEqual([true, true, true, false, true, false]);
-    expect([1, 2, 3, 4, 5, 6].map((week) => shownInWeek(week, 8, "second"))).toEqual([false, true, false, true, false, true]);
+  it("у вариантов свои недели, потом по кругу", () => {
+    expect([0, 2, 3, 6, 7, 9].map((week) => chainPosition([3, 4], week).index)).toEqual([0, 0, 1, 1, 0, 0]);
   });
 
-  it("номер варианта – сколько недель практика уже была", () => {
-    expect([1, 3, 5].map((week) => weeksShownBefore(week, 1, "first"))).toEqual([0, 2, 3]);
-    expect([2, 4, 6].map((week) => weeksShownBefore(week, 8, "second"))).toEqual([0, 1, 2]);
+  it("пустая длительность дальше по списку – этот вариант до конца", () => {
+    expect(chainPosition([3, null], 2).index).toBe(0);
+    expect(chainPosition([3, null], 3)).toEqual({ index: 1, into: 0 });
+    expect(chainPosition([3, null], 20).index).toBe(1);
   });
 });

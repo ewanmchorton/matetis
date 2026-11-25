@@ -227,12 +227,12 @@ describe("Варианты практик", () => {
     expect((await getMyProgram(boris, day(1))).weekly).toEqual([]);
   });
 
-  it("«каждую неделю новый» – следующий вариант по порядку, потом по кругу", async () => {
+  it("неделя на вариант – следующий по порядку, потом по кругу", async () => {
     await savePractice(manager, {
       title: "Прогулка без телефона",
       frequency: "weekly",
       position: 1,
-      newEachWeek: true,
+      spanWeeks: 1,
       variants: [
         { body: "Вопрос 1", typeIds: [HEALER] },
         { body: "Вопрос для Идеалиста", typeIds: [IDEALIST] },
@@ -246,16 +246,15 @@ describe("Варианты практик", () => {
     expect(bodies).toEqual(["Вопрос 1", "Вопрос 2", "Вопрос 1"]);
   });
 
-  it("с 15-го дня медитации чередуются по неделям, новая медитация – каждый раз, когда она есть", async () => {
+  it("медитация на слабую стихию сменяет медитацию на качество силы, вместе их нет", async () => {
     await savePractice(manager, {
       title: "Медитация на качество силы",
       frequency: "weekly",
       position: 1,
-      newEachWeek: true,
       alternation: "first",
       variants: [
-        { body: "Медитация 1", typeIds: [HEALER] },
-        { body: "Медитация 2", typeIds: [HEALER] },
+        { body: "Медитация 1", typeIds: [HEALER], spanWeeks: 3 },
+        { body: "Медитация 2", typeIds: [HEALER], spanWeeks: 2 },
       ],
     });
     await savePractice(manager, {
@@ -264,30 +263,32 @@ describe("Варианты практик", () => {
       position: 2,
       opensOnDay: 8,
       alternation: "second",
+      spanWeeks: 2,
     });
+    await savePractice(manager, { title: "Полный цикл зарядки", frequency: "weekly", position: 3 });
     const weeks = [];
-    for (const programDay of [1, 8, 15, 22, 29]) {
+    for (const programDay of [1, 8, 15, 22, 29, 36]) {
       const { weekly } = await getMyProgram(anna, day(programDay));
       weeks.push(
-        await Promise.all(
-          weekly.map(async (item) => (await shownBody(item.title, item.variantId)) ?? item.title),
-        ),
+        await Promise.all(weekly.map(async (item) => (await shownBody(item.title, item.variantId)) ?? item.title)),
       );
     }
+    // 3 недели медитация 1, потом 2 недели слабая стихия, потом медитация 2. Зарядка рядом всегда.
     expect(weeks).toEqual([
-      ["Медитация 1"],
-      ["Медитация 2", "Медитация на слабую стихию"],
-      ["Медитация 1"],
-      ["Медитация на слабую стихию"],
-      ["Медитация 2"],
+      ["Медитация 1", "Полный цикл зарядки"],
+      ["Медитация 1", "Полный цикл зарядки"],
+      ["Медитация 1", "Полный цикл зарядки"],
+      ["Медитация на слабую стихию", "Полный цикл зарядки"],
+      ["Медитация на слабую стихию", "Полный цикл зарядки"],
+      ["Медитация 2", "Полный цикл зарядки"],
     ]);
   });
 
-  it("практику, которой нет в эту неделю, отметить нельзя", async () => {
-    await savePractice(manager, { title: "Медитация на качество силы", frequency: "weekly", position: 1, alternation: "first" });
+  it("практику, которая ещё не открылась, отметить нельзя", async () => {
+    await savePractice(manager, { title: "Медитация на качество силы", frequency: "weekly", position: 1, opensOnDay: 30 });
     await getMyProgram(anna, day(1));
     const [meditation] = await listPracticesForStaff(manager);
-    await expect(setPracticeDone(anna, meditation.id, true, day(22))).rejects.toThrow("не найдена");
+    await expect(setPracticeDone(anna, meditation.id, true, day(1))).rejects.toThrow("не найдена");
   });
 
   it("на слабую стихию – вариант слабой стихии человека; без даты рождения практики нет", async () => {
@@ -308,22 +309,50 @@ describe("Варианты практик", () => {
     expect(titles([awareness])).toEqual(["Осознание на слабую стихию"]);
     expect(awareness.weakElement).toBe("metal");
     expect(await shownBody("Осознание на слабую стихию", awareness.variantId)).toBe("Про Металл");
+    const later = (await getMyProgram(anna, day(15))).awareness[0];
+    expect(await shownBody("Осознание на слабую стихию", later.variantId)).toBe("Про Металл");
   });
 
-  it("несколько слабых – медитация раз в 2 недели прокачивает их по очереди", async () => {
+  it("на экране одно осознание: следующее сменяет его, вместе их нет", async () => {
+    await savePractice(manager, {
+      title: "Осознание по книге «2 жизни»",
+      frequency: "awareness",
+      position: 1,
+      spanWeeks: 2,
+      variants: [{ body: "Про две жизни", typeIds: [HEALER] }],
+    });
+    await savePractice(manager, {
+      title: "Осознание на слабую стихию",
+      frequency: "awareness",
+      position: 2,
+      opensOnDay: 8,
+      spanWeeks: 2,
+      variants: [{ body: "Про Металл", weakElement: "metal" }],
+    });
+    await saveMyBirthDate(anna, "1988-03-15");
+    const shown = [];
+    for (const programDay of [1, 8, 15, 22]) {
+      const { awareness } = await getMyProgram(anna, day(programDay));
+      expect(awareness).toHaveLength(1);
+      shown.push(await shownBody(awareness[0].title, awareness[0].variantId));
+    }
+    expect(shown).toEqual(["Про две жизни", "Про две жизни", "Про Металл", "Про Металл"]);
+  });
+
+  it("несколько слабых – каждая стихия держится свои недели", async () => {
     await savePractice(manager, {
       title: "Медитация на слабую стихию",
       frequency: "weekly",
       position: 1,
       opensOnDay: 8,
-      alternation: "second",
+      spanWeeks: 2,
       variants: [
         { body: "Металл", weakElement: "metal" },
         { body: "Огонь", weakElement: "fire" },
         { body: "Дерево", weakElement: "wood" },
       ],
     });
-    // 15.03.1988: слабые Металл и Огонь. Медитация стоит во 2-ю, 4-ю, 6-ю… неделю.
+    // 15.03.1988: слабые Металл и Огонь. По 2 недели на каждую, практика с 8-го дня.
     await saveMyBirthDate(anna, "1988-03-15");
     await getMyProgram(anna, day(1)); // программа начинается в день первого открытия
     const shown = [];
@@ -331,7 +360,7 @@ describe("Варианты практик", () => {
       const [meditation] = (await getMyProgram(anna, day(programDay))).weekly;
       shown.push(meditation ? await shownBody(meditation.title, meditation.variantId) : "–");
     }
-    expect(shown).toEqual(["Металл", "–", "Огонь", "–", "Металл"]);
+    expect(shown).toEqual(["Металл", "Металл", "Огонь", "Огонь", "Металл"]);
   });
 
   it("вариант на стихию года – по текущей стихии, у всех типов один", async () => {
@@ -361,10 +390,14 @@ describe("Варианты практик", () => {
       title: "Осознание по книге «2 жизни»",
       frequency: "awareness",
       position: 1,
-      variants: [{ body: "Новый", typeIds: [IDEALIST] }],
+      spanWeeks: 4,
+      variants: [{ body: "Новый", typeIds: [IDEALIST], spanWeeks: 3 }],
     });
     const [item] = await listPracticesForStaff(manager);
-    expect(item.variants.map((variant) => [variant.body, variant.typeIds])).toEqual([["Новый", [IDEALIST]]]);
+    expect(item.spanWeeks).toBe(4);
+    expect(item.variants.map((variant) => [variant.body, variant.typeIds, variant.spanWeeks])).toEqual([
+      ["Новый", [IDEALIST], 3],
+    ]);
   });
 });
 

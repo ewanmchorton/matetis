@@ -5,7 +5,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { ElementBadge, getElement } from "@/entities/element";
-import { opensPracticeScreen } from "@/entities/program";
+import { awarenessPreview, opensPracticeScreen } from "@/entities/program";
 import type { MyProgram, ProgramPractice } from "@/entities/program/server";
 import { PhrasePrompt } from "@/features/phrase-notifications";
 import { routes } from "@/shared/config/routes";
@@ -129,7 +129,7 @@ function NavigatorCard({ navigator }: { navigator: NonNullable<MyProgram["naviga
   );
 }
 
-/** Главный экран программы: навигатор, утро, вечер, неделя, еженедельные практики, осознания. */
+/** Главный экран программы: навигатор, утро, вечер, неделя, практики на стихию, осознания. */
 export function ProgramPage() {
   const { state, actionError, companionScreen, markCompanionSeen, setDone, markWelcomeVideoSeen } = useMyProgram();
   const program = state.status === "ready" ? state.program : null;
@@ -164,14 +164,16 @@ export function ProgramPage() {
               </span>
             </div>
             <WeekLetters week={program.week} today={program.today} />
-            <p className="type-caption text-muted-foreground">
-              {typograph("Буква заполняется после первой практики за день")}
-            </p>
+            {program.programDay === 1 && (
+              <p className="type-caption text-muted-foreground">
+                {typograph("Буква заполняется после первой практики за день")}
+              </p>
+            )}
           </GlassCard>
 
           {(program.weekly.length > 0 || (elementVideo && !elementVideo.seen)) && (
-            <section className="space-y-3" aria-label="На этой неделе">
-              <SectionTitle title="На этой неделе" note="Один раз, в любой день" />
+            <section className="space-y-3" aria-label="На стихию">
+              <SectionTitle title="На стихию" />
               <GlassCard className="divide-y divide-foreground/8 px-5 py-1">
                 {elementVideo && !elementVideo.seen && (
                   <PracticeRow
@@ -196,16 +198,23 @@ export function ProgramPage() {
 
           {program.awareness.length > 0 && (
             <section className="space-y-3" aria-label="Осознание">
-              <SectionTitle title="Осознание" note="На весь период стихии" />
+              <SectionTitle title="Осознание" note="На стихию" />
               {program.awareness.map((practice) => (
-                <GlassCard key={practice.id} className="space-y-2">
-                  <p className="type-caption text-muted-foreground">
-                    {practice.weakElement
-                      ? `Слабая стихия: ${getElement(practice.weakElement).name}`
-                      : practice.title}
-                  </p>
-                  {practice.body && <p className="type-body text-foreground">{typograph(practice.body)}</p>}
-                </GlassCard>
+                <Link key={practice.id} href={`${routes.practice}/${practice.id}`} className="block">
+                  <GlassCard className="space-y-2">
+                    <p className="flex items-center justify-between gap-3 type-caption text-muted-foreground">
+                      <span>
+                        {practice.weakElement
+                          ? `Слабая стихия: ${getElement(practice.weakElement).name}`
+                          : practice.title}
+                      </span>
+                      <ChevronRight className="size-4 shrink-0" aria-hidden />
+                    </p>
+                    {practice.body && (
+                      <p className="type-body text-foreground">{typograph(awarenessPreview(practice.body))}</p>
+                    )}
+                  </GlassCard>
+                </Link>
               ))}
             </section>
           )}

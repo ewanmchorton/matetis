@@ -17,14 +17,13 @@ import {
 import { user } from "./auth";
 
 /**
- * Ежедневная практика – каждый день, еженедельная – один раз в неделю, в любой день.
- * Осознание – отдельный блок программы («2 жизни», на слабую стихию).
+ * Ежедневная практика – каждый день.
+ * Еженедельная и осознание – на стихию: по умолчанию один вариант на всю стихию.
+ * Сколько недель его показывать задаётся в админке (пусто – на всю стихию).
+ * Отметка еженедельной по-прежнему одна в неделю.
  */
 export const practiceFrequency = pgEnum("practice_frequency", ["daily", "weekly", "awareness"]);
-/**
- * Чередование с 15-го дня: «first» – в 3-ю, 5-ю… неделю программы, «second» – в 4-ю, 6-ю…
- * Так чередуются медитация на качество силы и медитация на слабую стихию.
- */
+/** Пара медитаций: «first» потом сменяет «second». Вместе их нет. */
 export const practiceAlternation = pgEnum("practice_alternation", ["first", "second"]);
 /** Где стоит ежедневная практика на экране программы. */
 export const practiceDaypart = pgEnum("practice_daypart", ["morning", "evening"]);
@@ -47,9 +46,14 @@ export const practice = pgTable(
     videoUrl: text("video_url"),
     /** С какого дня программы появляется у нового человека. */
     opensOnDay: smallint("opens_on_day").notNull().default(1),
-    /** Каждую неделю, когда практика есть в программе, – следующий вариант по порядку, потом по кругу. */
+    /**
+     * Сколько недель показывать один вариант, потом следующий, по кругу.
+     * Пусто – один вариант на всю стихию. У варианта может быть своё число.
+     */
+    spanWeeks: smallint("span_weeks"),
+    /** Раньше: новый вариант каждую неделю. Не используется, длительность – spanWeeks. */
     newEachWeek: boolean("new_each_week").notNull().default(false),
-    /** Пусто – без чередования. */
+    /** «first» / «second» – одна пара: вторая сменяет первую. Пусто – практика сама по себе. */
     alternation: practiceAlternation("alternation"),
     /** Можно проходить вместе с другом. Админ снимает для отдельных практик. */
     allowTogether: boolean("allow_together").notNull().default(true),
@@ -61,6 +65,7 @@ export const practice = pgTable(
       sql`(${table.frequency} = 'daily') = (${table.daypart} is not null)`,
     ),
     check("practice_opens_on_day", sql`${table.opensOnDay} >= 1`),
+    check("practice_span_weeks", sql`${table.spanWeeks} is null or ${table.spanWeeks} >= 1`),
   ],
 );
 
@@ -85,9 +90,12 @@ export const practiceVariant = pgTable(
     weakElement: text("weak_element"),
     /** На какую стихию года. Пусто – на любую. */
     seasonElement: text("season_element"),
+    /** Свои недели этого варианта. Пусто – как у практики. */
+    spanWeeks: smallint("span_weeks"),
   },
   (table) => [
     index("practice_variant_practice_idx").on(table.practiceId),
+    check("practice_variant_span_weeks", sql`${table.spanWeeks} is null or ${table.spanWeeks} >= 1`),
     check("practice_variant_weak_element", sql`${table.weakElement} in ('wood', 'fire', 'earth', 'metal', 'water')`),
     check(
       "practice_variant_season_element",

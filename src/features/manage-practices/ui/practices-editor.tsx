@@ -15,8 +15,8 @@ import { NativeSelect } from "@/shared/ui/native-select";
 import { Textarea } from "@/shared/ui/textarea";
 
 type Frequency = "daily" | "weekly" | "awareness";
-type Daypart = "morning" | "evening";
 type Alternation = "first" | "second" | null;
+type Daypart = "morning" | "evening";
 
 type Variant = {
   body: string;
@@ -24,6 +24,8 @@ type Variant = {
   typeIds: string[];
   weakElement: ElementId | null;
   seasonElement: ElementId | null;
+  /** Свои недели. Пусто – как у практики. */
+  spanWeeks: number | null;
 };
 
 type Practice = {
@@ -35,7 +37,9 @@ type Practice = {
   body: string;
   videoUrl: string | null;
   opensOnDay: number;
-  newEachWeek: boolean;
+  /** Сколько недель показывать вариант. Пусто – на всю стихию. */
+  spanWeeks: number | null;
+  /** Вторая медитация сменяет первую. Вместе их нет. */
   alternation: Alternation;
   allowTogether: boolean;
   variants: Variant[];
@@ -45,7 +49,14 @@ type Draft = Omit<Practice, "id" | "videoUrl"> & { id?: string; videoUrl: string
 
 const types = getPersonTypes();
 const elements = getElements();
-const emptyVariant = (): Variant => ({ body: "", videoUrl: "", typeIds: [], weakElement: null, seasonElement: null });
+const emptyVariant = (): Variant => ({
+  body: "",
+  videoUrl: "",
+  typeIds: [],
+  weakElement: null,
+  seasonElement: null,
+  spanWeeks: null,
+});
 
 type ListState = { status: "loading" } | { status: "error"; message: string } | { status: "ready"; practices: Practice[] };
 
@@ -60,7 +71,7 @@ function emptyDraft(frequency: Frequency, position: number): Draft {
     body: "",
     videoUrl: "",
     opensOnDay: 1,
-    newEachWeek: false,
+    spanWeeks: null,
     alternation: null,
     allowTogether: true,
     variants: [],
@@ -82,8 +93,22 @@ function variantAudience(variant: Variant) {
   return parts.join(" · ");
 }
 
+function weeksOrEmpty(value: string): number | null {
+  if (!value.trim()) return null;
+  const weeks = Number(value);
+  return Number.isInteger(weeks) && weeks >= 1 ? weeks : null;
+}
+
 /** Варианты текста практики: для типов, слабой стихии, стихии года. */
-function VariantsEditor({ variants, onChange }: { variants: Variant[]; onChange: (variants: Variant[]) => void }) {
+function VariantsEditor({
+  variants,
+  showWeeks,
+  onChange,
+}: {
+  variants: Variant[];
+  showWeeks: boolean;
+  onChange: (variants: Variant[]) => void;
+}) {
   const set = (index: number, change: Partial<Variant>) =>
     onChange(variants.map((variant, i) => (i === index ? { ...variant, ...change } : variant)));
 
@@ -169,6 +194,20 @@ function VariantsEditor({ variants, onChange }: { variants: Variant[]; onChange:
               </NativeSelect>
             </div>
           </div>
+          {showWeeks && (
+            <div className="space-y-1.5">
+              <Label htmlFor={`variant-${index}-weeks`}>Недель</Label>
+              <Input
+                id={`variant-${index}-weeks`}
+                type="number"
+                min={1}
+                className="h-11"
+                placeholder="Как у практики"
+                value={variant.spanWeeks ?? ""}
+                onChange={(event) => set(index, { spanWeeks: weeksOrEmpty(event.target.value) })}
+              />
+            </div>
+          )}
           <div className="space-y-1.5">
             <Label htmlFor={`variant-${index}-body`}>Текст</Label>
             <Textarea
@@ -198,7 +237,7 @@ function VariantsEditor({ variants, onChange }: { variants: Variant[]; onChange:
   );
 }
 
-/** Практики одного вида: ежедневные (утро и вечер), еженедельные или осознания. Список, правка, добавление. */
+/** Практики одного вида: ежедневные (утро и вечер), на стихию или осознания. Список, правка, добавление. */
 export function PracticesEditor({ frequency }: { frequency: Frequency }) {
   const [state, setState] = useState<ListState>({ status: "loading" });
   const [openId, setOpenId] = useState<string | null>(null);
@@ -339,15 +378,27 @@ export function PracticesEditor({ frequency }: { frequency: Frequency }) {
         />
       </div>
       <p className="text-xs text-muted-foreground">Аудио можно будет загрузить, когда появится хранение файлов на сервере.</p>
-      <label className="flex min-h-11 items-center gap-3 text-sm">
-        <input
-          type="checkbox"
-          className="size-5"
-          checked={draft.newEachWeek}
-          onChange={(event) => setDraft({ ...draft, newEachWeek: event.target.checked })}
-        />
-        Каждую неделю новый вариант – по порядку, потом по кругу
-      </label>
+      {frequency !== "daily" && (
+        <div className="space-y-1.5">
+          <Label htmlFor="practice-weeks">Сколько недель показывать</Label>
+          <Input
+            id="practice-weeks"
+            type="number"
+            min={1}
+            className="h-11"
+            placeholder="На всю стихию"
+            value={draft.spanWeeks ?? ""}
+            onChange={(event) => setDraft({ ...draft, spanWeeks: weeksOrEmpty(event.target.value) })}
+          />
+          <p className="text-xs text-muted-foreground">
+            Пусто – один вариант на всю стихию. Число – столько недель, потом следующий, по кругу. У варианта можно
+            поставить своё число: у одного типа 3 недели, у другого месяц.
+            {frequency === "awareness" ? " На экране одно осознание: следующее сменяет его." : ""}
+            {draft.alternation === "first" ? " Потом её сменяет медитация на слабую стихию." : ""}
+            {draft.alternation === "second" ? " Она сменяет медитацию на качество силы, вместе их нет." : ""}
+          </p>
+        </div>
+      )}
       {frequency !== "awareness" && (
         <label className="flex min-h-11 items-center gap-3 text-sm">
           <input
@@ -359,22 +410,11 @@ export function PracticesEditor({ frequency }: { frequency: Frequency }) {
           Можно делать вместе с другом
         </label>
       )}
-      {frequency === "weekly" && (
-        <div className="space-y-1.5">
-          <Label htmlFor="practice-alternation">С 15-го дня чередуется по неделям</Label>
-          <NativeSelect
-            id="practice-alternation"
-            className="h-11"
-            value={draft.alternation ?? ""}
-            onChange={(event) => setDraft({ ...draft, alternation: (event.target.value || null) as Alternation })}
-          >
-            <option value="">Нет, каждую неделю</option>
-            <option value="first">Да, в 3-ю, 5-ю, 7-ю… неделю</option>
-            <option value="second">Да, в 4-ю, 6-ю, 8-ю… неделю</option>
-          </NativeSelect>
-        </div>
-      )}
-      <VariantsEditor variants={draft.variants} onChange={(variants) => setDraft({ ...draft, variants })} />
+      <VariantsEditor
+        variants={draft.variants}
+        showWeeks={frequency !== "daily"}
+        onChange={(variants) => setDraft({ ...draft, variants })}
+      />
       <div className="flex flex-wrap gap-2">
         <Button type="submit" className="h-11" disabled={pending}>
           Сохранить
@@ -423,8 +463,9 @@ export function PracticesEditor({ frequency }: { frequency: Frequency }) {
                           с {item.opensOnDay}-го дня
                           {item.videoUrl ? " · видео" : ""}
                           {item.variants.length > 0 ? ` · вариантов: ${item.variants.length}` : item.body ? "" : " · без текста"}
-                          {item.newEachWeek ? " · каждую неделю новый" : ""}
-                          {item.alternation ? " · чередуется" : ""}
+                          {item.frequency !== "daily" ? (item.spanWeeks ? ` · ${item.spanWeeks} нед.` : " · на стихию") : ""}
+                          {item.variants.some((variant) => variant.spanWeeks) ? " · у вариантов свои недели" : ""}
+                          {item.alternation === "second" ? " · сменяет медитацию на качество силы" : ""}
                           {item.frequency !== "awareness" && !item.allowTogether ? " · не вместе" : ""}
                         </span>
                       </span>

@@ -9,14 +9,14 @@ import { cn } from "@/shared/lib/utils";
 
 const tabs = [
   { id: "daily", label: "Ежедневные" },
-  { id: "weekly", label: "Еженедельные" },
+  { id: "weekly", label: "На стихию" },
   { id: "awareness", label: "Осознания" },
   { id: "phrases", label: "Фразы дня" },
 ] as const;
 
 type Tab = (typeof tabs)[number]["id"];
 
-/** Раздел «Практики»: ежедневные, еженедельные, осознания и фразы дня. Вкладка запоминается в адресе. */
+/** Раздел «Практики»: ежедневные, на стихию, осознания и фразы дня. Вкладка запоминается в адресе. */
 export function AdminPracticesPage() {
   const router = useRouter();
   const fromUrl = useSearchParams().get("tab");

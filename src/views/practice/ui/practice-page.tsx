@@ -1,9 +1,16 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 
-import { isAudioPractice, loadMyProgram, numberedSteps } from "@/entities/program";
+import {
+  isAudioPractice,
+  isAwarenessPractice,
+  isThinkingPractice,
+  loadMyProgram,
+  numberedSteps,
+  rememberedPractice,
+} from "@/entities/program";
 import type { ProgramPractice } from "@/entities/program/server";
 import { request } from "@/shared/api/request";
 import { isStaticPrototype } from "@/shared/config/env";
@@ -35,16 +42,24 @@ export function PracticePage({ practiceId }: { practiceId: string }) {
   const [pending, setPending] = useState(false);
   const notePath = `/api/program/notes/${encodeURIComponent(practiceId)}`;
 
+  useLayoutEffect(() => {
+    const practice = rememberedPractice(practiceId);
+    if (!practice) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setState({ status: "ready", practice });
+  }, [practiceId]);
+
   useEffect(() => {
     // На GitHub Pages сервера нет: заметки не хранятся, поле пустое.
-    const savedNote = isStaticPrototype ? Promise.resolve({ text: "" }) : request<{ text: string }>(notePath);
-    Promise.all([loadMyProgram(), savedNote])
-      .then(([program, saved]) => {
-        const practice = [...program.morning, ...program.evening, ...program.weekly].find(
+    loadMyProgram()
+      .then(async (program) => {
+        const practice = [...program.morning, ...program.evening, ...program.weekly, ...program.awareness].find(
           (item) => item.id === practiceId,
         );
         if (!practice) throw new Error("Практика не найдена");
         setState({ status: "ready", practice });
+        if (!isThinkingPractice(practice) || isStaticPrototype) return;
+        const saved = await request<{ text: string }>(notePath);
         setNote(saved.text);
         setSavedNote(saved.text);
       })
@@ -53,6 +68,10 @@ export function PracticePage({ practiceId }: { practiceId: string }) {
 
   const practice = state.status === "ready" ? state.practice : null;
   const withAudio = practice ? isAudioPractice(practice) : false;
+  const reading = practice ? isAwarenessPractice(practice) : false;
+
+  // Пока практики нет, не рисуем экран: иначе на миг вспыхивает чужой фон и заголовок «Практика».
+  if (state.status === "loading") return null;
 
   async function saveNote() {
     if (withAudio) return;
@@ -80,7 +99,7 @@ export function PracticePage({ practiceId }: { practiceId: string }) {
   return (
     <ScreenLayout
       variant="page"
-      background={withAudio ? "04_earth_04_practice" : "04_earth_03_lizard"}
+      background={reading || withAudio ? "04_earth_04_practice" : "04_earth_03_lizard"}
       beforeTitle={
         practice?.daypart && (
           <p className="type-caption text-muted-foreground">{daypartNames[practice.daypart]} · каждый день</p>
@@ -88,15 +107,18 @@ export function PracticePage({ practiceId }: { practiceId: string }) {
       }
       title={practice?.title ?? "Практика"}
       actions={
-        <>
-          <BackButton onClick={() => void finish(false)} />
-          <Button size="cta" className="flex-1" disabled={pending || !practice} onClick={() => void finish(true)}>
-            Выполнено
-          </Button>
-        </>
+        reading ? (
+          <BackButton onClick={() => router.push(routes.program)} />
+        ) : (
+          <>
+            <BackButton onClick={() => void finish(false)} />
+            <Button size="cta" className="flex-1" disabled={pending || !practice} onClick={() => void finish(true)}>
+              Выполнено
+            </Button>
+          </>
+        )
       }
     >
-      {state.status === "loading" && <GlassCard aria-hidden className="h-40 animate-pulse" />}
       {state.status === "error" && (
         <GlassCard>
           <p role="alert" className="type-secondary text-destructive">
@@ -104,7 +126,12 @@ export function PracticePage({ practiceId }: { practiceId: string }) {
           </p>
         </GlassCard>
       )}
-      {practice && withAudio && (
+      {practice && reading && (
+        <GlassCard className="bg-background/80">
+          <p className="type-body whitespace-pre-line text-foreground">{typograph(practice.body)}</p>
+        </GlassCard>
+      )}
+      {practice && !reading && withAudio && (
         <>
           <AudioPlayer durationSeconds={PLACEHOLDER_AUDIO_SECONDS} />
           {practice.body && (
@@ -114,7 +141,7 @@ export function PracticePage({ practiceId }: { practiceId: string }) {
           )}
         </>
       )}
-      {practice && !withAudio && (
+      {practice && !reading && !withAudio && (
         <>
           <GlassCard className="space-y-4 bg-background/80">
             {practice.body && <p className="type-body text-foreground">{typograph(practice.body)}</p>}

@@ -29,6 +29,8 @@ export type PracticeVariant = {
   typeIds: string[];
   weakElement: ElementId | null;
   seasonElement: ElementId | null;
+  /** Свои недели. Пусто – как у практики. */
+  spanWeeks: number | null;
 };
 
 export type Practice = typeof practice.$inferSelect & { variants: PracticeVariant[] };
@@ -41,7 +43,9 @@ export type PracticeInput = {
   body?: unknown;
   videoUrl?: unknown;
   opensOnDay?: unknown;
-  newEachWeek?: unknown;
+  /** Сколько недель показывать вариант. Пусто – на всю стихию. */
+  spanWeeks?: unknown;
+  /** Пара медитаций: вторая сменяет первую. */
   alternation?: unknown;
   /** Можно ли проходить вместе с другом. Не передано – можно. */
   allowTogether?: unknown;
@@ -73,6 +77,11 @@ function elementOrNull(value: unknown): ElementId | null {
   return elementIds.find((id) => id === value) ?? null;
 }
 
+/** Пусто или не число – на всю стихию. */
+function spanWeeks(value: unknown): number | null {
+  return typeof value === "number" && Number.isInteger(value) && value >= 1 ? value : null;
+}
+
 function practiceValues(input: PracticeInput) {
   const title = text(input.title);
   if (!title) throw new AppError("empty_title", "Напишите название практики");
@@ -83,7 +92,6 @@ function practiceValues(input: PracticeInput) {
   if (input.frequency === "daily" && daypart !== "morning" && daypart !== "evening") {
     throw new AppError("invalid_daypart", "Выберите для ежедневной практики: утро или вечер");
   }
-  const alternation = input.alternation === "first" || input.alternation === "second" ? input.alternation : null;
   return {
     title,
     frequency: input.frequency,
@@ -92,8 +100,8 @@ function practiceValues(input: PracticeInput) {
     body: text(input.body),
     videoUrl: youTubeUrl(input.videoUrl),
     opensOnDay: wholeNumber(input.opensOnDay, 1, 1),
-    newEachWeek: input.newEachWeek === true,
-    alternation,
+    spanWeeks: input.frequency === "daily" ? null : spanWeeks(input.spanWeeks),
+    alternation: input.alternation === "first" || input.alternation === "second" ? input.alternation : null,
     allowTogether: input.allowTogether !== false,
   } as const;
 }
@@ -110,6 +118,7 @@ function variantValues(input: unknown) {
       videoUrl: youTubeUrl(variant.videoUrl),
       weakElement: elementOrNull(variant.weakElement),
       seasonElement: elementOrNull(variant.seasonElement),
+      spanWeeks: spanWeeks(variant.spanWeeks),
       typeIds: typeIds as string[],
     };
   });
@@ -140,6 +149,7 @@ export async function listPractices(): Promise<Practice[]> {
         videoUrl: variant.videoUrl,
         weakElement: elementOrNull(variant.weakElement),
         seasonElement: elementOrNull(variant.seasonElement),
+        spanWeeks: variant.spanWeeks,
         typeIds: types.filter((type) => type.variantId === variant.id).map((type) => type.typeId),
       })),
   }));

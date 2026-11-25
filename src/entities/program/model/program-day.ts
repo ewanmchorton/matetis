@@ -108,33 +108,36 @@ export function navigatorDay(whole: NavigatorWhole, parts: NavigatorPart[], cycl
   };
 }
 
-/** С какого дня программы медитации чередуются по неделям. */
-export const ALTERNATION_FROM_DAY = 15;
-
-export type Alternation = "first" | "second" | null;
-
 /** Неделя программы: дни 1–7 – первая. */
 export function programWeek(programDay: number): number {
   return Math.floor((programDay - 1) / 7) + 1;
 }
 
 /**
- * Есть ли практика в программе в эту неделю. До 15-го дня – с недели, где она появляется.
- * С 15-го дня «first» стоит в 3-ю, 5-ю… неделю, «second» – в 4-ю, 6-ю…
+ * Какой вариант показывать и сколько недель он уже идёт.
+ * Пустая длительность – этот вариант на всю стихию, следующие не открываются.
+ * Число – столько недель, потом следующий, по кругу.
+ * weeksSinceOpen: 0 в первую неделю, когда практика уже есть.
  */
-export function shownInWeek(week: number, opensOnDay: number, alternation: Alternation): boolean {
-  if (week < programWeek(opensOnDay)) return false;
-  const alternationWeek = programWeek(ALTERNATION_FROM_DAY);
-  if (!alternation || week < alternationWeek) return true;
-  const firstOfPair = (week - alternationWeek) % 2 === 0;
-  return alternation === "first" ? firstOfPair : !firstOfPair;
-}
+export function chainPosition(
+  spans: readonly (number | null)[],
+  weeksSinceOpen: number,
+): { index: number; into: number } {
+  const count = spans.length;
+  if (count === 0) return { index: 0, into: 0 };
+  const weeks = Math.max(0, weeksSinceOpen);
+  const normalized = spans.map((span) =>
+    typeof span === "number" && Number.isInteger(span) && span >= 1 ? span : null,
+  );
+  if (normalized.every((span) => span === null)) return { index: 0, into: weeks };
 
-/** Сколько недель практика уже была в программе до этой: номер варианта, если вариант каждую неделю новый. */
-export function weeksShownBefore(week: number, opensOnDay: number, alternation: Alternation): number {
-  let count = 0;
-  for (let earlier = 1; earlier < week; earlier += 1) {
-    if (shownInWeek(earlier, opensOnDay, alternation)) count += 1;
+  let passed = 0;
+  for (let step = 0; step < 10000; step += 1) {
+    const index = step % count;
+    const span = normalized[index];
+    if (span === null) return { index, into: weeks - passed };
+    if (weeks < passed + span) return { index, into: weeks - passed };
+    passed += span;
   }
-  return count;
+  return { index: 0, into: 0 };
 }

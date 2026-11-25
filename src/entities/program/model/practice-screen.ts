@@ -14,6 +14,34 @@ export const isAudioPractice = (practice: ProgramPractice) =>
 export const opensPracticeScreen = (practice: ProgramPractice) =>
   isThinkingPractice(practice) || isAudioPractice(practice);
 
+/** Осознание читают целиком на экране практики, на программе – только начало. */
+export const isAwarenessPractice = (practice: ProgramPractice) => practice.title.startsWith("Осознание");
+
+/** На карточке программы начало помещается примерно в три строки. */
+const AWARENESS_PREVIEW_LIMIT = 110;
+
+/**
+ * Начало осознания для карточки программы: первое предложение.
+ * Если оно длиннее карточки – столько слов, сколько помещается, и многоточие.
+ */
+export function awarenessPreview(body: string): string {
+  const text = body.trim();
+  if (!text) return "";
+  const end = text.search(/[.!?…](?=\s|$)/);
+  const sentence = end === -1 ? text : text.slice(0, end + 1);
+  if ([...sentence].length <= AWARENESS_PREVIEW_LIMIT) return sentence;
+  // Один знак оставляем под многоточие. Режем по запятой, чтобы не оборвать фразу на полуслове.
+  let preview = "";
+  let atComma = "";
+  for (const word of sentence.split(/\s+/)) {
+    const next = preview ? `${preview} ${word}` : word;
+    if ([...next].length > AWARENESS_PREVIEW_LIMIT - 1) break;
+    preview = next;
+    if (/[,:;]$/u.test(word)) atComma = preview;
+  }
+  return `${(atComma || preview).replace(/[,:;–—-]+$/u, "").trim()}…`;
+}
+
 /** Текст из пронумерованных строк («1. Закрываю глаза.») → пункты без номеров; иначе null. */
 export function numberedSteps(body: string) {
   const lines = body

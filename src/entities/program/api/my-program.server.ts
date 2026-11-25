@@ -26,13 +26,12 @@ import {
 import { AppError } from "@/shared/lib/app-error";
 
 import {
+  chainPosition,
   navigatorDay,
   navigatorPosition,
   programDayNumber,
   programWeek,
-  shownInWeek,
   weekDays,
-  weeksShownBefore,
   type NavigatorDay,
 } from "../model/program-day";
 import { listPractices, type Practice, type PracticeVariant } from "./program-content.server";
@@ -139,25 +138,153 @@ function fits(variant: PracticeVariant, person: Person, weakElement: ElementId |
 
 type VisiblePractice = { item: Practice; variant: PracticeVariant | null };
 
+function spanOf(variant: PracticeVariant, practiceSpan: number | null): number | null {
+  return variant.spanWeeks ?? practiceSpan;
+}
+
+/** Сколько недель держится слот. Есть вариант без числа недель – слот на всю стихию. */
+function slotSpan(variants: PracticeVariant[], practiceSpan: number | null): number | null {
+  if (variants.length === 0) return null;
+  let total = 0;
+  for (const variant of variants) {
+    const span = spanOf(variant, practiceSpan);
+    if (span === null) return null;
+    total += span;
+  }
+  return total;
+}
+
+/**
+ * Какой вариант видит человек через сколько недель после появления практики.
+ * Пустая длительность – первый подходящий на всю стихию.
+ * Число недель – столько держится вариант, потом следующий, по кругу.
+ * Варианты на слабую стихию идут по слабым стихиям человека: каждая свои недели.
+ */
+function pickVariant(item: Practice, person: Person, weeks: number): PracticeVariant | null {
+  const byWeak = item.variants.some((variant) => variant.weakElement !== null);
+  if (!byWeak) {
+    const suitable = item.variants.filter((variant) => fits(variant, person, null));
+    if (suitable.length === 0) return null;
+    const { index } = chainPosition(
+      suitable.map((variant) => spanOf(variant, item.spanWeeks)),
+      weeks,
+    );
+    return suitable[index] ?? null;
+  }
+  if (person.weakElements.length === 0) return null;
+  const slots = person.weakElements
+    .map((element) => {
+      const matches = item.variants.filter((variant) => fits(variant, person, element));
+      return { matches, span: slotSpan(matches, item.spanWeeks) };
+    })
+    .filter((slot) => slot.matches.length > 0);
+  if (slots.length === 0) return null;
+  const place = chainPosition(
+    slots.map((slot) => slot.span),
+    weeks,
+  );
+  const slot = slots[place.index];
+  const { index } = chainPosition(
+    slot.matches.map((variant) => spanOf(variant, item.spanWeeks)),
+    place.into,
+  );
+  return slot.matches[index] ?? null;
+}
+
+type Step = { item: Practice; variant: PracticeVariant | null; span: number | null };
+
+function gcd(a: number, b: number): number {
+  return b === 0 ? a : gcd(b, a % b);
+}
+
+/** Очередь: по одному шагу из каждого списка, пока каждый не пройдёт свой круг. */
+function interleave<T>(sequences: T[][]): T[] {
+  const lists = sequences.filter((list) => list.length > 0);
+  if (lists.length === 0) return [];
+  if (lists.length === 1) return lists[0];
+  const rounds = lists.map((list) => list.length).reduce((a, b) => (a / gcd(a, b)) * b);
+  const cursors = lists.map(() => 0);
+  const steps: T[] = [];
+  for (let round = 0; round < rounds; round += 1) {
+    for (const [index, list] of lists.entries()) {
+      steps.push(list[cursors[index] % list.length]);
+      cursors[index] += 1;
+    }
+  }
+  return steps;
+}
+
+/** Что человек может увидеть в этой практике, по порядку, и сколько недель каждый кусок. */
+function contentsOf(item: Practice, person: Person): Step[] {
+  const step = (variant: PracticeVariant | null): Step => ({
+    item,
+    variant,
+    span: variant ? spanOf(variant, item.spanWeeks) : item.spanWeeks,
+  });
+  if (item.variants.length === 0) return [step(null)];
+  const byWeak = item.variants.some((variant) => variant.weakElement !== null);
+  if (!byWeak) return item.variants.filter((variant) => fits(variant, person, null)).map(step);
+  if (person.weakElements.length === 0) return [];
+  return person.weakElements.flatMap((element) => item.variants.filter((variant) => fits(variant, person, element)).map(step));
+}
+
+/**
+ * Ключ пары, где на экране только одна практика.
+ * Осознания сменяют друг друга. Медитации с «first» и «second» – тоже: вторая сменяет первую.
+ */
+function rotationKey(item: Practice): string | null {
+  if (item.frequency === "awareness") return "awareness";
+  if (item.frequency === "weekly" && (item.alternation === "first" || item.alternation === "second")) return "meditation";
+  return null;
+}
+
+/** Какая практика из пары видна в этот день. Остальные из пары не показываются. */
+function activeInGroups(practices: Practice[], person: Person, programDay: number): Map<string, VisiblePractice> {
+  const groups = new Map<string, Practice[]>();
+  for (const item of practices) {
+    const key = rotationKey(item);
+    if (!key) continue;
+    groups.set(key, [...(groups.get(key) ?? []), item]);
+  }
+  const active = new Map<string, VisiblePractice>();
+  for (const [key, members] of groups) {
+    const ordered = [...members].sort((a, b) => {
+      if (a.alternation === "first" && b.alternation !== "first") return -1;
+      if (b.alternation === "first" && a.alternation !== "first") return 1;
+      return a.position - b.position;
+    });
+    const steps = interleave(ordered.map((item) => contentsOf(item, person)));
+    if (steps.length === 0) continue;
+    const anchor = Math.min(...steps.map((step) => step.item.opensOnDay));
+    const since = programWeek(programDay) - programWeek(anchor);
+    let chosen = steps[chainPosition(steps.map((step) => step.span), since).index];
+    if (chosen.item.opensOnDay > programDay) {
+      chosen = steps.find((step) => step.item.opensOnDay <= programDay) ?? chosen;
+    }
+    if (chosen.item.opensOnDay > programDay) continue;
+    active.set(key, { item: chosen.item, variant: chosen.variant });
+  }
+  return active;
+}
+
 /**
  * Практики человека в этот день программы. Без вариантов – текст самой практики для всех.
- * С вариантами – подходящий человеку; если каждую неделю новый – следующий по порядку, по кругу.
- * Варианты на слабую стихию: при каждом появлении практики – следующая слабая стихия по очереди
- * (медитация раз в 2 недели – стихия меняется раз в 2 недели).
- * Не подошёл ни один вариант – практики у человека нет.
+ * С вариантами – подходящий человеку. Не подошёл ни один – практики у него нет.
+ * Осознание на экране одно. Медитация на слабую стихию сменяет медитацию на качество силы.
  */
 export function visiblePractices(practices: Practice[], person: Person, programDay: number): VisiblePractice[] {
-  const week = programWeek(programDay);
+  const active = activeInGroups(practices, person, programDay);
   return practices.flatMap((item): VisiblePractice[] => {
-    if (item.opensOnDay > programDay || !shownInWeek(week, item.opensOnDay, item.alternation)) return [];
+    const key = rotationKey(item);
+    if (key) {
+      const chosen = active.get(key);
+      return chosen?.item.id === item.id ? [chosen] : [];
+    }
+    if (item.opensOnDay > programDay) return [];
     if (item.variants.length === 0) return [{ item, variant: null }];
-    const shownBefore = weeksShownBefore(week, item.opensOnDay, item.alternation);
-    const { weakElements: weak } = person;
-    const weakElement = weak.length > 0 ? weak[shownBefore % weak.length] : null;
-    const suitable = item.variants.filter((variant) => fits(variant, person, weakElement));
-    if (suitable.length === 0) return [];
-    const index = item.newEachWeek ? shownBefore % suitable.length : 0;
-    return [{ item, variant: suitable[index] }];
+    const sinceOpen = programWeek(programDay) - programWeek(item.opensOnDay);
+    const variant = pickVariant(item, person, sinceOpen);
+    return variant ? [{ item, variant }] : [];
   });
 }
 
@@ -358,7 +485,7 @@ export async function getMyNote(userId: string, practiceId: string, now = new Da
   return { text: row?.text ?? "" };
 }
 
-/** Человек посмотрел видео по текущей стихии – в этот период оно уходит из «На этой неделе». */
+/** Человек посмотрел видео по текущей стихии – в этот период оно уходит из «На стихию». */
 export async function markElementVideoSeen(userId: string, now = new Date()) {
   const [today, season] = await Promise.all([todayFor(userId, now), getCurrentSeason(now)]);
   await db

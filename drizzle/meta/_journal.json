@@ -162,6 +162,13 @@
       "when": 1794930368421,
       "tag": "0022_together",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1795610835955,
+      "tag": "0023_practice_span_weeks",
+      "breakpoints": true
     }
   ]
 }

@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 
 import type { CompanionScreen } from "@/entities/companion";
-import { loadMyProgram } from "@/entities/program";
+import { loadMyProgram, rememberedProgram } from "@/entities/program";
 import type { MyProgram } from "@/entities/program/server";
 import { request } from "@/shared/api/request";
 import { isDevelopment, isStaticPrototype } from "@/shared/config/env";
@@ -38,6 +38,13 @@ export function useMyProgram() {
   const [state, setState] = useState<ProgramState>({ status: "loading" });
   const [actionError, setActionError] = useState<string | null>(null);
   const [companionScreen, setCompanionScreen] = useState<CompanionScreen | null>(null);
+
+  useLayoutEffect(() => {
+    const program = rememberedProgram();
+    if (!program) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setState({ status: "ready", program });
+  }, []);
 
   const reload = useCallback(async () => {
     const companion = loadCompanionScreen().then(setCompanionScreen);
