@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { getElement, getElements, type ElementId } from "@/entities/element";
 import { formatLabel, type BookFormat } from "@/entities/library/model/readable-books";
 import { request } from "@/shared/api/request";
+import { isStaticPrototype } from "@/shared/config/env";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
@@ -48,12 +49,22 @@ export function AdminLibraryPage() {
   const [addingPractice, setAddingPractice] = useState(false);
 
   const load = useCallback(() => {
+    if (isStaticPrototype) return;
     request<Catalog>("/api/admin/library/sections")
       .then(setCatalog)
       .catch((loadError: Error) => setError(loadError.message));
   }, []);
 
   useEffect(load, [load]);
+
+  if (isStaticPrototype) {
+    return (
+      <div className="space-y-1">
+        <h1 className="text-2xl font-semibold">Библиотека</h1>
+        <p className="text-sm text-muted-foreground">На этом сайте нет сервера: раздел наполняется в рабочем приложении.</p>
+      </div>
+    );
+  }
 
   async function run(task: () => Promise<Catalog>) {
     setError(null);

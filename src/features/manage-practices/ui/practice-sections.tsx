@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { getElements, type ElementId } from "@/entities/element";
 import { getPersonTypes } from "@/entities/person-type";
 import { request } from "@/shared/api/request";
+import { isStaticPrototype } from "@/shared/config/env";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
@@ -131,12 +132,17 @@ export function PracticeSections({ frequency }: { frequency: Frequency }) {
   const [dragId, setDragId] = useState<string | null>(null);
 
   const load = useCallback(() => {
+    if (isStaticPrototype) return;
     request<Practice[]>("/api/admin/practices")
       .then((rows) => setPractices(rows.filter((row) => row.frequency === frequency)))
       .catch((loadError: Error) => setError(loadError.message));
   }, [frequency]);
 
   useEffect(load, [load]);
+
+  if (isStaticPrototype) {
+    return <p className="text-sm text-muted-foreground">На этом сайте нет сервера: раздел наполняется в рабочем приложении.</p>;
+  }
 
   function practiceOf(section: Section) {
     return practices?.find((item) => item.title === section.title) ?? null;

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { ElementBadge, getElement, type ElementId } from "@/entities/element";
 import { request } from "@/shared/api/request";
+import { isStaticPrototype } from "@/shared/config/env";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 
@@ -27,6 +28,7 @@ export function AdminElementsPage() {
   const [dragId, setDragId] = useState<string | null>(null);
 
   const load = useCallback(() => {
+    if (isStaticPrototype) return;
     Promise.all([request<Calendar>("/api/admin/element"), request<Pictures[]>("/api/admin/elements")])
       .then(([nextCalendar, nextPictures]) => {
         setCalendar(nextCalendar);
@@ -37,6 +39,15 @@ export function AdminElementsPage() {
   }, []);
 
   useEffect(load, [load]);
+
+  if (isStaticPrototype) {
+    return (
+      <div className="space-y-1">
+        <h1 className="text-2xl font-semibold">Стихии</h1>
+        <p className="text-sm text-muted-foreground">На этом сайте нет сервера: раздел наполняется в рабочем приложении.</p>
+      </div>
+    );
+  }
 
   async function upload(elementId: ElementId, kind: "main" | "practice", file: File) {
     setError(null);

@@ -327,7 +327,14 @@ export function AdminNavigatorPage() {
     </form>
   );
 
-  if (isStaticPrototype) return <h1 className="text-2xl font-semibold">Навигатор</h1>;
+  if (isStaticPrototype) {
+    return (
+      <div className="mx-auto max-w-3xl space-y-1">
+        <h1 className="text-2xl font-semibold">Навигатор</h1>
+        <p className="text-sm text-muted-foreground">На этом сайте нет сервера: раздел наполняется в рабочем приложении.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">
