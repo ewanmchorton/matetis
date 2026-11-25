@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { getPersonTypes } from "@/entities/person-type";
 import { request } from "@/shared/api/request";
 import { isStaticPrototype } from "@/shared/config/env";
+import { previewNavigatorMessages } from "@/shared/demo/admin-preview";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
@@ -29,6 +30,7 @@ type ListState = { status: "loading" } | { status: "error"; message: string } | 
 
 const types = getPersonTypes();
 const emptyPart = (): Part => ({ title: "", body: "", firstDayTask: "", secondDayTask: "" });
+const exampleMessages = previewNavigatorMessages();
 
 function toDraft(message: Message): Draft {
   return {
@@ -55,9 +57,11 @@ function toDraft(message: Message): Draft {
 
 /** Раздел «Навигатор»: послания Мастеров из трёх частей, по порядку для своих типов. */
 export function AdminNavigatorPage() {
-  const [state, setState] = useState<ListState>({ status: "loading" });
-  const [openId, setOpenId] = useState<string | null>(null);
-  const [draft, setDraft] = useState<Draft | null>(null);
+  const [state, setState] = useState<ListState>(
+    isStaticPrototype ? { status: "ready", messages: exampleMessages } : { status: "loading" },
+  );
+  const [openId, setOpenId] = useState<string | null>(isStaticPrototype ? (exampleMessages[0]?.id ?? null) : null);
+  const [draft, setDraft] = useState<Draft | null>(isStaticPrototype && exampleMessages[0] ? toDraft(exampleMessages[0]) : null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [openType, setOpenType] = useState("t1");
@@ -326,15 +330,6 @@ export function AdminNavigatorPage() {
       </div>
     </form>
   );
-
-  if (isStaticPrototype) {
-    return (
-      <div className="mx-auto max-w-3xl space-y-1">
-        <h1 className="text-2xl font-semibold">Навигатор</h1>
-        <p className="text-sm text-muted-foreground">На этом сайте нет сервера: раздел наполняется в рабочем приложении.</p>
-      </div>
-    );
-  }
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">

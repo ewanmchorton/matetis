@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 
 import { request } from "@/shared/api/request";
+import { isStaticPrototype } from "@/shared/config/env";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
@@ -23,11 +24,22 @@ const prices = [
 
 /** Контакт администратора для экранов без доступа и цены, которые подставляются при продлении. */
 export function AccessSettingsForm() {
-  const [form, setForm] = useState<Record<keyof Settings, string> | null>(null);
+  const [form, setForm] = useState<Record<keyof Settings, string> | null>(
+    isStaticPrototype
+      ? {
+          adminPhone: "+375293344101",
+          adminTelegram: "@vernojit",
+          firstMonthCents: "20",
+          monthCents: "5",
+          threeMonthsCents: "10",
+        }
+      : null,
+  );
   const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null);
   const [pending, setPending] = useState(false);
 
   useEffect(() => {
+    if (isStaticPrototype) return;
     request<Settings>("/api/admin/access/settings")
       .then((settings) =>
         setForm({

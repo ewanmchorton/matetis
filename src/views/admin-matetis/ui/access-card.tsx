@@ -5,6 +5,8 @@ import { useCallback, useEffect, useState } from "react";
 
 import { formatDay, formatEuro, type AccessCardDto } from "@/entities/access";
 import { request } from "@/shared/api/request";
+import { isStaticPrototype } from "@/shared/config/env";
+import { previewAccessCard } from "@/shared/demo/admin-preview";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
@@ -36,14 +38,16 @@ function centsToInput(cents: number | null | undefined) {
 /** Карточка Матэтиса: доступ и оплаты, тип и стихии, роль в команде. */
 /** contact – почта или ник в Telegram, как ввёл администратор или как пришло в списке. */
 export function AccessCard({ contact, onBack, onChanged }: { contact: string; onBack: () => void; onChanged: () => void }) {
-  const [card, setCard] = useState<AccessCardDto | null>(null);
+  const preview = isStaticPrototype ? previewAccessCard(contact) : null;
+  const [card, setCard] = useState<AccessCardDto | null>(preview);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [term, setTerm] = useState<Term>("1");
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState(preview ? centsToInput(preview.suggestedAmounts["1"]) : "");
   const [until, setUntil] = useState("");
 
   const load = useCallback(() => {
+    if (isStaticPrototype) return;
     request<AccessCardDto>("/api/admin/access/person", { method: "POST", body: JSON.stringify({ contact }) })
       .then((loaded) => {
         setCard(loaded);

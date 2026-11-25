@@ -7,6 +7,7 @@ import { getElements, type ElementId } from "@/entities/element";
 import { getPersonTypes } from "@/entities/person-type";
 import { request } from "@/shared/api/request";
 import { isStaticPrototype } from "@/shared/config/env";
+import { previewDailyPractices } from "@/shared/demo/admin-preview";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
@@ -239,9 +240,14 @@ function VariantsEditor({
 
 /** Практики одного вида: ежедневные (утро и вечер), на стихию или осознания. Список, правка, добавление. */
 export function PracticesEditor({ frequency }: { frequency: Frequency }) {
-  const [state, setState] = useState<ListState>({ status: "loading" });
-  const [openId, setOpenId] = useState<string | null>(null);
-  const [draft, setDraft] = useState<Draft | null>(null);
+  const exampleDaily = isStaticPrototype ? previewDailyPractices() : [];
+  const [state, setState] = useState<ListState>(
+    isStaticPrototype ? { status: "ready", practices: exampleDaily } : { status: "loading" },
+  );
+  const [openId, setOpenId] = useState<string | null>(exampleDaily[0]?.id ?? null);
+  const [draft, setDraft] = useState<Draft | null>(
+    exampleDaily[0] ? { ...exampleDaily[0], videoUrl: exampleDaily[0].videoUrl ?? "" } : null,
+  );
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -425,8 +431,6 @@ export function PracticesEditor({ frequency }: { frequency: Frequency }) {
       </div>
     </form>
   );
-
-  if (isStaticPrototype) return <p className="text-sm text-muted-foreground">На этом сайте нет сервера.</p>;
 
   return (
     <div className="space-y-5">

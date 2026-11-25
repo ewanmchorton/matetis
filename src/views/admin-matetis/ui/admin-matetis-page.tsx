@@ -7,6 +7,7 @@ import type { AccessListItemDto } from "@/entities/access";
 import { PushToggle } from "@/features/admin-notifications";
 import { request } from "@/shared/api/request";
 import { isStaticPrototype } from "@/shared/config/env";
+import { previewMatetis } from "@/shared/demo/admin-preview";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
@@ -34,7 +35,9 @@ type ListState = { status: "loading" } | { status: "error"; message: string } | 
  * Добавить почту, найти человека, открыть его карточку.
  */
 export function AdminMatetisPage() {
-  const [state, setState] = useState<ListState>({ status: "loading" });
+  const [state, setState] = useState<ListState>(
+    isStaticPrototype ? { status: "ready", items: previewMatetis() } : { status: "loading" },
+  );
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
   const [newContact, setNewContact] = useState("");
@@ -76,15 +79,6 @@ export function AdminMatetisPage() {
     setAddError(null);
     setNewContact("");
     setOpenContact(contact);
-  }
-
-  if (isStaticPrototype) {
-    return (
-      <div className="space-y-1">
-        <h1 className="text-2xl font-semibold">Матэтисы</h1>
-        <p className="text-sm text-muted-foreground">На этом сайте нет сервера: доступы открываются в рабочем приложении.</p>
-      </div>
-    );
   }
 
   if (openContact) {

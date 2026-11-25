@@ -7,6 +7,7 @@ import { PHRASE_MAX_LENGTH, type DailyPhraseDto } from "@/entities/daily-phrase"
 import { getPersonTypes } from "@/entities/person-type";
 import { request } from "@/shared/api/request";
 import { isStaticPrototype } from "@/shared/config/env";
+import { previewPhrases } from "@/shared/demo/admin-preview";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { Textarea } from "@/shared/ui/textarea";
@@ -25,7 +26,9 @@ function typeNames(typeIds: string[]) {
 
 /** Фразы дня: короткие цитаты, которые раз в день приходят людям уведомлением. Вкладка раздела «Практики». */
 export function PhrasesEditor() {
-  const [state, setState] = useState<ListState>({ status: "loading" });
+  const [state, setState] = useState<ListState>(
+    isStaticPrototype ? { status: "ready", phrases: previewPhrases() } : { status: "loading" },
+  );
   const [text, setText] = useState("");
   const [typeIds, setTypeIds] = useState<string[]>([]);
   const [pending, setPending] = useState(false);
@@ -68,10 +71,6 @@ export function PhrasesEditor() {
     } catch (removeError) {
       setError((removeError as Error).message);
     }
-  }
-
-  if (isStaticPrototype) {
-    return <p className="text-sm text-muted-foreground">На этом сайте нет сервера: фразы добавляются в рабочем приложении.</p>;
   }
 
   return (

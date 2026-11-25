@@ -1,9 +1,14 @@
+import { isStaticPrototype } from "@/shared/config/env";
+
 // Запрос к серверу приложения из браузера. Ошибка содержит понятный текст и код ответа.
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 export type RequestError = Error & { status?: number };
 
 export async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  if (isStaticPrototype && path.startsWith("/api/admin")) {
+    throw Object.assign(new Error("На опубликованном сайте правки не сохраняются."), { status: 0 }) as RequestError;
+  }
   const payload = init?.body;
   const response = await fetch(`${basePath}${path}`, {
     ...init,

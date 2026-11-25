@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ElementBadge, getElement, type ElementId } from "@/entities/element";
 import { request } from "@/shared/api/request";
 import { isStaticPrototype } from "@/shared/config/env";
+import { previewCalendar, previewElementPictures } from "@/shared/demo/admin-preview";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 
@@ -21,9 +22,9 @@ const order: ElementId[] = ["wood", "fire", "earth", "metal", "water"];
 
 /** Раздел «Стихии»: текущая стихия, картинки и день начала Металла. */
 export function AdminElementsPage() {
-  const [calendar, setCalendar] = useState<Calendar | null>(null);
-  const [pictures, setPictures] = useState<Pictures[] | null>(null);
-  const [open, setOpen] = useState<ElementId | null>(null);
+  const [calendar, setCalendar] = useState<Calendar | null>(isStaticPrototype ? previewCalendar : null);
+  const [pictures, setPictures] = useState<Pictures[] | null>(isStaticPrototype ? previewElementPictures() : null);
+  const [open, setOpen] = useState<ElementId | null>(isStaticPrototype ? "metal" : null);
   const [error, setError] = useState<string | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
 
@@ -39,15 +40,6 @@ export function AdminElementsPage() {
   }, []);
 
   useEffect(load, [load]);
-
-  if (isStaticPrototype) {
-    return (
-      <div className="space-y-1">
-        <h1 className="text-2xl font-semibold">Стихии</h1>
-        <p className="text-sm text-muted-foreground">На этом сайте нет сервера: раздел наполняется в рабочем приложении.</p>
-      </div>
-    );
-  }
 
   async function upload(elementId: ElementId, kind: "main" | "practice", file: File) {
     setError(null);

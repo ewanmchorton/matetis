@@ -12,6 +12,8 @@ import {
 } from "@/entities/birth-reading";
 import type { PersonType } from "@/entities/person-type";
 import { request } from "@/shared/api/request";
+import { isStaticPrototype } from "@/shared/config/env";
+import { previewPerson } from "@/shared/demo/admin-preview";
 
 type PersonDetails = {
   birthReading: { birthDate: string; digitCounts: DigitCounts; elements: ElementScore[] } | null;
@@ -26,10 +28,11 @@ const formatBirthDate = (value: string) => value.split("-").reverse().join(".");
 
 /** Тип и стихии по дате рождения в карточке Матэтиса. */
 export function PersonInfo({ userId }: { userId: string }) {
-  const [data, setData] = useState<PersonDetails | null>(null);
+  const [data, setData] = useState<PersonDetails | null>(isStaticPrototype ? previewPerson() : null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (isStaticPrototype) return;
     request<PersonDetails>(`/api/admin/students/${encodeURIComponent(userId)}`)
       .then(setData)
       .catch((loadError: Error) => setError(loadError.message));

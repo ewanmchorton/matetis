@@ -7,6 +7,7 @@ import { getElement, getElements, type ElementId } from "@/entities/element";
 import { formatLabel, type BookFormat } from "@/entities/library/model/readable-books";
 import { request } from "@/shared/api/request";
 import { isStaticPrototype } from "@/shared/config/env";
+import { previewElementPages, previewLibraryPractices, previewReadableBooks } from "@/shared/demo/admin-preview";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
@@ -42,7 +43,11 @@ type Chapter = (typeof tabs)[number]["id"];
 /** Раздел «Библиотека»: видео стихий, практики и книги. */
 export function AdminLibraryPage() {
   const [chapter, setChapter] = useState<Chapter>("elements");
-  const [catalog, setCatalog] = useState<Catalog | null>(null);
+  const [catalog, setCatalog] = useState<Catalog | null>(
+    isStaticPrototype
+      ? { elements: previewElementPages(), practices: previewLibraryPractices(), books: previewReadableBooks() }
+      : null,
+  );
   const [error, setError] = useState<string | null>(null);
   const [elementId, setElementId] = useState<ElementId | null>("water");
   const [openPractice, setOpenPractice] = useState<string | null>(null);
@@ -56,15 +61,6 @@ export function AdminLibraryPage() {
   }, []);
 
   useEffect(load, [load]);
-
-  if (isStaticPrototype) {
-    return (
-      <div className="space-y-1">
-        <h1 className="text-2xl font-semibold">Библиотека</h1>
-        <p className="text-sm text-muted-foreground">На этом сайте нет сервера: раздел наполняется в рабочем приложении.</p>
-      </div>
-    );
-  }
 
   async function run(task: () => Promise<Catalog>) {
     setError(null);

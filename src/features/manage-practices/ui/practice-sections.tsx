@@ -7,6 +7,7 @@ import { getElements, type ElementId } from "@/entities/element";
 import { getPersonTypes } from "@/entities/person-type";
 import { request } from "@/shared/api/request";
 import { isStaticPrototype } from "@/shared/config/env";
+import { previewSectionPractices } from "@/shared/demo/admin-preview";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
@@ -123,11 +124,15 @@ function weeksOrNull(value: string) {
 /** Разделы практик на стихию и осознаний: внутри – очереди по типам или стихиям. */
 export function PracticeSections({ frequency }: { frequency: Frequency }) {
   const sections = frequency === "weekly" ? weeklySections : awarenessSections;
-  const [practices, setPractices] = useState<Practice[] | null>(null);
+  const [practices, setPractices] = useState<Practice[] | null>(
+    isStaticPrototype ? previewSectionPractices().filter((row) => row.frequency === frequency) : null,
+  );
   const [error, setError] = useState<string | null>(null);
   const [openSection, setOpenSection] = useState(sections[0].title);
   const [openBucket, setOpenBucket] = useState<string | null>(frequency === "weekly" ? "t1" : "t1");
-  const [openItem, setOpenItem] = useState<string | null>(null);
+  const [openItem, setOpenItem] = useState<string | null>(
+    isStaticPrototype ? (frequency === "weekly" ? "meditation-healer" : "awareness-healer") : null,
+  );
   const [adding, setAdding] = useState<{ section: string; bucketId: string | null } | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
 
@@ -139,10 +144,6 @@ export function PracticeSections({ frequency }: { frequency: Frequency }) {
   }, [frequency]);
 
   useEffect(load, [load]);
-
-  if (isStaticPrototype) {
-    return <p className="text-sm text-muted-foreground">На этом сайте нет сервера: раздел наполняется в рабочем приложении.</p>;
-  }
 
   function practiceOf(section: Section) {
     return practices?.find((item) => item.title === section.title) ?? null;
