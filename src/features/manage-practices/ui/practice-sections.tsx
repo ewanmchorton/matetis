@@ -42,6 +42,8 @@ type Section = {
   opensOnDay: number;
   hint: string;
   addLabel: string;
+  /** Пусто – поле «Сколько недель» есть. У зарядки его нет: одна на всю стихию. */
+  showWeeks?: boolean;
 };
 
 const weeklySections: Section[] = [
@@ -80,6 +82,7 @@ const weeklySections: Section[] = [
     opensOnDay: 1,
     hint: "По стихии года: одна и та же для всех, пока идёт эта стихия.",
     addLabel: "Добавить зарядку",
+    showWeeks: false,
   },
 ];
 
@@ -157,7 +160,7 @@ export function PracticeSections({ frequency }: { frequency: Frequency }) {
       title: String(data.get("title") ?? ""),
       body: String(data.get("body") ?? ""),
       videoUrl: String(data.get("video") ?? ""),
-      spanWeeks: weeksOrNull(String(data.get("weeks") ?? "")),
+      spanWeeks: section.showWeeks === false ? null : weeksOrNull(String(data.get("weeks") ?? "")),
       typeIds: section.groupBy === "type" ? [key] : [],
       weakElement: section.groupBy === "weak" ? key : null,
       seasonElement: section.groupBy === "season" ? key : null,
@@ -260,6 +263,7 @@ export function PracticeSections({ frequency }: { frequency: Frequency }) {
                       buckets={buckets(section)}
                       chooseLabel={section.groupBy === "type" ? "Тип" : section.groupBy === "weak" ? "Слабая стихия" : "Стихия года"}
                       submitLabel={section.addLabel}
+                      hideWeeks={section.showWeeks === false}
                       onSubmit={(event) => void saveItem(section, null, event)}
                     />
                   ) : (
@@ -300,6 +304,7 @@ export function PracticeSections({ frequency }: { frequency: Frequency }) {
                               formKey={`${section.title}-${bucket.id}`}
                               order={items.length + 1}
                               submitLabel={section.addLabel}
+                              hideWeeks={section.showWeeks === false}
                               onSubmit={(event) => void saveItem(section, bucket.id, event)}
                             />
                           ) : (
@@ -339,7 +344,7 @@ export function PracticeSections({ frequency }: { frequency: Frequency }) {
                                     <span className="text-sm text-muted-foreground">{index + 1}. </span>
                                     <span className="text-sm font-medium">{line}</span>
                                     <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-                                      {item.spanWeeks ? `${item.spanWeeks} нед.` : "на всю стихию"}
+                                      {section.showWeeks === false || !item.spanWeeks ? "на всю стихию" : `${item.spanWeeks} нед.`}
                                       {note ? ` · ${note}` : ""}
                                     </span>
                                   </button>
@@ -362,6 +367,7 @@ export function PracticeSections({ frequency }: { frequency: Frequency }) {
                                     weeks={item.spanWeeks}
                                     video={item.videoUrl}
                                     submitLabel="Сохранить"
+                                    hideWeeks={section.showWeeks === false}
                                     onSubmit={(event) => void saveItem(section, bucket.id, event, item.id)}
                                   />
                                 )}
@@ -392,6 +398,7 @@ function ItemForm({
   buckets,
   chooseLabel,
   submitLabel,
+  hideWeeks = false,
   onSubmit,
 }: {
   formKey: string;
@@ -403,6 +410,7 @@ function ItemForm({
   buckets?: { id: string; name: string }[];
   chooseLabel?: string;
   submitLabel: string;
+  hideWeeks?: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
   return (
@@ -424,19 +432,21 @@ function ItemForm({
         <Label htmlFor={`title-${formKey}`}>Название</Label>
         <Input id={`title-${formKey}`} name="title" className="h-11" placeholder="Как увидит человек" defaultValue={title} required />
       </div>
-      <div className="grid gap-3 sm:grid-cols-[1fr_140px]">
-        <div className="space-y-1.5">
-          <Label htmlFor={`weeks-${formKey}`}>Сколько недель</Label>
-          <Input
-            id={`weeks-${formKey}`}
-            name="weeks"
-            type="number"
-            min={1}
-            className="h-11"
-            placeholder="На всю стихию"
-            defaultValue={weeks ?? ""}
-          />
-        </div>
+      <div className={hideWeeks ? "space-y-1.5" : "grid gap-3 sm:grid-cols-[1fr_140px]"}>
+        {!hideWeeks && (
+          <div className="space-y-1.5">
+            <Label htmlFor={`weeks-${formKey}`}>Сколько недель</Label>
+            <Input
+              id={`weeks-${formKey}`}
+              name="weeks"
+              type="number"
+              min={1}
+              className="h-11"
+              placeholder="На всю стихию"
+              defaultValue={weeks ?? ""}
+            />
+          </div>
+        )}
         <div className="space-y-1.5">
           <Label htmlFor={`order-${formKey}`}>Порядок</Label>
           <Input id={`order-${formKey}`} name="order" type="number" min={1} className="h-11" defaultValue={order} />

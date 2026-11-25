@@ -6,6 +6,7 @@ import { Bookmark, BookOpen, ChevronRight, Headphones, Play, Video } from "lucid
 import { currentElementId, getElement, getElementGuide } from "@/entities/element";
 import { formatLabel, readableBooks } from "@/entities/library/model/readable-books";
 import { request } from "@/shared/api/request";
+import { isStaticPrototype } from "@/shared/config/env";
 import { typograph } from "@/shared/lib/typograph";
 import { cn } from "@/shared/lib/utils";
 import { BackButton } from "@/shared/ui/back-button";
@@ -17,7 +18,16 @@ import { readMarks, type ReaderMark } from "./reader-marks";
 import { writePlace } from "./reader-place";
 import { ReaderScreen } from "./reader-screen";
 
-/** Редкие практики. На заглавной – только название, текст открывается внутри. */
+type LibraryCatalog = {
+  elements: {
+    id: string;
+    videoUrl: string | null;
+    body: string;
+    books: { id: string; title: string; author: string | null }[];
+    films: { id: string; title: string; year: number | null }[];
+  }[];
+  practices: { id: string; title: string; kind: "video" | "audio"; body: string; videoUrl: string | null; hasAudio: boolean }[];
+};
 const libraryPractices = [
   { title: "Золотая подушечка", kind: "audio" as const },
   { title: "Техника Золотого Шара", kind: "audio" as const },
@@ -138,12 +148,14 @@ function LibraryHome({
   onAllPractices,
   onBook,
   onAllBooks,
+  practices = libraryPractices,
 }: {
   onElement: () => void;
   onPractice: (title: string) => void;
   onAllPractices: () => void;
   onBook: (id: string) => void;
   onAllBooks: () => void;
+  practices?: { title: string; kind: "audio" | "video" }[];
 }) {
   const element = getElement(currentElementId);
 
@@ -174,7 +186,7 @@ function LibraryHome({
       <section className="space-y-3" aria-label="Практики">
         <PictureHeading>Практики</PictureHeading>
         <GlassCard className="divide-y divide-foreground/10 p-0">
-          {libraryPractices.slice(0, homePreview).map((practice) => (
+          {practices.slice(0, homePreview).map((practice) => (
             <LibraryRow
               key={practice.title}
               icon={practice.kind}
@@ -206,10 +218,17 @@ function LibraryHome({
   );
 }
 
-function ElementScreen({ onBack }: { onBack: () => void }) {
+function ElementScreen({ onBack, page }: { onBack: () => void; page?: LibraryCatalog["elements"][number] | null }) {
   const element = getElement(currentElementId);
   const guide = getElementGuide(currentElementId);
-  const covers = currentElementId === "water" ? waterRecommendations : { books: [], films: [] };
+  const covers = page && (page.books.length > 0 || page.films.length > 0)
+    ? {
+        books: page.books.map((book) => ({ title: book.title, author: book.author ?? "" })),
+        films: page.films.map((film) => ({ title: film.title })),
+      }
+    : currentElementId === "water"
+      ? waterRecommendations
+      : { books: [], films: [] };
   const [imageSrc, setImageSrc] = useState<string | null>(null);
 
   useEffect(() => {
@@ -237,7 +256,9 @@ function ElementScreen({ onBack }: { onBack: () => void }) {
         </div>
       </GlassCard>
       <GlassCard>
-        {guide ? (
+        {page?.body ? (
+          <Prose text={page.body} />
+        ) : guide ? (
           <Prose text={guide.text} />
         ) : (
           <p className="type-body text-muted-foreground">Описание появится, когда его добавят.</p>
@@ -267,9 +288,19 @@ function ElementScreen({ onBack }: { onBack: () => void }) {
   );
 }
 
-function PracticeScreen({ title, onBack }: { title: string; onBack: () => void }) {
+function PracticeScreen({
+  title,
+  body,
+  kind,
+  onBack,
+}: {
+  title: string;
+  body?: string;
+  kind?: "audio" | "video";
+  onBack: () => void;
+}) {
   const practice = libraryPractices.find((item) => item.title === title);
-  const video = practice?.kind === "video";
+  const video = (kind ?? practice?.kind) === "video";
 
   return (
     <ScreenLayout
@@ -288,13 +319,21 @@ function PracticeScreen({ title, onBack }: { title: string; onBack: () => void }
         <AudioPlayer durationSeconds={5 * 60} />
       )}
       <GlassCard className="bg-background/80">
-        <p className="type-body text-foreground">Текст практики появится, когда его добавят.</p>
+        <p className="type-body text-foreground">{body ? typograph(body) : "Текст практики появится, когда его добавят."}</p>
       </GlassCard>
     </ScreenLayout>
   );
 }
 
-function PracticeList({ onBack, onOpen }: { onBack: () => void; onOpen: (title: string) => void }) {
+function PracticeList({
+  practices = libraryPractices,
+  onBack,
+  onOpen,
+}: {
+  practices?: { title: string; kind: "audio" | "video" }[];
+  onBack: () => void;
+  onOpen: (title: string) => void;
+}) {
   return (
     <ScreenLayout
       variant="page"
@@ -304,7 +343,7 @@ function PracticeList({ onBack, onOpen }: { onBack: () => void; onOpen: (title: 
       actions={<BackButton onClick={onBack} />}
     >
       <GlassCard className="divide-y divide-foreground/10 p-0">
-        {libraryPractices.map((practice) => (
+        {practices.map((practice) => (
           <LibraryRow
             key={practice.title}
             icon={practice.kind}
@@ -410,16 +449,30 @@ function BookmarkScreen({ onBack, onOpen }: { onBack: () => void; onOpen: (id: s
 /** Заглавная – список. Читалка открывается из раздела «Книги». */
 export function LibraryPage() {
   const [view, setView] = useState<View>({ name: "home" });
+  const [catalog, setCatalog] = useState<LibraryCatalog | null>(null);
+
+  useEffect(() => {
+    if (isStaticPrototype) return;
+    request<LibraryCatalog>("/api/library/catalog")
+      .then(setCatalog)
+      .catch(() => setCatalog(null));
+  }, []);
+
+  const practices = catalog?.practices.length
+    ? catalog.practices.map((practice) => ({ title: practice.title, kind: practice.kind, body: practice.body }))
+    : libraryPractices.map((practice) => ({ ...practice, body: "" }));
+  const elementPage = catalog?.elements.find((item) => item.id === currentElementId) ?? null;
 
   if (view.name === "reader") {
     const book = readableBooks.find((item) => item.id === view.id);
     if (!book) return null;
     return <ReaderScreen book={book} onBack={() => setView({ name: "books" })} />;
   }
-  if (view.name === "element") return <ElementScreen onBack={() => setView({ name: "home" })} />;
+  if (view.name === "element") return <ElementScreen page={elementPage} onBack={() => setView({ name: "home" })} />;
   if (view.name === "practices") {
     return (
       <PracticeList
+        practices={practices}
         onBack={() => setView({ name: "home" })}
         onOpen={(title) => setView({ name: "practice", title, back: "practices" })}
       />
@@ -450,6 +503,8 @@ export function LibraryPage() {
     return (
       <PracticeScreen
         title={view.title}
+        body={practices.find((practice) => practice.title === view.title)?.body}
+        kind={practices.find((practice) => practice.title === view.title)?.kind}
         onBack={() => setView(back === "practices" ? { name: "practices" } : { name: "home" })}
       />
     );
@@ -462,6 +517,7 @@ export function LibraryPage() {
       onAllPractices={() => setView({ name: "practices" })}
       onBook={(id) => setView({ name: "reader", id })}
       onAllBooks={() => setView({ name: "books" })}
+      practices={practices}
     />
   );
 }
