@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 
 import { request, type RequestError } from "@/shared/api/request";
 import { isDevelopment, isStaticPrototype } from "@/shared/config/env";
@@ -24,23 +24,37 @@ function demoAccess(): MyAccess {
 
 export type MyAccessState = { status: "loading" } | { status: "signed-out" } | { status: "ready"; access: MyAccess };
 
+/** Уже узнанный доступ. Новый экран не ждёт повторный запрос и не мигает пустым кадром. */
+let remembered: MyAccessState | null = null;
+
+function remember(next: MyAccessState) {
+  remembered = next;
+  return next;
+}
+
 /** Свой доступ с сервера (GET /api/access). */
 export function useMyAccess(): MyAccessState {
   const [state, setState] = useState<MyAccessState>({ status: "loading" });
+
+  useLayoutEffect(() => {
+    if (!remembered) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setState(remembered);
+  }, []);
 
   useEffect(() => {
     if (isStaticPrototype) {
       // Адрес страницы известен только в браузере, поэтому демо выбираем здесь.
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setState({ status: "ready", access: demoAccess() });
+      setState(remember({ status: "ready", access: demoAccess() }));
       return;
     }
     request<MyAccess>("/api/access")
-      .then((access) => setState({ status: "ready", access }))
+      .then((access) => setState(remember({ status: "ready", access })))
       .catch((error: RequestError) => {
-        if (error.status === 401 && isDevelopment) return setState({ status: "ready", access: demoAccess() });
+        if (error.status === 401 && isDevelopment) return setState(remember({ status: "ready", access: demoAccess() }));
         // Ошибка сети или не вошёл: экраны сами отправят на вход, доступ не открываем.
-        setState({ status: "signed-out" });
+        setState(remember({ status: "signed-out" }));
       });
   }, []);
 

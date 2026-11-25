@@ -18,5 +18,11 @@ export function Logo({ href, className }: { href?: string; className?: string })
       {APP_NAME}
     </span>
   );
-  return href ? <Link href={href}>{text}</Link> : text;
+  return href ? (
+    <Link href={href} className="inline-flex h-(--header-height) items-center">
+      {text}
+    </Link>
+  ) : (
+    text
+  );
 }

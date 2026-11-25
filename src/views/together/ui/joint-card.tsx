@@ -144,7 +144,7 @@ export function JointCardView({
         <Label>Ждём ответа</Label>
         <h2 className="type-section">{typograph(card.practice.title)}</h2>
         <p className="type-secondary text-muted-foreground">
-          {typograph(`Ждём, пока ${name} ответит. 7 дней с дня согласия.`)}
+          {typograph(`Ждём, пока ${name} ответит.`)}
         </p>
         <Button size="cta" variant="outline" disabled={pending} onClick={onCancel}>
           Отменить
