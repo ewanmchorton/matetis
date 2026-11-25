@@ -6,9 +6,9 @@ import { sql } from "drizzle-orm";
 import type { PersonRole } from "@/shared/auth/roles";
 import { db, user } from "@/shared/db";
 
-/** Удаляет всех людей, всё, что к ним привязано, запросы входа, периоды доступа, отметки о напоминаниях, фразы дня, переходы на Металл, практики и послания. */
+/** Удаляет людей и наполняемые таблицы, чтобы следующий тест начинал с пустой базы. */
 export async function clearDatabase() {
-  await db.execute(sql`truncate table "user", verification, access_period, access_expiry_reminder, daily_phrase, metal_start, practice, navigator_message, program_video, element_video_seen cascade`);
+  await db.execute(sql`truncate table "user", verification, access_period, access_expiry_reminder, daily_phrase, metal_start, practice, navigator_message, program_video, element_video_seen, element_recommendation, library_book_cover cascade`);
 }
 
 /** Создаёт человека напрямую в базе, минуя регистрацию. */

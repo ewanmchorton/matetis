@@ -12,7 +12,7 @@ import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Textarea } from "@/shared/ui/textarea";
 
-type Recommendation = { id: string; title: string; author: string | null; year: number | null };
+type Recommendation = { id: string; title: string; author: string | null; year: number | null; coverUrl: string | null };
 type ElementPage = {
   id: ElementId;
   videoUrl: string | null;
@@ -28,7 +28,7 @@ type Practice = {
   videoUrl: string | null;
   hasAudio: boolean;
 };
-type Book = { id: string; title: string; author: string; format: BookFormat; ready: boolean };
+type Book = { id: string; title: string; author: string; format: BookFormat; ready: boolean; coverUrl: string | null };
 type Catalog = { elements: ElementPage[]; practices: Practice[]; books: Book[] };
 const tabs = [
   { id: "elements", label: "Видео стихий" },
@@ -200,17 +200,31 @@ export function AdminLibraryPage() {
       {chapter === "books" && (
         <ul className="divide-y overflow-hidden rounded-2xl border bg-background">
           {catalog.books.map((book) => (
-            <li key={book.id} className="px-4 py-3">
-              <span className="block font-medium">{book.title}</span>
-              <span className="block text-sm text-muted-foreground">
-                {book.author} · {formatLabel[book.format]} · {book.ready ? "файл на месте" : "файла нет на компьютере"}
+            <li key={book.id} className="flex items-center gap-3 px-4 py-3">
+              <span className="min-w-0 flex-1">
+                <span className="block font-medium">{book.title}</span>
+                <span className="block text-sm text-muted-foreground">
+                  {book.author} · {formatLabel[book.format]} · {book.ready ? "файл на месте" : "файла нет на компьютере"}
+                </span>
               </span>
+              <CoverControl
+                label={`Обложка «${book.title}»`}
+                imageUrl={book.coverUrl}
+                onFile={(file) => void run(() => uploadBookCover(book.id, file))}
+              />
             </li>
           ))}
         </ul>
       )}
     </div>
   );
+}
+
+function uploadBookCover(id: string, file: File) {
+  const body = new FormData();
+  body.set("id", id);
+  body.set("file", file);
+  return request<Catalog>("/api/admin/library/books/cover", { method: "POST", body });
 }
 
 function practicePayload(data: FormData) {
@@ -289,6 +303,18 @@ function ElementEditor({
     }
   }
 
+  async function uploadCover(id: string, file: File) {
+    const body = new FormData();
+    body.set("id", id);
+    body.set("file", file);
+    onError(null);
+    try {
+      onSaved(await request<Catalog>("/api/admin/library/recommendations/cover", { method: "POST", body }));
+    } catch (saveError) {
+      onError((saveError as Error).message);
+    }
+  }
+
   return (
     <div className="space-y-5 border-t bg-muted/20 p-3">
       <form className="space-y-3" onSubmit={(event) => void saveVideo(event)}>
@@ -304,7 +330,13 @@ function ElementEditor({
           Сохранить видео и текст
         </Button>
       </form>
-      <RecommendationList title="Книги" items={page.books} onRemove={(id) => void removeItem(id)} note={(item) => item.author ?? ""} />
+      <RecommendationList
+        title="Книги"
+        items={page.books}
+        onRemove={(id) => void removeItem(id)}
+        onCover={(id, file) => void uploadCover(id, file)}
+        note={(item) => item.author ?? ""}
+      />
       <form className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]" onSubmit={(event) => void addItem("book", event)}>
         <Input name="title" className="h-11" placeholder="Название книги" required aria-label={`Название книги, стихия ${element.name}`} />
         <Input name="author" className="h-11" placeholder="Автор" required aria-label="Автор книги" />
@@ -312,7 +344,13 @@ function ElementEditor({
           Добавить книгу
         </Button>
       </form>
-      <RecommendationList title="Фильмы" items={page.films} onRemove={(id) => void removeItem(id)} note={(item) => (item.year ? String(item.year) : "")} />
+      <RecommendationList
+        title="Фильмы"
+        items={page.films}
+        onRemove={(id) => void removeItem(id)}
+        onCover={(id, file) => void uploadCover(id, file)}
+        note={(item) => (item.year ? String(item.year) : "")}
+      />
       <form className="grid gap-2 sm:grid-cols-[1fr_140px_auto]" onSubmit={(event) => void addItem("film", event)}>
         <Input name="title" className="h-11" placeholder="Название фильма" required aria-label={`Название фильма, стихия ${element.name}`} />
         <Input name="year" className="h-11" type="number" placeholder="Год" aria-label="Год фильма" />
@@ -329,11 +367,13 @@ function RecommendationList({
   items,
   note,
   onRemove,
+  onCover,
 }: {
   title: string;
   items: Recommendation[];
   note: (item: Recommendation) => string;
   onRemove: (id: string) => void;
+  onCover: (id: string, file: File) => void;
 }) {
   return (
     <div className="space-y-2">
@@ -345,12 +385,38 @@ function RecommendationList({
             {item.title}
             {note(item) ? <span className="text-muted-foreground"> · {note(item)}</span> : null}
           </span>
+          <CoverControl label={`Обложка «${item.title}»`} imageUrl={item.coverUrl} onFile={(file) => onCover(item.id, file)} />
           <Button variant="ghost" size="icon" className="size-11" aria-label={`Удалить «${item.title}»`} onClick={() => onRemove(item.id)}>
             <Trash2 />
           </Button>
         </div>
       ))}
     </div>
+  );
+}
+
+function CoverControl({ label, imageUrl, onFile }: { label: string; imageUrl: string | null; onFile: (file: File) => void }) {
+  return (
+    <span className="flex items-center gap-2">
+      {imageUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={imageUrl} alt="" className="h-14 w-10 rounded-md object-cover" />
+      )}
+      <label className="inline-flex h-11 cursor-pointer items-center rounded-full border px-3 text-sm">
+        {imageUrl ? "Заменить" : "Обложка"}
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="sr-only"
+          aria-label={label}
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            event.target.value = "";
+            if (file) onFile(file);
+          }}
+        />
+      </label>
+    </span>
   );
 }
 

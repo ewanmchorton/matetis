@@ -15,6 +15,8 @@ export const elementRecommendation = pgTable(
     author: text("author"),
     year: smallint("year"),
     position: smallint("position").notNull().default(1),
+    /** Имя файла обложки в private/library-covers. Пусто – обложки ещё нет. */
+    coverPath: text("cover_path"),
   },
   (table) => [
     check("element_recommendation_element", sql`${table.elementId} in ('wood', 'fire', 'earth', 'metal', 'water')`),
@@ -23,6 +25,13 @@ export const elementRecommendation = pgTable(
 );
 
 export const libraryPracticeKind = pgEnum("library_practice_kind", ["video", "audio"]);
+
+/** Обложка книги из раздела «Книги». Сама книга задана в коде, здесь только картинка. */
+export const libraryBookCover = pgTable("library_book_cover", {
+  bookId: text("book_id").primaryKey(),
+  /** Имя файла в private/library-covers. */
+  fileName: text("file_name").notNull(),
+});
 
 /** Редкая практика библиотеки: название, текст и видео или аудио. Приветственное видео хранится отдельно. */
 export const libraryPractice = pgTable(

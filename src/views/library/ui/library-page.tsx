@@ -23,10 +23,11 @@ type LibraryCatalog = {
     id: string;
     videoUrl: string | null;
     body: string;
-    books: { id: string; title: string; author: string | null }[];
-    films: { id: string; title: string; year: number | null }[];
+    books: { id: string; title: string; author: string | null; coverUrl: string | null }[];
+    films: { id: string; title: string; year: number | null; coverUrl: string | null }[];
   }[];
   practices: { id: string; title: string; kind: "video" | "audio"; body: string; videoUrl: string | null; hasAudio: boolean }[];
+  books: { id: string; coverUrl: string | null }[];
 };
 const libraryPractices = [
   { title: "Золотая подушечка", kind: "audio" as const },
@@ -42,10 +43,10 @@ const practiceBackground = currentElementId === "water" ? "11_water" : "04_earth
 /** Рекомендации внутри стихии: только обложки, читалка отсюда не открывается. */
 const waterRecommendations = {
   books: [
-    { title: "Дао дэ цзин", author: "Лао-цзы" },
-    { title: "Цигун для начинающих", author: "Мантак Чиа" },
+    { title: "Дао дэ цзин", author: "Лао-цзы", imageSrc: null },
+    { title: "Цигун для начинающих", author: "Мантак Чиа", imageSrc: null },
   ],
-  films: [{ title: "Весна, лето, осень, зима… и снова весна" }],
+  films: [{ title: "Весна, лето, осень, зима… и снова весна", imageSrc: null }],
 };
 
 /** На заглавной видно столько строк. Остальные открываются отдельной страницей и листаются вниз. */
@@ -85,12 +86,18 @@ function Prose({ text }: { text: string }) {
   );
 }
 
-function Cover({ title, note }: { title: string; note?: string }) {
+function Cover({ title, note, imageSrc }: { title: string; note?: string; imageSrc?: string | null }) {
   return (
     <div className="space-y-2">
-      <div className="flex aspect-[2/3] items-end rounded-2xl bg-primary/10 p-3">
-        <span className="type-caption text-foreground">{typograph(title)}</span>
+      <div className="relative flex aspect-[2/3] items-end overflow-hidden rounded-2xl bg-primary/10 p-3">
+        {imageSrc ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={imageSrc} alt="" className="absolute inset-0 size-full object-cover" />
+        ) : (
+          <span className="type-caption text-foreground">{typograph(title)}</span>
+        )}
       </div>
+      {imageSrc && <p className="type-caption text-foreground">{typograph(title)}</p>}
       {note && <p className="type-caption text-muted-foreground">{note}</p>}
     </div>
   );
@@ -123,16 +130,23 @@ function LibraryRow({
   icon,
   title,
   meta,
+  imageSrc,
   onClick,
 }: {
   icon?: "audio" | "video" | "book" | "mark";
   title: string;
   meta?: string;
+  imageSrc?: string | null;
   onClick: () => void;
 }) {
   return (
     <button type="button" onClick={onClick} className="flex min-h-14 w-full items-center gap-3 px-5 py-3 text-left">
-      {icon && <RowIcon kind={icon} />}
+      {imageSrc ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={imageSrc} alt="" className="size-10 shrink-0 rounded-md object-cover" />
+      ) : (
+        icon && <RowIcon kind={icon} />
+      )}
       <span className="min-w-0 flex-1">
         <span className={cn("block type-block", icon ? "text-foreground" : "text-primary")}>{typograph(title)}</span>
         {meta && <span className="block type-caption text-muted-foreground">{typograph(meta)}</span>}
@@ -149,6 +163,7 @@ function LibraryHome({
   onBook,
   onAllBooks,
   practices = libraryPractices,
+  bookCovers = {},
 }: {
   onElement: () => void;
   onPractice: (title: string) => void;
@@ -156,6 +171,7 @@ function LibraryHome({
   onBook: (id: string) => void;
   onAllBooks: () => void;
   practices?: { title: string; kind: "audio" | "video" }[];
+  bookCovers?: Record<string, string>;
 }) {
   const element = getElement(currentElementId);
 
@@ -208,6 +224,7 @@ function LibraryHome({
               icon="book"
               title={book.title}
               meta={`${book.author} – ${formatLabel[book.format]}`}
+              imageSrc={bookCovers[book.id]}
               onClick={() => onBook(book.id)}
             />
           ))}
@@ -223,8 +240,8 @@ function ElementScreen({ onBack, page }: { onBack: () => void; page?: LibraryCat
   const guide = getElementGuide(currentElementId);
   const covers = page && (page.books.length > 0 || page.films.length > 0)
     ? {
-        books: page.books.map((book) => ({ title: book.title, author: book.author ?? "" })),
-        films: page.films.map((film) => ({ title: film.title })),
+        books: page.books.map((book) => ({ title: book.title, author: book.author ?? "", imageSrc: book.coverUrl })),
+        films: page.films.map((film) => ({ title: film.title, imageSrc: film.coverUrl })),
       }
     : currentElementId === "water"
       ? waterRecommendations
@@ -269,7 +286,7 @@ function ElementScreen({ onBack, page }: { onBack: () => void; page?: LibraryCat
         <ul className="grid grid-cols-2 gap-4">
           {covers.books.map((book) => (
             <li key={book.title}>
-              <Cover title={book.title} note={book.author} />
+              <Cover title={book.title} note={book.author} imageSrc={book.imageSrc} />
             </li>
           ))}
         </ul>
@@ -279,7 +296,7 @@ function ElementScreen({ onBack, page }: { onBack: () => void; page?: LibraryCat
         <ul className="grid grid-cols-2 gap-4">
           {covers.films.map((film) => (
             <li key={film.title}>
-              <Cover title={film.title} />
+              <Cover title={film.title} imageSrc={film.imageSrc} />
             </li>
           ))}
         </ul>
@@ -372,10 +389,12 @@ function BookList({
   onBack,
   onOpen,
   onBookmarks,
+  bookCovers = {},
 }: {
   onBack: () => void;
   onOpen: (id: string) => void;
   onBookmarks: () => void;
+  bookCovers?: Record<string, string>;
 }) {
   return (
     <ScreenLayout
@@ -402,6 +421,7 @@ function BookList({
             icon="book"
             title={book.title}
             meta={`${book.author} – ${formatLabel[book.format]}`}
+            imageSrc={bookCovers[book.id]}
             onClick={() => onOpen(book.id)}
           />
         ))}
@@ -462,6 +482,9 @@ export function LibraryPage() {
     ? catalog.practices.map((practice) => ({ title: practice.title, kind: practice.kind, body: practice.body }))
     : libraryPractices.map((practice) => ({ ...practice, body: "" }));
   const elementPage = catalog?.elements.find((item) => item.id === currentElementId) ?? null;
+  const bookCovers = Object.fromEntries(
+    (catalog?.books ?? []).flatMap((book) => (book.coverUrl ? [[book.id, book.coverUrl] as const] : [])),
+  );
 
   if (view.name === "reader") {
     const book = readableBooks.find((item) => item.id === view.id);
@@ -484,6 +507,7 @@ export function LibraryPage() {
         onBack={() => setView({ name: "home" })}
         onOpen={(id) => setView({ name: "reader", id })}
         onBookmarks={() => setView({ name: "bookmarks" })}
+        bookCovers={bookCovers}
       />
     );
   }
@@ -518,6 +542,7 @@ export function LibraryPage() {
       onBook={(id) => setView({ name: "reader", id })}
       onAllBooks={() => setView({ name: "books" })}
       practices={practices}
+      bookCovers={bookCovers}
     />
   );
 }

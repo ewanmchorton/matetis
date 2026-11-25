@@ -4,9 +4,9 @@ import path from "node:path";
 
 import { and, asc, eq, sql } from "drizzle-orm";
 
-import { readableBooks, type BookFormat } from "@/entities/library/model/readable-books";
+import { bookById, readableBooks, type BookFormat } from "@/entities/library/model/readable-books";
 import { assertStaff } from "@/shared/auth/assert-admin";
-import { db, elementRecommendation, libraryPractice, programVideo } from "@/shared/db";
+import { db, elementRecommendation, libraryBookCover, libraryPractice, programVideo } from "@/shared/db";
 import { AppError } from "@/shared/lib/app-error";
 
 const elementIds = ["wood", "fire", "earth", "metal", "water"] as const;
@@ -16,7 +16,14 @@ type PracticeKind = "video" | "audio";
 
 const audioRoot = path.resolve(process.cwd(), "private", "library-audio");
 const bookRoot = path.resolve(process.cwd(), "private", "library-books");
+const coverRoot = path.resolve(process.cwd(), "private", "library-covers");
 const maxAudioBytes = 30 * 1024 * 1024;
+const maxCoverBytes = 8 * 1024 * 1024;
+const imageExtensions: Record<string, string> = {
+  "image/jpeg": ".jpg",
+  "image/png": ".png",
+  "image/webp": ".webp",
+};
 const audioExtensions: Record<string, string> = {
   "audio/mpeg": ".mp3",
   "audio/mp4": ".m4a",
@@ -30,6 +37,8 @@ export type LibraryRecommendation = {
   title: string;
   author: string | null;
   year: number | null;
+  /** Адрес обложки. Пусто – картинки ещё нет. */
+  coverUrl: string | null;
 };
 
 export type LibraryElementPage = {
@@ -56,6 +65,8 @@ export type LibraryBookItem = {
   format: BookFormat;
   /** Файл уже лежит в private/library-books. */
   ready: boolean;
+  /** Адрес обложки. Пусто – картинки ещё нет. */
+  coverUrl: string | null;
 };
 
 function asElement(value: unknown): ElementId {
@@ -93,8 +104,26 @@ async function fileReady(file: string) {
   }
 }
 
+function coverAddress(kind: "recommendation" | "book", id: string) {
+  return `/api/library/cover/${kind}/${id}`;
+}
+
+function imageType(fileName: string) {
+  if (fileName.endsWith(".png")) return "image/png";
+  if (fileName.endsWith(".webp")) return "image/webp";
+  return "image/jpeg";
+}
+
+function coverFile(fileName: string) {
+  const full = path.resolve(coverRoot, fileName);
+  if (full !== path.join(coverRoot, fileName)) return null;
+  return full;
+}
+
 /** Книги, которые уже лежат в библиотеке. Новые файлы сюда не добавляются этой функцией. */
 export async function listLibraryBooks(): Promise<LibraryBookItem[]> {
+  const covers = await db.select().from(libraryBookCover);
+  const covered = new Set(covers.map((row) => row.bookId));
   return Promise.all(
     readableBooks.map(async (book) => ({
       id: book.id,
@@ -102,6 +131,7 @@ export async function listLibraryBooks(): Promise<LibraryBookItem[]> {
       author: book.author,
       format: book.format,
       ready: await fileReady(book.file),
+      coverUrl: covered.has(book.id) ? coverAddress("book", book.id) : null,
     })),
   );
 }
@@ -122,6 +152,7 @@ export async function libraryCatalog() {
       title: row.title,
       author: row.author,
       year: row.year,
+      coverUrl: row.coverPath ? coverAddress("recommendation", row.id) : null,
     });
     return {
       id,
@@ -188,8 +219,84 @@ export async function addRecommendation(
 
 export async function deleteRecommendation(viewerId: string, id: unknown) {
   await assertStaff(viewerId);
-  if (typeof id === "string") await db.delete(elementRecommendation).where(eq(elementRecommendation.id, id));
+  if (typeof id !== "string") return libraryCatalog();
+  const [row] = await db.delete(elementRecommendation).where(eq(elementRecommendation.id, id)).returning();
+  if (row?.coverPath) {
+    const full = coverFile(row.coverPath);
+    if (full) await rm(full, { force: true });
+  }
   return libraryCatalog();
+}
+
+async function writtenCover(file: unknown, name: string) {
+  if (!(file instanceof File)) throw new AppError("empty_file", "Выберите картинку");
+  if (file.size > maxCoverBytes) throw new AppError("file_too_big", "Картинка больше 8 МБ");
+  const extension = imageExtensions[file.type];
+  if (!extension) throw new AppError("invalid_file", "Нужна картинка JPEG, PNG или WebP");
+  await mkdir(coverRoot, { recursive: true });
+  const fileName = `${name}${extension}`;
+  await writeFile(path.join(coverRoot, fileName), Buffer.from(await file.arrayBuffer()));
+  return fileName;
+}
+
+/** Обложка книги или фильма на странице стихии. Новая картинка заменяет прежнюю. */
+export async function saveRecommendationCover(viewerId: string, input: { id: unknown; file: unknown }) {
+  await assertStaff(viewerId);
+  if (typeof input.id !== "string") throw new AppError("not_found", "Запись не найдена");
+  const [row] = await db.select().from(elementRecommendation).where(eq(elementRecommendation.id, input.id)).limit(1);
+  if (!row) throw new AppError("not_found", "Запись не найдена");
+  const fileName = await writtenCover(input.file, `recommendation-${row.id}`);
+  await db.update(elementRecommendation).set({ coverPath: fileName }).where(eq(elementRecommendation.id, row.id));
+  if (row.coverPath && row.coverPath !== fileName) {
+    const previous = coverFile(row.coverPath);
+    if (previous) await rm(previous, { force: true });
+  }
+  return libraryCatalog();
+}
+
+/** Обложка книги в разделе «Книги». Новая картинка заменяет прежнюю. */
+export async function saveBookCover(viewerId: string, input: { id: unknown; file: unknown }) {
+  await assertStaff(viewerId);
+  const book = typeof input.id === "string" ? bookById(input.id) : undefined;
+  if (!book) throw new AppError("not_found", "Книга не найдена");
+  const fileName = await writtenCover(input.file, `book-${book.id}`);
+  const [previous] = await db.select().from(libraryBookCover).where(eq(libraryBookCover.bookId, book.id)).limit(1);
+  if (previous) {
+    await db.update(libraryBookCover).set({ fileName }).where(eq(libraryBookCover.bookId, book.id));
+    if (previous.fileName !== fileName) {
+      const old = coverFile(previous.fileName);
+      if (old) await rm(old, { force: true });
+    }
+  } else {
+    await db.insert(libraryBookCover).values({ bookId: book.id, fileName });
+  }
+  return libraryCatalog();
+}
+
+/** Файл обложки. Нет записи или файла – null. */
+export async function readLibraryCover(kind: string, id: string): Promise<{ data: Buffer; type: string } | null> {
+  const fileName =
+    kind === "recommendation"
+      ? (
+          await db
+            .select({ coverPath: elementRecommendation.coverPath })
+            .from(elementRecommendation)
+            .where(eq(elementRecommendation.id, id))
+            .limit(1)
+        )[0]?.coverPath
+      : kind === "book"
+        ? (await db.select({ fileName: libraryBookCover.fileName }).from(libraryBookCover).where(eq(libraryBookCover.bookId, id)).limit(1))[0]
+            ?.fileName
+        : null;
+  if (!fileName) return null;
+  const full = coverFile(fileName);
+  if (!full) return null;
+  try {
+    const data = await readFile(full);
+    return { data, type: imageType(fileName) };
+  } catch {
+    return null;
+  }
 }
 
 export async function saveLibraryPractice(
