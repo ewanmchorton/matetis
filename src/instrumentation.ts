@@ -13,6 +13,12 @@ export async function register() {
   // Во время сборки и в прототипе для GitHub Pages сервера с базой нет.
   if (process.env.NEXT_PHASE === "phase-production-build" || process.env.NEXT_PUBLIC_STATIC_PROTOTYPE === "true") return;
 
+  // На сервере база обновляется сама при запуске новой версии. Не получилось – приложение не стартует.
+  if (process.env.MIGRATE_ON_START === "true") {
+    const { applyMigrationsOrExit } = await import("@/shared/db/migrate.server");
+    await applyMigrationsOrExit();
+  }
+
   const { sendExpiringDigest } = await import("@/entities/access/server");
   const check = () =>
     sendExpiringDigest().catch((error: unknown) => console.error("Сводка о доступах не отправлена", error));

@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const isGithubPages = process.env.GITHUB_PAGES === "true";
+// Сборка для сервера (Dockerfile): только нужные для запуска файлы, без pnpm install на сервере.
+const isStandalone = process.env.NEXT_OUTPUT === "standalone";
 
 const nextConfig: NextConfig = {
   // Открыть локальный сервер с телефона в той же Wi-Fi-сети.
@@ -19,6 +21,7 @@ const nextConfig: NextConfig = {
         images: { unoptimized: true },
       }
     : {}),
+  ...(isStandalone ? { output: "standalone" } : {}),
 };
 
 export default nextConfig;

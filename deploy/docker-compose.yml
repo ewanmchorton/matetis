@@ -1,0 +1,58 @@
+# Сервер МАТЭТИС: приложение, база PostgreSQL и Caddy (HTTPS).
+# Настройки – в deploy/.env (шаблон – deploy/.env.example, в Git не попадает).
+# Запуск из папки deploy: docker compose up -d
+name: matetis-server
+
+services:
+  app:
+    image: ${APP_IMAGE:-matetis-app}
+    build: ..
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      BETTER_AUTH_URL: https://${DOMAIN}
+      MIGRATE_ON_START: "true"
+    volumes:
+      - files:/app/private
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Принимает запросы из интернета и сам получает сертификат HTTPS для DOMAIN.
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - app
+
+volumes:
+  db-data:
+  files:
+  caddy-data:
+  caddy-config:
