@@ -1,7 +1,9 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
+import { hasAccess } from "@/entities/access/server";
 import { bookById, type BookFormat } from "@/entities/library/model/readable-books";
+import { getCurrentUser } from "@/shared/auth/session";
 
 const mime: Record<BookFormat, string> = {
   pdf: "application/pdf",
@@ -10,8 +12,11 @@ const mime: Record<BookFormat, string> = {
   fb2: "application/xml",
 };
 
-/** Отдаёт файл книги читалке. Скачивания в интерфейсе нет: файл только для показа страниц. */
+/** Отдаёт файл книги читалке. Скачивания в интерфейсе нет: файл только для показа страниц. Только с доступом. */
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const user = await getCurrentUser();
+  if (!user) return new Response("Нужно войти", { status: 401 });
+  if (!(await hasAccess(user))) return new Response("Нужен доступ к программе", { status: 403 });
   const { id } = await params;
   const book = bookById(id);
   if (!book) return new Response("Нет такой книги", { status: 404 });
