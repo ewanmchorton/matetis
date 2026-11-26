@@ -70,6 +70,7 @@ cp .env.example .env   # вписать пароли и ключи; для пр�
 docker compose up -d --build
 ```
 
+- Образ приложения собирает GitHub при каждой отправке в `main` (`.github/workflows/docker.yml`) и кладёт в `ghcr.io/ewanmchorton/matetis`. Сервер сам не обновляется. Обновить его из папки `deploy`: `docker compose pull app && docker compose up -d app`.
 - При запуске приложение само применяет новые миграции из `drizzle/`. Не получилось – приложение останавливается, причина в `docker compose logs app`.
 - Загруженные в админке файлы лежат в вольюме `files` (внутри контейнера – `/app/private`), база – в вольюме `db-data`.
 - Копии базы: сервис `backup` каждую ночь в 3:00 по Минску кладёт копию в S3 (`S3_*` в `.env`) и удаляет копии старше 14 дней. Команды из папки `deploy`:
