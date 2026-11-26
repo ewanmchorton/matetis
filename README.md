@@ -72,6 +72,11 @@ docker compose up -d --build
 
 - При запуске приложение само применяет новые миграции из `drizzle/`. Не получилось – приложение останавливается, причина в `docker compose logs app`.
 - Загруженные в админке файлы лежат в вольюме `files` (внутри контейнера – `/app/private`), база – в вольюме `db-data`.
+- Копии базы: сервис `backup` каждую ночь в 3:00 по Минску кладёт копию в S3 (`S3_*` в `.env`) и удаляет копии старше 14 дней. Команды из папки `deploy`:
+  - сделать копию сейчас – `docker compose exec backup backup.sh`;
+  - список копий – `docker compose exec backup restore.sh`;
+  - проверить копию – `docker compose exec backup restore.sh <файл> restore_check`: восстанавливает во временную базу, рабочая не меняется. После проверки временную базу удалить: `docker compose exec db psql -U matetis -d postgres -c "DROP DATABASE restore_check"`;
+  - заменить рабочую базу копией – `docker compose stop app`, затем `docker compose exec backup restore.sh <файл> matetis --replace`, затем `docker compose start app`.
 - На компьютере Caddy выдаёт свой сертификат для `localhost`, браузер предупредит о нём – это нормально. Письма уходят в Mailpit, если в `.env` указать `SMTP_HOST=host.docker.internal`, `SMTP_PORT=1025`, `SMTP_SECURE=false`.
 
 ## Структура (FSD)
