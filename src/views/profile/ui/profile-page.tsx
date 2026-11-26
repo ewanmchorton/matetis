@@ -7,13 +7,11 @@ import { CompanionImage } from "@/entities/companion";
 import { ElementBadge, getCurrentElement } from "@/entities/element";
 import { getPersonType } from "@/entities/person-type";
 import { PhraseSettings } from "@/features/phrase-notifications";
-import { progressActions, useProgress } from "@/entities/progress";
 import { authClient } from "@/shared/auth/client";
 import { isTelegramContact } from "@/shared/auth/contact";
 import { isStaticPrototype } from "@/shared/config/env";
 import { routes } from "@/shared/config/routes";
 import { typograph } from "@/shared/lib/typograph";
-import { useIsClient } from "@/shared/lib/use-is-client";
 import { Button } from "@/shared/ui/button";
 import { Checkbox } from "@/shared/ui/checkbox";
 import { GlassCard } from "@/shared/ui/glass-card";
@@ -28,7 +26,7 @@ const checkboxClass = "size-6 rounded-md border-primary/40 bg-background/70 [&_s
 
 export function ProfilePage() {
   const router = useRouter();
-  const { state, actionError, setPhraseSettings, answerRequest } = useProfile();
+  const { state, actionError, setPhraseSettings, setBirthDate, answerRequest } = useProfile();
   const journal = useJournal();
 
   useEffect(() => {
@@ -74,7 +72,7 @@ export function ProfilePage() {
         state.status === "loading" && <GlassCard aria-hidden className="h-96 animate-pulse" />
       )}
 
-      <PersonTypeCard />
+      {state.status === "ready" && <PersonTypeCard typeId={state.data.me.typeId} />}
 
       <ProfileJournal state={journal} />
 
@@ -97,7 +95,7 @@ export function ProfilePage() {
             />
             <SettingRow label="Пароль" value="••••••••" />
           </dl>
-          <BirthDateField />
+          <BirthDateField value={state.data.me.birthDate} onChange={(value) => void setBirthDate(value)} />
           <Button variant="ghost" size="cta" className="text-primary" onClick={() => void signOut()}>
             Выйти из аккаунта
           </Button>
@@ -116,15 +114,10 @@ function SettingRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-// Карточка психотипа пока работает на данных прототипа в браузере.
-
-function PersonTypeCard() {
-  const isClient = useIsClient();
-  const { typeId } = useProgress();
-  const type = getPersonType(typeId ?? "t1");
+function PersonTypeCard({ typeId }: { typeId: string | null }) {
+  const type = typeId ? getPersonType(typeId) : undefined;
   const element = getCurrentElement();
 
-  if (!isClient) return <GlassCard aria-hidden className="h-40 animate-pulse" />;
   if (!type) return null;
 
   return (
@@ -171,26 +164,22 @@ function Reminders({ children }: { children?: ReactNode }) {
   );
 }
 
-function BirthDateField() {
-  const isClient = useIsClient();
-  const { birthDate } = useProgress();
-
+/** Календарь телефона. Пустое значение не сохраняем: дату рождения можно поменять, но не стереть. */
+function BirthDateField({ value, onChange }: { value: string | null; onChange: (value: string) => void }) {
   return (
     <div className="grid gap-1.5">
       <label htmlFor="birth-date" className="type-secondary text-muted-foreground">
         Дата рождения
       </label>
-      {isClient ? (
-        <input
-          id="birth-date"
-          type="date"
-          className="block h-(--field-height) w-full min-w-0 max-w-full appearance-none rounded-2xl border border-input bg-background/70 px-4 py-0 text-left type-body leading-[calc(var(--field-height)-2px)] outline-none focus-visible:ring-3 focus-visible:ring-ring/50 [&::-webkit-date-and-time-value]:m-0 [&::-webkit-date-and-time-value]:text-left [&::-webkit-date-and-time-value]:leading-[calc(var(--field-height)-2px)]"
-          value={birthDate ?? ""}
-          onChange={(event) => progressActions.setBirthDate(event.target.value || null)}
-        />
-      ) : (
-        <div className="h-(--button-height) animate-pulse rounded-2xl bg-secondary" aria-hidden />
-      )}
+      <input
+        id="birth-date"
+        type="date"
+        className="block h-(--field-height) w-full min-w-0 max-w-full appearance-none rounded-2xl border border-input bg-background/70 px-4 py-0 text-left type-body leading-[calc(var(--field-height)-2px)] outline-none focus-visible:ring-3 focus-visible:ring-ring/50 [&::-webkit-date-and-time-value]:m-0 [&::-webkit-date-and-time-value]:text-left [&::-webkit-date-and-time-value]:leading-[calc(var(--field-height)-2px)]"
+        value={value ?? ""}
+        onChange={(event) => {
+          if (event.target.value) onChange(event.target.value);
+        }}
+      />
     </div>
   );
 }

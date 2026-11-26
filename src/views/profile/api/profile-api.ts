@@ -2,13 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import { request, type RequestError } from "@/shared/api/request";
 import { isDevelopment, isStaticPrototype } from "@/shared/config/env";
 
 import type { ProfileData } from "../model/types";
 
 /** Демо-данные: на GitHub Pages (там нет сервера) и при локальной разработке без входа. */
 const demoProfile: ProfileData = {
-  me: { name: "Анна", contact: "anna@example.ru", companionStage: 5 },
+  me: { name: "Анна", contact: "anna@example.ru", companionStage: 5, typeId: "t7", birthDate: "1992-03-14" },
   settings: { autoMatchConsent: true, phraseNotifications: true, phraseFromHour: 9, phraseToHour: 21 },
   friends: [
     { id: "marina", name: "Марина", companionStage: 1 },
@@ -25,24 +26,6 @@ export type ProfileState =
   | { status: "error"; message: string }
   | { status: "ready"; data: ProfileData; demo: boolean };
 
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${basePath}${path}`, {
-    ...init,
-    headers: { "Content-Type": "application/json", ...init?.headers },
-  });
-  const body: unknown = await response.json().catch(() => null);
-  if (!response.ok) {
-    const message =
-      body && typeof body === "object" && "message" in body && typeof body.message === "string"
-        ? body.message
-        : "Не получилось. Проверьте интернет и попробуйте ещё раз";
-    throw Object.assign(new Error(message), { status: response.status });
-  }
-  return body as T;
-}
-
 /** Данные профиля и действия с ними. */
 export function useProfile() {
   const [state, setState] = useState<ProfileState>({ status: "loading" });
@@ -53,12 +36,12 @@ export function useProfile() {
     try {
       setState({ status: "ready", data: await request<ProfileData>("/api/profile"), demo: false });
     } catch (error) {
-      const status = (error as { status?: number }).status;
+      const { status, message } = error as RequestError;
       if (status === 401) {
         // При разработке экран открывается и без входа – через меню «Экраны».
         setState(isDevelopment ? { status: "ready", data: demoProfile, demo: true } : { status: "signed-out" });
       } else {
-        setState({ status: "error", message: (error as Error).message });
+        setState({ status: "error", message });
       }
     }
   }, []);
@@ -94,6 +77,20 @@ export function useProfile() {
     }
   }
 
+  /** Новая дата рождения: сервер пересчитывает квадрат Пифагора, от него зависят практики на слабую стихию. */
+  async function setBirthDate(birthDate: string) {
+    setActionError(null);
+    const before = state.status === "ready" ? state.data.me.birthDate : null;
+    update((data) => ({ ...data, me: { ...data.me, birthDate } }));
+    if (demo) return;
+    try {
+      await request("/api/birth-reading", { method: "POST", body: JSON.stringify({ birthDate }) });
+    } catch (error) {
+      update((data) => ({ ...data, me: { ...data.me, birthDate: before } }));
+      setActionError((error as Error).message);
+    }
+  }
+
   async function answerRequest(personId: string, action: "accept" | "decline") {
     setActionError(null);
     if (demo) {
@@ -117,5 +114,5 @@ export function useProfile() {
     }
   }
 
-  return { state, actionError, setPhraseSettings, answerRequest };
+  return { state, actionError, setPhraseSettings, setBirthDate, answerRequest };
 }
