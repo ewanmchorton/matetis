@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 
 import { cancelPdfPage, openDjvu, openPdf, type FixedBook } from "../lib/open-fixed";
 import { type ReaderJump, type ReaderStatus } from "./reader-chrome";
@@ -21,17 +21,16 @@ function PageCanvas({
   maxHeight?: number;
 }) {
   const host = useRef<HTMLDivElement>(null);
-  const [active, setActive] = useState(!watch);
+  const [inView, setInView] = useState(false);
+  // В режиме «по странице» лист рисуется сразу, без ожидания прокрутки.
+  const active = !watch || inView;
 
   useEffect(() => {
-    if (!watch) {
-      setActive(true);
-      return;
-    }
+    if (!watch) return;
     const node = host.current;
     if (!node) return;
     const observer = new IntersectionObserver(
-      ([entry]) => setActive(Boolean(entry?.isIntersecting)),
+      ([entry]) => setInView(Boolean(entry?.isIntersecting)),
       { rootMargin: "700px 0px" },
     );
     observer.observe(node);
@@ -97,7 +96,10 @@ export function FixedReader({
   const lastTap = useRef(0);
   const tapTimer = useRef(0);
   const pageRef = useRef(page);
-  pageRef.current = page;
+
+  useLayoutEffect(() => {
+    pageRef.current = page;
+  });
 
   useEffect(() => {
     let closed: FixedBook | null = null;
@@ -132,6 +134,8 @@ export function FixedReader({
 
   useEffect(() => {
     if (!book || !jump) return;
+    // Переход по оглавлению или закладке приходит снаружи.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPage(Math.min(book.pageCount, Math.max(1, jump.page)));
   }, [book, jump]);
 
@@ -201,6 +205,8 @@ export function FixedReader({
   }, []);
 
   useEffect(() => {
+    // Новая страница открывается без увеличения, откуда бы ни пришла смена страницы.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setZoom(1);
   }, [page]);
 
@@ -250,7 +256,7 @@ export function FixedReader({
       return;
     }
     if (moved > 12) return;
-    const now = Date.now();
+    const now = event.timeStamp;
     window.clearTimeout(tapTimer.current);
     if (now - lastTap.current < 280) {
       lastTap.current = 0;

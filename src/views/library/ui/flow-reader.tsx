@@ -123,13 +123,17 @@ export function FlowReader({
   const pages = useRef<HTMLElement[][]>([]);
   const pendingEnd = useRef(false);
   const pageRef = useRef(page);
-  pageRef.current = page;
   const startY = useRef(0);
   const enteredScroll = useRef(false);
   const holdSlice = useRef(false);
   const placeRef = useRef({ page, slice: sliceIndex, pageCount });
-  placeRef.current = { page, slice: sliceIndex, pageCount };
   const height = useReaderFrame(frame, book !== null);
+
+  // Раньше остальных эффектов: раскладка страниц ниже читает уже новое место.
+  useLayoutEffect(() => {
+    pageRef.current = page;
+    placeRef.current = { page, slice: sliceIndex, pageCount };
+  });
 
   useEffect(() => {
     let revoke = () => undefined as void;
@@ -137,6 +141,8 @@ export function FlowReader({
       const opened = openFlowBook(format, data);
       revoke = opened.revoke;
       if (!opened.slices.length) {
+        // Книга разбирается прямо из файла, без ожидания: состояние ставится сразу.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setError("В файле не нашлось текста.");
       } else {
         const saved = readPlace(bookId);
@@ -160,6 +166,8 @@ export function FlowReader({
 
   useEffect(() => {
     if (!book || !jump) return;
+    // Переход по оглавлению или закладке приходит снаружи.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSliceIndex(Math.min(book.slices.length - 1, Math.max(0, jump.slice)));
     setPage(Math.max(1, jump.page));
   }, [book, jump]);

@@ -31,7 +31,9 @@ export function ReaderScreen({ book, onBack }: { book: ReadableBook; onBack: () 
   const [jump, setJump] = useState<ReaderJump | null>(null);
   const textBook = book.format === "epub" || book.format === "fb2";
 
+  // Настройки и закладки лежат в браузере: читаем их после открытия книги.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLook(readLook());
     setMarks(readMarks(book.id));
     setChrome(false);
@@ -41,10 +43,11 @@ export function ReaderScreen({ book, onBack }: { book: ReadableBook; onBack: () 
 
   useEffect(() => {
     let cancel = false;
+    // Другая книга: прежний файл и ошибка больше не относятся к экрану.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setData(null);
     setError(null);
     if (!book.published && isStaticPrototype) {
-      setData(null);
       setError("На сайте для просмотра пока открывается только «Две жизни».");
       return;
     }

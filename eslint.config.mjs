@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Готовые сборки читалок PDF и DJVU, не наш код.
+    "public/vendor/**",
   ]),
 ]);
 

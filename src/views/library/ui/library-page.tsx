@@ -434,6 +434,8 @@ function BookmarkScreen({ onBack, onOpen }: { onBack: () => void; onOpen: (id: s
   const [marks, setMarks] = useState<ReturnType<typeof savedMarks>>([]);
 
   useEffect(() => {
+    // Закладки лежат в браузере, на сервере их нет.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMarks(savedMarks());
   }, []);
 

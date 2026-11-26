@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
 import { typograph } from "@/shared/lib/typograph";
+import { useIsClient } from "@/shared/lib/use-is-client";
 import { cn } from "@/shared/lib/utils";
 import { AppLogo } from "./app-logo";
 import { StepDots } from "@/shared/ui/step-dots";
@@ -157,9 +158,7 @@ const ivory = (alpha: number) => `rgb(250 247 242 / ${alpha})`;
 
 /** Кнопки у нижнего края телефона, сразу над вкладками. Вне карточки экрана, чтобы картинка их не сдвигала. */
 function PinnedActions({ children }: { children: ReactNode }) {
-  const [ready, setReady] = useState(false);
-  useEffect(() => setReady(true), []);
-  if (!ready) return null;
+  if (!useIsClient()) return null;
   return createPortal(
     <div
       className="fixed inset-x-0 z-30 mx-auto flex w-full max-w-[440px] gap-3 px-(--screen-gutter)"
