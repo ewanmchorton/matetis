@@ -20,9 +20,6 @@ importers:
       cn:
         specifier: ^0.4.0
         version: 0.4.0
-      djvujs-dist:
-        specifier: ^0.5.4
-        version: 0.5.4
       drizzle-orm:
         specifier: ^0.45.4
         version: 0.45.4(@types/pg@8.23.1)(kysely@0.29.6)(pg@8.23.1)
@@ -2174,9 +2171,6 @@ packages:
   diff@8.0.4:
     resolution: {integrity: sha512-DPi0FmjiSU5EvQV0++GFDOJ9ASQUVFh5kD+OzOnYdi7n3Wpm9hWWGfB/O2blfHcMVTL5WkQXSnRiK9makhrcnw==}
     engines: {node: '>=0.3.1'}
-
-  djvujs-dist@0.5.4:
-    resolution: {integrity: sha512-zEKOeiXlQ81mxWXhlZ0qnjSr1WBB9dWa8BhhlJjc4e+h9SVHsTl0Sz2IuMrkwDM/ZMn0aUeZQG+J7ODiTAtDpQ==}
 
   doctrine@2.1.0:
     resolution: {integrity: sha512-35mSku4ZXK0vfCuHEDAwt55dg2jNajHZ1odvF+8SSr82EsZY4QmXfuWso8oEd8zRhVObSN18aM0CjSdoBX7zIw==}
@@ -5965,8 +5959,6 @@ snapshots:
   detect-libc@2.1.2: {}
 
   diff@8.0.4: {}
-
-  djvujs-dist@0.5.4: {}
 
   doctrine@2.1.0:
     dependencies:
