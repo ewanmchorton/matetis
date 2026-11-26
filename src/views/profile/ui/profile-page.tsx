@@ -93,7 +93,6 @@ export function ProfilePage() {
               label={state.data.me.contact && isTelegramContact(state.data.me.contact) ? "Telegram" : "E-mail"}
               value={state.data.me.contact ?? ""}
             />
-            <SettingRow label="Пароль" value="••••••••" />
           </dl>
           <BirthDateField value={state.data.me.birthDate} onChange={(value) => void setBirthDate(value)} />
           <Button variant="ghost" size="cta" className="text-primary" onClick={() => void signOut()}>
